@@ -1,15 +1,11 @@
 import 'package:get_it/get_it.dart';
+import '../services/secure_storage_service.dart';
 
 final GetIt getIt = GetIt.instance;
 
 void setupLocator() {
-  // Services will be registered here in future stories
-  // Example:
-  // getIt.registerLazySingleton<SecureStorageService>(() => SecureStorageService());
-  // getIt.registerLazySingleton<TapoService>(() => TapoService());
+  // Services
+  getIt.registerLazySingleton<SecureStorageService>(() => SecureStorageService());
 
   // ViewModels will be registered here in future stories
-  // Example:
-  // getIt.registerFactory<ConfigViewModel>(() => ConfigViewModel());
-  // getIt.registerFactory<HomeViewModel>(() => HomeViewModel());
 }
