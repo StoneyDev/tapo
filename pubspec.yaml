@@ -35,6 +35,20 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # MVVM + DI
+  get_it: ^8.0.3
+  watch_it: ^1.5.1
+
+  # Secure storage
+  flutter_secure_storage: ^9.2.4
+
+  # HTTP client
+  http: ^1.4.0
+
+  # Cryptography
+  pointycastle: ^3.9.1
+  crypto: ^3.0.6
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
