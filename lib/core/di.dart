@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import '../services/secure_storage_service.dart';
 import '../services/tapo_service.dart';
 import '../viewmodels/config_viewmodel.dart';
+import '../viewmodels/home_viewmodel.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -11,6 +12,7 @@ void setupLocator() {
 
   // ViewModels - registered as factory (new instance each time)
   getIt.registerFactory<ConfigViewModel>(() => ConfigViewModel());
+  getIt.registerFactory<HomeViewModel>(() => HomeViewModel());
 }
 
 /// Register TapoService with credentials (call after user authenticates)
