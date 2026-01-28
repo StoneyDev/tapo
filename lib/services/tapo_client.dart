@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:tapo/core/http_utils.dart';
 import 'package:tapo/core/klap_crypto.dart';
 import 'package:tapo/core/klap_session.dart';
 
@@ -29,9 +30,7 @@ class TapoClient {
   Future<Map<String, dynamic>?> _request(
     Map<String, dynamic> payload,
   ) async {
-    if (!session.isEstablished) {
-      return null;
-    }
+    if (!session.isEstablished) return null;
 
     try {
       // Encrypt (matches python-kasa encrypt method)
@@ -74,65 +73,17 @@ class TapoClient {
         ..add(utf8.encode(request))
         ..add(body);
 
-      // Read response
-      final responseData = <int>[];
-      await for (final chunk in socket) {
-        responseData.addAll(chunk);
-        final str = utf8.decode(responseData, allowMalformed: true);
-        if (str.contains('\r\n\r\n')) {
-          final headerEnd = str.indexOf('\r\n\r\n');
-          final headers = str.substring(0, headerEnd);
-          final clMatch =
-              RegExp(r'Content-Length: (\d+)').firstMatch(headers);
-          if (clMatch != null) {
-            final cl = int.parse(clMatch.group(1)!);
-            if (responseData.length >= headerEnd + 4 + cl) break;
-          } else {
-            break;
-          }
-        }
-      }
+      final response = await readHttpResponse(socket);
       await socket.close();
 
-      final responseStr = utf8.decode(responseData, allowMalformed: true);
-      final statusCode = int.parse(responseStr.split(' ')[1]);
+      if (response.statusCode != 200 || response.body.length < 32) return null;
 
-      if (statusCode != 200) {
-        return null;
-      }
+      // Decrypt: skip signature (32 bytes), decrypt the rest
+      final ciphertext = Uint8List.sublistView(response.body, 32);
+      final decrypted = aesDecrypt(ciphertext, session.key!, iv);
+      final result = jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>;
 
-      // Find body
-      var bodyStart = 0;
-      for (var i = 0; i < responseData.length - 3; i++) {
-        if (responseData[i] == 13 &&
-            responseData[i + 1] == 10 &&
-            responseData[i + 2] == 13 &&
-            responseData[i + 3] == 10) {
-          bodyStart = i + 4;
-          break;
-        }
-      }
-      final responseBody = Uint8List.fromList(
-        responseData.sublist(bodyStart),
-      );
-
-      if (responseBody.length < 32) {
-        return null;
-      }
-
-      // Decrypt (matches python-kasa decrypt method)
-      // Skip signature (32 bytes), decrypt the rest
-      final responseCiphertext = Uint8List.sublistView(responseBody, 32);
-      final decrypted = aesDecrypt(responseCiphertext, session.key!, iv);
-      final jsonStr = utf8.decode(decrypted);
-
-      final result = jsonDecode(jsonStr) as Map<String, dynamic>;
-
-      if (result['error_code'] != 0) {
-        return null;
-      }
-
-      return result;
+      return result['error_code'] == 0 ? result : null;
     } on Exception {
       return null;
     }

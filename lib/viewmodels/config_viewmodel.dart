@@ -55,20 +55,15 @@ class ConfigViewModel extends ChangeNotifier {
 
   Future<bool> saveConfig(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
-      _errorMessage = 'Email and password required';
-      notifyListeners();
+      _setError('Email and password required');
       return false;
     }
-
     if (!_isValidEmail(email)) {
-      _errorMessage = 'Invalid email format';
-      notifyListeners();
+      _setError('Invalid email format');
       return false;
     }
-
     if (password.length < 8) {
-      _errorMessage = 'Password must be at least 8 characters';
-      notifyListeners();
+      _setError('Password must be at least 8 characters');
       return false;
     }
 
@@ -82,7 +77,7 @@ class ConfigViewModel extends ChangeNotifier {
       registerTapoService(email, password);
       return true;
     } on Exception {
-      _errorMessage = 'Failed to save configuration';
+      _setError('Failed to save configuration');
       return false;
     } finally {
       _isLoading = false;
@@ -92,23 +87,22 @@ class ConfigViewModel extends ChangeNotifier {
 
   void addDeviceIp(String ip) {
     final trimmedIp = ip.trim();
+
     if (trimmedIp.isEmpty) {
-      _errorMessage = 'IP address cannot be empty';
+      _setError('IP address cannot be empty');
+    } else if (!_isValidIpv4(trimmedIp)) {
+      _setError('Invalid IP address format');
+    } else if (_deviceIps.contains(trimmedIp)) {
+      _setError('IP address already added');
+    } else {
+      _errorMessage = null;
+      _deviceIps.add(trimmedIp);
       notifyListeners();
-      return;
     }
-    if (!_isValidIpv4(trimmedIp)) {
-      _errorMessage = 'Invalid IP address format';
-      notifyListeners();
-      return;
-    }
-    if (_deviceIps.contains(trimmedIp)) {
-      _errorMessage = 'IP address already added';
-      notifyListeners();
-      return;
-    }
-    _errorMessage = null;
-    _deviceIps.add(trimmedIp);
+  }
+
+  void _setError(String message) {
+    _errorMessage = message;
     notifyListeners();
   }
 

@@ -51,9 +51,7 @@ class HomeViewModel extends ChangeNotifier {
       final tapoService = getIt<TapoService>();
 
       // Fetch state for all devices in parallel
-      final futures = ips.map(tapoService.getDeviceState);
-      final results = await Future.wait(futures);
-      _devices = results.whereType<TapoDevice>().toList();
+      _devices = await Future.wait(ips.map(tapoService.getDeviceState));
       _errorMessage = null;
     } on Exception {
       _errorMessage = 'Failed to load devices';
@@ -107,11 +105,7 @@ class HomeViewModel extends ChangeNotifier {
     try {
       final tapoService = getIt<TapoService>();
       final updatedDevice = await tapoService.toggleDevice(ip);
-
-      if (updatedDevice != null) {
-        _devices = List.from(_devices);
-        _devices[index] = updatedDevice;
-      }
+      _devices = List.from(_devices)..[index] = updatedDevice;
     } finally {
       _togglingDevices.remove(ip);
       notifyListeners();

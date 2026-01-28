@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:tapo/core/http_utils.dart';
 import 'package:tapo/core/klap_crypto.dart';
 
 /// KLAP session for communicating with Tapo devices
@@ -29,14 +30,8 @@ class KlapSession {
   /// Perform KLAP two-stage handshake
   Future<bool> handshake() async {
     try {
-      if (!await _handshake1()) {
-        return false;
-      }
-
-      if (!await _handshake2()) {
-        return false;
-      }
-
+      if (!await _handshake1()) return false;
+      if (!await _handshake2()) return false;
       _deriveSessionKeys();
       return true;
     } on Exception {
@@ -60,16 +55,10 @@ class KlapSession {
       ..add(utf8.encode(request))
       ..add(_localSeed!);
 
-    final response = await _readHttpResponse(socket);
+    final response = await readHttpResponse(socket);
     await socket.close();
 
-    if (response.statusCode != 200) {
-      return false;
-    }
-
-    if (response.body.length != 48) {
-      return false;
-    }
+    if (response.statusCode != 200 || response.body.length != 48) return false;
 
     _remoteSeed = Uint8List.sublistView(response.body, 0, 16);
     final serverHash = Uint8List.sublistView(response.body, 16, 48);
@@ -80,11 +69,8 @@ class KlapSession {
       ..._remoteSeed!,
       ...authHash,
     ]);
-    if (!bytesEqual(serverHash, expected)) {
-      return false;
-    }
+    if (!bytesEqual(serverHash, expected)) return false;
 
-    // Extract session cookie
     if (response.cookie != null) {
       sessionCookie = response.cookie;
     }
@@ -98,7 +84,6 @@ class KlapSession {
       return false;
     }
 
-    // Client hash: SHA256(remoteSeed + localSeed + authHash)
     final clientHash = sha256HashBytes([
       ..._remoteSeed!,
       ..._localSeed!,
@@ -118,7 +103,7 @@ class KlapSession {
       ..add(utf8.encode(request))
       ..add(clientHash);
 
-    final response = await _readHttpResponse(socket);
+    final response = await readHttpResponse(socket);
     await socket.close();
 
     return response.statusCode == 200;
@@ -172,65 +157,4 @@ class KlapSession {
       List.generate(length, (_) => random.nextInt(256)),
     );
   }
-
-  Future<_HttpResponse> _readHttpResponse(Socket socket) async {
-    final data = <int>[];
-    await for (final chunk in socket) {
-      data.addAll(chunk);
-      final str = utf8.decode(data, allowMalformed: true);
-      if (str.contains('\r\n\r\n')) {
-        final headerEnd = str.indexOf('\r\n\r\n');
-        final headers = str.substring(0, headerEnd);
-        final clMatch =
-            RegExp(r'Content-Length: (\d+)').firstMatch(headers);
-        if (clMatch != null) {
-          final cl = int.parse(clMatch.group(1)!);
-          if (data.length >= headerEnd + 4 + cl) break;
-        } else {
-          break;
-        }
-      }
-    }
-
-    final str = utf8.decode(data, allowMalformed: true);
-    final statusCode = int.parse(str.split(' ')[1]);
-
-    String? cookie;
-    final cookieMatch =
-        RegExp(r'Set-Cookie: ([^;\r\n]+)').firstMatch(str);
-    if (cookieMatch != null) {
-      cookie = cookieMatch.group(1);
-    }
-
-    var bodyStart = 0;
-    for (var i = 0; i < data.length - 3; i++) {
-      if (data[i] == 13 &&
-          data[i + 1] == 10 &&
-          data[i + 2] == 13 &&
-          data[i + 3] == 10) {
-        bodyStart = i + 4;
-        break;
-      }
-    }
-
-    return _HttpResponse(
-      statusCode: statusCode,
-      body: Uint8List.fromList(data.sublist(bodyStart)),
-      cookie: cookie,
-    );
-  }
-
-  void dispose() {}
-}
-
-class _HttpResponse {
-  _HttpResponse({
-    required this.statusCode,
-    required this.body,
-    this.cookie,
-  });
-
-  final int statusCode;
-  final String? cookie;
-  final Uint8List body;
 }

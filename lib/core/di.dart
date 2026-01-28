@@ -7,7 +7,6 @@ import 'package:tapo/viewmodels/home_viewmodel.dart';
 final GetIt getIt = GetIt.instance;
 
 void setupLocator() {
-  // Services
   getIt
     ..registerLazySingleton<SecureStorageService>(SecureStorageService.new)
     ..registerLazySingleton<ConfigViewModel>(ConfigViewModel.new)
