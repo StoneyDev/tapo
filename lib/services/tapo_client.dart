@@ -22,6 +22,16 @@ class TapoClient {
     return result;
   }
 
+  /// Set device on/off state
+  /// Returns true on success, false on failure
+  Future<bool> setDeviceOn(bool on) async {
+    final response = await _request({
+      'method': 'set_device_info',
+      'params': {'device_on': on},
+    });
+    return response != null;
+  }
+
   /// Send encrypted request to device
   /// Returns decoded JSON response or null on failure
   Future<Map<String, dynamic>?> _request(Map<String, dynamic> payload) async {
