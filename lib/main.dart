@@ -1,7 +1,10 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
-import 'core/di.dart';
-import 'views/config_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:tapo/core/di.dart';
+import 'package:tapo/services/secure_storage_service.dart';
+import 'package:tapo/views/config_screen.dart';
+import 'package:tapo/views/home_screen.dart';
 
 void main() {
   setupLocator();
@@ -18,11 +21,49 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      initialRoute: '/config',
+      home: const _StartupScreen(),
       routes: {
         '/config': (context) => const ConfigScreen(),
-        '/home': (context) => const Placeholder(), // TODO: US-015
+        '/home': (context) => const HomeScreen(),
       },
+    );
+  }
+}
+
+class _StartupScreen extends StatefulWidget {
+  const _StartupScreen();
+
+  @override
+  State<_StartupScreen> createState() => _StartupScreenState();
+}
+
+class _StartupScreenState extends State<_StartupScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _checkAuth();
+  }
+
+  Future<void> _checkAuth() async {
+    final storage = getIt<SecureStorageService>();
+    final hasCreds = await storage.hasCredentials();
+
+    if (!mounted) return;
+
+    if (hasCreds) {
+      final creds = await storage.getCredentials();
+      if (!mounted) return;
+      registerTapoService(creds.email!, creds.password!);
+      unawaited(Navigator.pushReplacementNamed(context, '/home'));
+    } else {
+      unawaited(Navigator.pushReplacementNamed(context, '/config'));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }

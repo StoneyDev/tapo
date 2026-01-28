@@ -1,14 +1,18 @@
 import 'package:flutter/foundation.dart';
-import '../core/di.dart';
-import '../models/tapo_device.dart';
-import '../services/secure_storage_service.dart';
-import '../services/tapo_service.dart';
+import 'package:tapo/core/di.dart';
+import 'package:tapo/models/tapo_device.dart';
+import 'package:tapo/services/secure_storage_service.dart';
+import 'package:tapo/services/tapo_service.dart';
 
 class HomeViewModel extends ChangeNotifier {
+  final SecureStorageService _storageService = getIt<SecureStorageService>();
+
   List<TapoDevice> _devices = [];
   bool _isLoading = false;
   String? _errorMessage;
   final Set<String> _togglingDevices = {};
+  final Map<String, DateTime> _lastToggleTime = {};
+  static const _toggleCooldown = Duration(milliseconds: 500);
 
   List<TapoDevice> get devices => List.unmodifiable(_devices);
   bool get isLoading => _isLoading;
@@ -17,7 +21,8 @@ class HomeViewModel extends ChangeNotifier {
   /// Check if a specific device is currently being toggled
   bool isToggling(String ip) => _togglingDevices.contains(ip);
 
-  final SecureStorageService _storageService = getIt<SecureStorageService>();
+  /// Refresh devices (alias for loadDevices)
+  Future<void> refresh() => loadDevices();
 
   /// Load all configured devices and fetch their states
   Future<void> loadDevices() async {
@@ -45,22 +50,33 @@ class HomeViewModel extends ChangeNotifier {
 
       final tapoService = getIt<TapoService>();
 
-      // Fetch state for each device
-      final List<TapoDevice> fetchedDevices = [];
-      for (final ip in ips) {
-        final device = await tapoService.getDeviceState(ip);
-        if (device != null) {
-          fetchedDevices.add(device);
-        }
-      }
-
-      _devices = fetchedDevices;
+      // Fetch state for all devices in parallel
+      final futures = ips.map(tapoService.getDeviceState);
+      final results = await Future.wait(futures);
+      _devices = results.whereType<TapoDevice>().toList();
       _errorMessage = null;
-    } catch (e) {
-      _errorMessage = 'Failed to load devices: $e';
+    } on Exception {
+      _errorMessage = 'Failed to load devices';
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Remove device from configuration
+  Future<void> removeDevice(String ip) async {
+    // Remove from local list
+    _devices = _devices.where((d) => d.ip != ip).toList();
+    notifyListeners();
+
+    // Remove from storage
+    final ips = await _storageService.getDeviceIps();
+    ips.remove(ip);
+    await _storageService.saveDeviceIps(ips);
+
+    // Disconnect session if exists
+    if (getIt.isRegistered<TapoService>()) {
+      getIt<TapoService>().disconnect(ip);
     }
   }
 
@@ -71,6 +87,14 @@ class HomeViewModel extends ChangeNotifier {
       notifyListeners();
       return;
     }
+
+    // Rate limiting - prevent rapid toggles
+    final lastToggle = _lastToggleTime[ip];
+    if (lastToggle != null &&
+        DateTime.now().difference(lastToggle) < _toggleCooldown) {
+      return; // Ignore rapid toggle requests
+    }
+    _lastToggleTime[ip] = DateTime.now();
 
     // Find device index
     final index = _devices.indexWhere((d) => d.ip == ip);
@@ -92,10 +116,5 @@ class HomeViewModel extends ChangeNotifier {
       _togglingDevices.remove(ip);
       notifyListeners();
     }
-  }
-
-  /// Refresh all device states
-  Future<void> refresh() async {
-    await loadDevices();
   }
 }

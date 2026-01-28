@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:crypto/crypto.dart';
 import 'package:pointycastle/export.dart';
 
@@ -45,8 +46,7 @@ Uint8List aesEncrypt(Uint8List data, Uint8List key, Uint8List iv) {
   // PKCS7 padding
   final blockSize = cipher.blockSize;
   final padLength = blockSize - (data.length % blockSize);
-  final padded = Uint8List(data.length + padLength);
-  padded.setAll(0, data);
+  final padded = Uint8List(data.length + padLength)..setAll(0, data);
   for (var i = data.length; i < padded.length; i++) {
     padded[i] = padLength;
   }
@@ -57,6 +57,25 @@ Uint8List aesEncrypt(Uint8List data, Uint8List key, Uint8List iv) {
     offset += cipher.processBlock(padded, offset, output, offset);
   }
   return output;
+}
+
+/// Compare two byte arrays in constant time (timing-safe)
+/// Uses XOR accumulation to prevent timing attacks
+bool bytesEqual(Uint8List a, Uint8List b) {
+  if (a.length != b.length) {
+    // Still need length check, but do dummy work to maintain timing
+    var result = 0;
+    for (var i = 0; i < a.length; i++) {
+      result |= a[i];
+    }
+    // Use result to prevent compiler optimization, always return false
+    return result != result; // Always false, prevents dead code elimination
+  }
+  var result = 0;
+  for (var i = 0; i < a.length; i++) {
+    result |= a[i] ^ b[i];
+  }
+  return result == 0;
 }
 
 /// AES-128-CBC decrypt with PKCS7 unpadding
@@ -70,10 +89,16 @@ Uint8List aesDecrypt(Uint8List data, Uint8List key, Uint8List iv) {
     offset += cipher.processBlock(data, offset, output, offset);
   }
 
-  // Remove PKCS7 padding
+  // Remove PKCS7 padding with proper validation
   final padLength = output.last;
-  if (padLength > 0 && padLength <= 16) {
+  if (padLength > 0 && padLength <= 16 && padLength <= output.length) {
+    // Verify all padding bytes are equal
+    for (var i = output.length - padLength; i < output.length; i++) {
+      if (output[i] != padLength) {
+        throw const FormatException('Invalid PKCS7 padding');
+      }
+    }
     return Uint8List.sublistView(output, 0, output.length - padLength);
   }
-  return output;
+  throw const FormatException('Invalid PKCS7 padding length');
 }

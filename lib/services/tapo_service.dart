@@ -1,16 +1,14 @@
+import 'dart:developer' as dev;
 import 'dart:typed_data';
-import '../core/klap_session.dart';
-import '../core/klap_crypto.dart';
-import '../models/tapo_device.dart';
-import 'tapo_client.dart';
+
+import 'package:tapo/core/klap_crypto.dart';
+import 'package:tapo/core/klap_session.dart';
+import 'package:tapo/models/tapo_device.dart';
+import 'package:tapo/services/tapo_client.dart';
 
 /// High-level service for managing Tapo devices
 /// Handles session management and device communication
 class TapoService {
-  final Uint8List _authHash;
-  final Map<String, KlapSession> _sessions = {};
-  final Map<String, TapoClient> _clients = {};
-
   TapoService({required Uint8List authHash}) : _authHash = authHash;
 
   /// Factory constructor from email/password
@@ -18,10 +16,16 @@ class TapoService {
     return TapoService(authHash: generateAuthHash(email, password));
   }
 
+  final Uint8List _authHash;
+  final Map<String, KlapSession> _sessions = {};
+  final Map<String, TapoClient> _clients = {};
+
   /// Connect to device, returns true on successful handshake
   Future<bool> connectToDevice(String ip) async {
+    dev.log('[TapoService] Connecting to $ip');
     // Reuse existing session if established
     if (_sessions.containsKey(ip) && _sessions[ip]!.isEstablished) {
+      dev.log('[TapoService] Reusing existing session for $ip');
       return true;
     }
 
@@ -29,8 +33,11 @@ class TapoService {
     final success = await session.handshake();
 
     if (success) {
+      dev.log('[TapoService] Connected to $ip');
       _sessions[ip] = session;
       _clients[ip] = TapoClient(session: session);
+    } else {
+      dev.log('[TapoService] Failed to connect to $ip');
     }
 
     return success;
@@ -38,8 +45,10 @@ class TapoService {
 
   /// Get device state, returns TapoDevice or null if unreachable
   Future<TapoDevice?> getDeviceState(String ip) async {
+    dev.log('[TapoService] Getting device state for $ip');
     // Ensure connected
     if (!await connectToDevice(ip)) {
+      dev.log('[TapoService] Device $ip marked offline (connection failed)');
       return TapoDevice(
         ip: ip,
         nickname: 'Unknown',
@@ -54,6 +63,7 @@ class TapoService {
 
     if (info == null) {
       // Session may have expired, clear and return offline
+      dev.log('[TapoService] Device $ip marked offline (getDeviceInfo failed)');
       _sessions.remove(ip);
       _clients.remove(ip);
       return TapoDevice(
@@ -65,6 +75,7 @@ class TapoService {
       );
     }
 
+    dev.log('[TapoService] Device $ip online: ${info['nickname']}');
     return TapoDevice(
       ip: ip,
       nickname: info['nickname'] as String? ?? 'Tapo Device',
@@ -87,7 +98,7 @@ class TapoService {
 
     // Toggle to opposite state
     final newState = !currentState.deviceOn;
-    final success = await client.setDeviceOn(newState);
+    final success = await client.setDeviceOn(on: newState);
 
     if (!success) {
       // Session may have expired

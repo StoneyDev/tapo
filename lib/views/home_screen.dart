@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tapo/services/secure_storage_service.dart';
+import 'package:tapo/services/tapo_service.dart';
+import 'package:tapo/viewmodels/home_viewmodel.dart';
+import 'package:tapo/views/widgets/plug_card.dart';
 import 'package:watch_it/watch_it.dart';
-import '../services/secure_storage_service.dart';
-import '../viewmodels/home_viewmodel.dart';
-import 'widgets/plug_card.dart';
 
 class HomeScreen extends StatefulWidget with WatchItStatefulWidgetMixin {
   const HomeScreen({super.key});
@@ -43,11 +44,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _logout(BuildContext context) async {
+    // Disconnect all active sessions first
+    final getIt = GetIt.instance;
+    if (getIt.isRegistered<TapoService>()) {
+      getIt<TapoService>().disconnectAll();
+      getIt.unregister<TapoService>();
+    }
+
     final storage = di<SecureStorageService>();
     await storage.clearCredentials();
     await storage.clearDeviceIps();
     if (context.mounted) {
-      Navigator.pushReplacementNamed(context, '/config');
+      await Navigator.pushReplacementNamed(context, '/config');
     }
   }
 
@@ -61,9 +69,15 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(vm.errorMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            Text(
+              vm.errorMessage!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: vm.refresh, child: const Text('Retry')),
+            FilledButton(
+              onPressed: vm.refresh,
+              child: const Text('Retry'),
+            ),
           ],
         ),
       );
@@ -83,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return PlugCard(
             device: device,
             onToggle: () => vm.toggleDevice(device.ip),
+            onRemove: () => vm.removeDevice(device.ip),
             isToggling: vm.isToggling(device.ip),
           );
         },

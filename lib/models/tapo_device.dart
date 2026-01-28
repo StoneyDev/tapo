@@ -1,31 +1,14 @@
-class TapoDevice {
-  final String ip;
-  final String nickname;
-  final String model;
-  final bool deviceOn;
-  final bool isOnline;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  const TapoDevice({
-    required this.ip,
-    required this.nickname,
-    required this.model,
-    required this.deviceOn,
-    required this.isOnline,
-  });
+part 'tapo_device.freezed.dart';
 
-  TapoDevice copyWith({
-    String? ip,
-    String? nickname,
-    String? model,
-    bool? deviceOn,
-    bool? isOnline,
-  }) {
-    return TapoDevice(
-      ip: ip ?? this.ip,
-      nickname: nickname ?? this.nickname,
-      model: model ?? this.model,
-      deviceOn: deviceOn ?? this.deviceOn,
-      isOnline: isOnline ?? this.isOnline,
-    );
-  }
+@freezed
+abstract class TapoDevice with _$TapoDevice {
+  const factory TapoDevice({
+    required String ip,
+    required String nickname,
+    required String model,
+    required bool deviceOn,
+    required bool isOnline,
+  }) = _TapoDevice;
 }

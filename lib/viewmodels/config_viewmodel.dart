@@ -1,59 +1,73 @@
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
-import '../services/secure_storage_service.dart';
-import '../core/di.dart';
+import 'package:tapo/core/di.dart';
+import 'package:tapo/services/secure_storage_service.dart';
 
 class ConfigViewModel extends ChangeNotifier {
+  ConfigViewModel({SecureStorageService? storageService})
+      : _storageService =
+            storageService ?? GetIt.instance<SecureStorageService>();
+
   final SecureStorageService _storageService;
 
-  String _email = '';
-  String _password = '';
   List<String> _deviceIps = [];
   bool _isLoading = false;
   String? _errorMessage;
 
-  ConfigViewModel({SecureStorageService? storageService})
-      : _storageService = storageService ?? GetIt.instance<SecureStorageService>();
-
-  // Getters
-  String get email => _email;
-  String get password => _password;
   List<String> get deviceIps => List.unmodifiable(_deviceIps);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // Setters for form fields
-  set email(String value) {
-    _email = value;
-    notifyListeners();
-  }
-
-  set password(String value) {
-    _password = value;
-    notifyListeners();
-  }
-
-  Future<void> loadConfig() async {
+  Future<({String email, String password})> loadConfig() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       final creds = await _storageService.getCredentials();
-      _email = creds.email ?? '';
-      _password = creds.password ?? '';
       _deviceIps = await _storageService.getDeviceIps();
-    } catch (e) {
-      _errorMessage = 'Failed to load config: $e';
+      return (email: creds.email ?? '', password: creds.password ?? '');
+    } on Exception {
+      _errorMessage = 'Failed to load configuration';
+      return (email: '', password: '');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<bool> saveConfig() async {
-    if (_email.isEmpty || _password.isEmpty) {
+  /// Validate email format
+  bool _isValidEmail(String email) {
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    return emailRegex.hasMatch(email);
+  }
+
+  /// Validate IPv4 address format
+  bool _isValidIpv4(String ip) {
+    final parts = ip.split('.');
+    if (parts.length != 4) return false;
+    for (final part in parts) {
+      final num = int.tryParse(part);
+      if (num == null || num < 0 || num > 255) return false;
+    }
+    return true;
+  }
+
+  Future<bool> saveConfig(String email, String password) async {
+    if (email.isEmpty || password.isEmpty) {
       _errorMessage = 'Email and password required';
+      notifyListeners();
+      return false;
+    }
+
+    if (!_isValidEmail(email)) {
+      _errorMessage = 'Invalid email format';
+      notifyListeners();
+      return false;
+    }
+
+    if (password.length < 8) {
+      _errorMessage = 'Password must be at least 8 characters';
       notifyListeners();
       return false;
     }
@@ -63,13 +77,12 @@ class ConfigViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _storageService.saveCredentials(_email, _password);
+      await _storageService.saveCredentials(email, password);
       await _storageService.saveDeviceIps(_deviceIps);
-      // Register TapoService with credentials
-      registerTapoService(_email, _password);
+      registerTapoService(email, password);
       return true;
-    } catch (e) {
-      _errorMessage = 'Failed to save config: $e';
+    } on Exception {
+      _errorMessage = 'Failed to save configuration';
       return false;
     } finally {
       _isLoading = false;
@@ -78,10 +91,25 @@ class ConfigViewModel extends ChangeNotifier {
   }
 
   void addDeviceIp(String ip) {
-    if (ip.isNotEmpty && !_deviceIps.contains(ip)) {
-      _deviceIps.add(ip);
+    final trimmedIp = ip.trim();
+    if (trimmedIp.isEmpty) {
+      _errorMessage = 'IP address cannot be empty';
       notifyListeners();
+      return;
     }
+    if (!_isValidIpv4(trimmedIp)) {
+      _errorMessage = 'Invalid IP address format';
+      notifyListeners();
+      return;
+    }
+    if (_deviceIps.contains(trimmedIp)) {
+      _errorMessage = 'IP address already added';
+      notifyListeners();
+      return;
+    }
+    _errorMessage = null;
+    _deviceIps.add(trimmedIp);
+    notifyListeners();
   }
 
   void removeDeviceIp(String ip) {

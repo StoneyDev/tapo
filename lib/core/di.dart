@@ -1,18 +1,17 @@
 import 'package:get_it/get_it.dart';
-import '../services/secure_storage_service.dart';
-import '../services/tapo_service.dart';
-import '../viewmodels/config_viewmodel.dart';
-import '../viewmodels/home_viewmodel.dart';
+import 'package:tapo/services/secure_storage_service.dart';
+import 'package:tapo/services/tapo_service.dart';
+import 'package:tapo/viewmodels/config_viewmodel.dart';
+import 'package:tapo/viewmodels/home_viewmodel.dart';
 
 final GetIt getIt = GetIt.instance;
 
 void setupLocator() {
   // Services
-  getIt.registerLazySingleton<SecureStorageService>(() => SecureStorageService());
-
-  // ViewModels - registered as factory (new instance each time)
-  getIt.registerFactory<ConfigViewModel>(() => ConfigViewModel());
-  getIt.registerFactory<HomeViewModel>(() => HomeViewModel());
+  getIt
+    ..registerLazySingleton<SecureStorageService>(SecureStorageService.new)
+    ..registerLazySingleton<ConfigViewModel>(ConfigViewModel.new)
+    ..registerLazySingleton<HomeViewModel>(HomeViewModel.new);
 }
 
 /// Register TapoService with credentials (call after user authenticates)

@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorageService {
@@ -25,6 +26,12 @@ class SecureStorageService {
     await _storage.delete(key: _keyPassword);
   }
 
+  Future<bool> hasCredentials() async {
+    final email = await _storage.read(key: _keyEmail);
+    final password = await _storage.read(key: _keyPassword);
+    return email != null && password != null;
+  }
+
   // Device IPs methods
   Future<void> saveDeviceIps(List<String> ips) async {
     final json = jsonEncode(ips);
@@ -34,7 +41,8 @@ class SecureStorageService {
   Future<List<String>> getDeviceIps() async {
     final json = await _storage.read(key: _keyDeviceIps);
     if (json == null) return [];
-    return List<String>.from(jsonDecode(json));
+    final decoded = jsonDecode(json) as List<dynamic>;
+    return decoded.cast<String>();
   }
 
   Future<void> clearDeviceIps() async {

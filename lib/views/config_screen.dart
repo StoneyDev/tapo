@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tapo/viewmodels/config_viewmodel.dart';
 import 'package:watch_it/watch_it.dart';
-import '../viewmodels/config_viewmodel.dart';
 
 class ConfigScreen extends StatefulWidget with WatchItStatefulWidgetMixin {
   const ConfigScreen({super.key});
@@ -11,18 +11,28 @@ class ConfigScreen extends StatefulWidget with WatchItStatefulWidgetMixin {
 
 class _ConfigScreenState extends State<ConfigScreen> {
   final _ipController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   late final ConfigViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
     _viewModel = di<ConfigViewModel>();
-    _viewModel.loadConfig();
+    _loadConfig();
+  }
+
+  Future<void> _loadConfig() async {
+    final creds = await _viewModel.loadConfig();
+    _emailController.text = creds.email;
+    // Don't pre-populate password for security - require re-entry
   }
 
   @override
   void dispose() {
     _ipController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -35,55 +45,58 @@ class _ConfigScreenState extends State<ConfigScreen> {
   }
 
   Future<void> _save() async {
-    final success = await _viewModel.saveConfig();
+    final success = await _viewModel.saveConfig(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
     if (success && mounted) {
-      Navigator.of(context).pushReplacementNamed('/home');
+      await Navigator.of(context).pushReplacementNamed('/home');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     watchIt<ConfigViewModel>();
-    final vm = _viewModel;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Configuration'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: vm.isLoading
+      body: _viewModel.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _buildForm(vm),
+          : _buildForm(),
     );
   }
 
-  Widget _buildForm(ConfigViewModel vm) {
+  Widget _buildForm() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextField(
+            controller: _emailController,
             decoration: const InputDecoration(
               labelText: 'Email',
               border: OutlineInputBorder(),
             ),
             keyboardType: TextInputType.emailAddress,
-            controller: TextEditingController(text: vm.email),
-            onChanged: (v) => vm.email = v,
           ),
           const SizedBox(height: 16),
           TextField(
+            controller: _passwordController,
             decoration: const InputDecoration(
               labelText: 'Password',
               border: OutlineInputBorder(),
             ),
             obscureText: true,
-            controller: TextEditingController(text: vm.password),
-            onChanged: (v) => vm.password = v,
           ),
           const SizedBox(height: 24),
-          const Text('Device IPs', style: TextStyle(fontWeight: FontWeight.bold)),
+          const Text(
+            'Device IPs',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -106,17 +119,18 @@ class _ConfigScreenState extends State<ConfigScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          ...vm.deviceIps.map((ip) => ListTile(
-                title: Text(ip),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () => vm.removeDeviceIp(ip),
-                ),
-              )),
-          if (vm.errorMessage != null) ...[
+          for (final ip in _viewModel.deviceIps)
+            ListTile(
+              title: Text(ip),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () => _viewModel.removeDeviceIp(ip),
+              ),
+            ),
+          if (_viewModel.errorMessage != null) ...[
             const SizedBox(height: 16),
             Text(
-              vm.errorMessage!,
+              _viewModel.errorMessage!,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ],

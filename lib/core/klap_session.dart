@@ -1,136 +1,171 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
-import 'klap_crypto.dart';
+
+import 'package:tapo/core/klap_crypto.dart';
 
 /// KLAP session for communicating with Tapo devices
+/// Matches python-kasa KlapEncryptionSession implementation
 class KlapSession {
+  KlapSession({required this.deviceIp, required this.authHash});
+
   final String deviceIp;
   final Uint8List authHash;
 
   String? sessionCookie;
-  Uint8List? key;
-  Uint8List? iv;
-  int seq = 0;
-
   Uint8List? _localSeed;
   Uint8List? _remoteSeed;
-  Uint8List? _serverHash;
 
-  KlapSession({required this.deviceIp, required this.authHash});
+  // Derived session values (matches python-kasa)
+  Uint8List? _key; // 16 bytes
+  Uint8List? _iv; // 12 bytes
+  Uint8List? _sig; // 28 bytes
+  int seq = 0;
 
-  String get _baseUrl => 'http://$deviceIp/app';
+  Uint8List? get key => _key;
+  Uint8List? get sig => _sig;
 
   /// Perform KLAP two-stage handshake
-  /// Returns true on success, false on failure
   Future<bool> handshake() async {
     try {
-      // Stage 1: handshake1 - send local seed, get remote seed
-      final stage1Success = await _handshake1();
-      if (!stage1Success) return false;
+      if (!await _handshake1()) {
+        return false;
+      }
 
-      // Stage 2: handshake2 - verify auth, get session established
-      final stage2Success = await _handshake2();
-      if (!stage2Success) return false;
+      if (!await _handshake2()) {
+        return false;
+      }
 
-      // Derive encryption key and IV
-      _deriveKeyAndIv();
-
+      _deriveSessionKeys();
       return true;
-    } catch (e) {
+    } on Exception {
       return false;
     }
   }
 
-  /// Stage 1: POST /app/handshake1
-  /// Send 16-byte local seed, receive 16-byte remote seed + 32-byte server hash
+  /// Stage 1: Send local seed, receive remote seed + server hash
   Future<bool> _handshake1() async {
     _localSeed = _generateRandomBytes(16);
 
-    final response = await http.post(
-      Uri.parse('$_baseUrl/handshake1'),
-      body: _localSeed,
-    );
+    final socket = await Socket.connect(deviceIp, 80);
+    final request = 'POST /app/handshake1 HTTP/1.1\r\n'
+        'Host: $deviceIp\r\n'
+        'Content-Type: application/octet-stream\r\n'
+        'Content-Length: 16\r\n'
+        'Accept: */*\r\n'
+        '\r\n';
 
-    if (response.statusCode != 200) return false;
+    socket
+      ..add(utf8.encode(request))
+      ..add(_localSeed!);
 
-    final body = response.bodyBytes;
-    if (body.length != 48) return false; // 16 remote seed + 32 server hash
+    final response = await _readHttpResponse(socket);
+    await socket.close();
 
-    _remoteSeed = Uint8List.sublistView(body, 0, 16);
-    _serverHash = Uint8List.sublistView(body, 16, 48);
+    if (response.statusCode != 200) {
+      return false;
+    }
+
+    if (response.body.length != 48) {
+      return false;
+    }
+
+    _remoteSeed = Uint8List.sublistView(response.body, 0, 16);
+    final serverHash = Uint8List.sublistView(response.body, 16, 48);
+
+    // Verify: SHA256(localSeed + remoteSeed + authHash)
+    final expected = sha256HashBytes([
+      ..._localSeed!,
+      ..._remoteSeed!,
+      ...authHash,
+    ]);
+    if (!bytesEqual(serverHash, expected)) {
+      return false;
+    }
 
     // Extract session cookie
-    final cookie = response.headers['set-cookie'];
-    if (cookie != null) {
-      sessionCookie = cookie.split(';').first;
+    if (response.cookie != null) {
+      sessionCookie = response.cookie;
     }
 
     return true;
   }
 
-  /// Stage 2: POST /app/handshake2
-  /// Send client hash to verify auth
+  /// Stage 2: Send client hash to verify auth
   Future<bool> _handshake2() async {
     if (_localSeed == null || _remoteSeed == null || sessionCookie == null) {
       return false;
     }
 
-    // Client hash = SHA256(remoteSeed + localSeed + authHash)
+    // Client hash: SHA256(remoteSeed + localSeed + authHash)
     final clientHash = sha256HashBytes([
       ..._remoteSeed!,
       ..._localSeed!,
       ...authHash,
     ]);
 
-    final response = await http.post(
-      Uri.parse('$_baseUrl/handshake2'),
-      headers: {'Cookie': sessionCookie!},
-      body: clientHash,
-    );
+    final socket = await Socket.connect(deviceIp, 80);
+    final request = 'POST /app/handshake2 HTTP/1.1\r\n'
+        'Host: $deviceIp\r\n'
+        'Content-Type: application/octet-stream\r\n'
+        'Content-Length: 32\r\n'
+        'Cookie: $sessionCookie\r\n'
+        'Accept: */*\r\n'
+        '\r\n';
+
+    socket
+      ..add(utf8.encode(request))
+      ..add(clientHash);
+
+    final response = await _readHttpResponse(socket);
+    await socket.close();
 
     return response.statusCode == 200;
   }
 
-  /// Derive encryption key and IV from seeds
-  /// Key = SHA256(localSeed + remoteSeed + authHash)[0:16]
-  /// IV = SHA256("iv" + localSeed + remoteSeed + authHash)[0:12] padded to 16
-  void _deriveKeyAndIv() {
-    if (_localSeed == null || _remoteSeed == null) return;
-
-    // Key derivation
-    final keyMaterial = sha256HashBytes([
+  /// Derive session keys (matches python-kasa exactly)
+  void _deriveSessionKeys() {
+    // Key: SHA256("lsk" + localSeed + remoteSeed + authHash)[:16]
+    final keyPayload = sha256HashBytes([
+      ...utf8.encode('lsk'),
       ..._localSeed!,
       ..._remoteSeed!,
       ...authHash,
     ]);
-    key = Uint8List.sublistView(keyMaterial, 0, 16);
+    _key = Uint8List.sublistView(keyPayload, 0, 16);
 
-    // IV derivation: SHA256("iv" + localSeed + remoteSeed + authHash)[0:12]
-    final ivPrefix = utf8.encode('iv');
-    final ivMaterial = sha256HashBytes([
-      ...ivPrefix,
+    // IV + Seq: SHA256("iv" + localSeed + remoteSeed + authHash)
+    // iv = [:12], seq = [-4:] as signed big-endian int32
+    final ivPayload = sha256HashBytes([
+      ...utf8.encode('iv'),
       ..._localSeed!,
       ..._remoteSeed!,
       ...authHash,
     ]);
-    // IV is first 12 bytes, but AES needs 16, so we'll use seq to fill
-    iv = Uint8List.sublistView(ivMaterial, 0, 12);
+    _iv = Uint8List.sublistView(ivPayload, 0, 12);
+    seq = ByteData.sublistView(ivPayload, 28, 32).getInt32(0);
 
-    // Derive initial seq from SHA256("seq" + localSeed + remoteSeed + authHash)
-    final seqPrefix = utf8.encode('seq');
-    final seqMaterial = sha256HashBytes([
-      ...seqPrefix,
+    // Sig: SHA256("ldk" + localSeed + remoteSeed + authHash)[:28]
+    final sigPayload = sha256HashBytes([
+      ...utf8.encode('ldk'),
       ..._localSeed!,
       ..._remoteSeed!,
       ...authHash,
     ]);
-    // seq is signed 32-bit int from first 4 bytes
-    seq = ByteData.sublistView(seqMaterial, 0, 4).getInt32(0, Endian.big);
+    _sig = Uint8List.sublistView(sigPayload, 0, 28);
   }
 
-  /// Generate cryptographically random bytes
+  /// Generate IV for current seq: iv (12 bytes) + seq (4 bytes big-endian)
+  Uint8List generateIv() {
+    final iv = Uint8List(16)..setAll(0, _iv!);
+    final seqBytes = ByteData(4)..setInt32(0, seq);
+    iv.setAll(12, seqBytes.buffer.asUint8List());
+    return iv;
+  }
+
+  bool get isEstablished => _key != null && _iv != null && _sig != null;
+
   Uint8List _generateRandomBytes(int length) {
     final random = Random.secure();
     return Uint8List.fromList(
@@ -138,17 +173,64 @@ class KlapSession {
     );
   }
 
-  /// Check if session is established
-  bool get isEstablished => key != null && iv != null && sessionCookie != null;
+  Future<_HttpResponse> _readHttpResponse(Socket socket) async {
+    final data = <int>[];
+    await for (final chunk in socket) {
+      data.addAll(chunk);
+      final str = utf8.decode(data, allowMalformed: true);
+      if (str.contains('\r\n\r\n')) {
+        final headerEnd = str.indexOf('\r\n\r\n');
+        final headers = str.substring(0, headerEnd);
+        final clMatch =
+            RegExp(r'Content-Length: (\d+)').firstMatch(headers);
+        if (clMatch != null) {
+          final cl = int.parse(clMatch.group(1)!);
+          if (data.length >= headerEnd + 4 + cl) break;
+        } else {
+          break;
+        }
+      }
+    }
 
-  /// Get IV for current sequence number (12-byte base IV + 4-byte seq counter)
-  Uint8List getIvForSeq(int seqNum) {
-    if (iv == null) throw StateError('Session not established');
-    final fullIv = Uint8List(16);
-    fullIv.setAll(0, iv!);
-    // Last 4 bytes are seq number as big-endian
-    final seqBytes = ByteData(4)..setInt32(0, seqNum, Endian.big);
-    fullIv.setAll(12, seqBytes.buffer.asUint8List());
-    return fullIv;
+    final str = utf8.decode(data, allowMalformed: true);
+    final statusCode = int.parse(str.split(' ')[1]);
+
+    String? cookie;
+    final cookieMatch =
+        RegExp(r'Set-Cookie: ([^;\r\n]+)').firstMatch(str);
+    if (cookieMatch != null) {
+      cookie = cookieMatch.group(1);
+    }
+
+    var bodyStart = 0;
+    for (var i = 0; i < data.length - 3; i++) {
+      if (data[i] == 13 &&
+          data[i + 1] == 10 &&
+          data[i + 2] == 13 &&
+          data[i + 3] == 10) {
+        bodyStart = i + 4;
+        break;
+      }
+    }
+
+    return _HttpResponse(
+      statusCode: statusCode,
+      body: Uint8List.fromList(data.sublist(bodyStart)),
+      cookie: cookie,
+    );
   }
+
+  void dispose() {}
+}
+
+class _HttpResponse {
+  _HttpResponse({
+    required this.statusCode,
+    required this.body,
+    this.cookie,
+  });
+
+  final int statusCode;
+  final String? cookie;
+  final Uint8List body;
 }
