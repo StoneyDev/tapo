@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:watch_it/watch_it.dart';
+import '../services/secure_storage_service.dart';
 import '../viewmodels/home_viewmodel.dart';
 import 'widgets/plug_card.dart';
 
@@ -29,9 +30,25 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Tapo Devices'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: () => _logout(context),
+          ),
+        ],
       ),
       body: _buildBody(vm),
     );
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    final storage = di<SecureStorageService>();
+    await storage.clearCredentials();
+    await storage.clearDeviceIps();
+    if (context.mounted) {
+      Navigator.pushReplacementNamed(context, '/config');
+    }
   }
 
   Widget _buildBody(HomeViewModel vm) {
