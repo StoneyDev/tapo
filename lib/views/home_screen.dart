@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:watch_it/watch_it.dart';
-import '../models/tapo_device.dart';
 import '../viewmodels/home_viewmodel.dart';
+import 'widgets/plug_card.dart';
 
 class HomeScreen extends StatefulWidget with WatchItStatefulWidgetMixin {
   const HomeScreen({super.key});
@@ -61,37 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView.builder(
         padding: const EdgeInsets.all(8),
         itemCount: vm.devices.length,
-        itemBuilder: (context, index) => _DeviceCard(
+        itemBuilder: (context, index) => PlugCard(
           device: vm.devices[index],
           onToggle: () => vm.toggleDevice(vm.devices[index].ip),
-        ),
-      ),
-    );
-  }
-}
-
-class _DeviceCard extends StatelessWidget {
-  final TapoDevice device;
-  final VoidCallback onToggle;
-
-  const _DeviceCard({required this.device, required this.onToggle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: Icon(
-          device.deviceOn ? Icons.power : Icons.power_off,
-          color: device.isOnline
-              ? (device.deviceOn ? Colors.green : Colors.grey)
-              : Colors.red,
-          size: 32,
-        ),
-        title: Text(device.nickname.isNotEmpty ? device.nickname : device.ip),
-        subtitle: Text('${device.model} • ${device.ip}'),
-        trailing: Switch(
-          value: device.deviceOn,
-          onChanged: device.isOnline ? (_) => onToggle() : null,
         ),
       ),
     );
