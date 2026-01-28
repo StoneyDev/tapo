@@ -8,10 +8,14 @@ class HomeViewModel extends ChangeNotifier {
   List<TapoDevice> _devices = [];
   bool _isLoading = false;
   String? _errorMessage;
+  final Set<String> _togglingDevices = {};
 
   List<TapoDevice> get devices => List.unmodifiable(_devices);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  /// Check if a specific device is currently being toggled
+  bool isToggling(String ip) => _togglingDevices.contains(ip);
 
   final SecureStorageService _storageService = getIt<SecureStorageService>();
 
@@ -72,12 +76,20 @@ class HomeViewModel extends ChangeNotifier {
     final index = _devices.indexWhere((d) => d.ip == ip);
     if (index == -1) return;
 
-    final tapoService = getIt<TapoService>();
-    final updatedDevice = await tapoService.toggleDevice(ip);
+    // Mark as toggling
+    _togglingDevices.add(ip);
+    notifyListeners();
 
-    if (updatedDevice != null) {
-      _devices = List.from(_devices);
-      _devices[index] = updatedDevice;
+    try {
+      final tapoService = getIt<TapoService>();
+      final updatedDevice = await tapoService.toggleDevice(ip);
+
+      if (updatedDevice != null) {
+        _devices = List.from(_devices);
+        _devices[index] = updatedDevice;
+      }
+    } finally {
+      _togglingDevices.remove(ip);
       notifyListeners();
     }
   }

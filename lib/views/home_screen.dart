@@ -61,10 +61,14 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView.builder(
         padding: const EdgeInsets.all(8),
         itemCount: vm.devices.length,
-        itemBuilder: (context, index) => PlugCard(
-          device: vm.devices[index],
-          onToggle: () => vm.toggleDevice(vm.devices[index].ip),
-        ),
+        itemBuilder: (context, index) {
+          final device = vm.devices[index];
+          return PlugCard(
+            device: device,
+            onToggle: () => vm.toggleDevice(device.ip),
+            isToggling: vm.isToggling(device.ip),
+          );
+        },
       ),
     );
   }

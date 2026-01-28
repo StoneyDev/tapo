@@ -4,8 +4,14 @@ import '../../models/tapo_device.dart';
 class PlugCard extends StatelessWidget {
   final TapoDevice device;
   final VoidCallback onToggle;
+  final bool isToggling;
 
-  const PlugCard({super.key, required this.device, required this.onToggle});
+  const PlugCard({
+    super.key,
+    required this.device,
+    required this.onToggle,
+    this.isToggling = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +80,13 @@ class PlugCard extends StatelessWidget {
   }
 
   Widget _buildToggle() {
+    if (isToggling) {
+      return const SizedBox(
+        width: 48,
+        height: 24,
+        child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+      );
+    }
     return Switch(
       value: device.deviceOn,
       onChanged: device.isOnline ? (_) => onToggle() : null,
