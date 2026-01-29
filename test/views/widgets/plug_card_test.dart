@@ -116,19 +116,17 @@ void main() {
     });
 
     group('isToggling state', () {
-      testWidgets('shows CircularProgressIndicator when isToggling is true',
+      testWidgets('shows spinner when toggling, switch otherwise',
           (tester) async {
         final device = TestFixtures.onlineDevice();
-        await tester.pumpWidget(buildTestWidget(device, isToggling: true));
 
+        // When toggling
+        await tester.pumpWidget(buildTestWidget(device, isToggling: true));
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
         expect(find.byType(Switch), findsNothing);
-      });
 
-      testWidgets('shows Switch when isToggling is false', (tester) async {
-        final device = TestFixtures.onlineDevice();
+        // When not toggling
         await tester.pumpWidget(buildTestWidget(device, isToggling: false));
-
         expect(find.byType(Switch), findsOneWidget);
         expect(find.byType(CircularProgressIndicator), findsNothing);
       });
@@ -154,20 +152,16 @@ void main() {
         expect(switchWidget.onChanged, isNull);
       });
 
-      testWidgets('switch reflects device state (on)', (tester) async {
-        final device = TestFixtures.onlineDevice(deviceOn: true);
-        await tester.pumpWidget(buildTestWidget(device));
+      testWidgets('switch reflects device on/off state', (tester) async {
+        // Device on
+        await tester.pumpWidget(
+            buildTestWidget(TestFixtures.onlineDevice(deviceOn: true)));
+        expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
 
-        final switchWidget = tester.widget<Switch>(find.byType(Switch));
-        expect(switchWidget.value, isTrue);
-      });
-
-      testWidgets('switch reflects device state (off)', (tester) async {
-        final device = TestFixtures.onlineDevice(deviceOn: false);
-        await tester.pumpWidget(buildTestWidget(device));
-
-        final switchWidget = tester.widget<Switch>(find.byType(Switch));
-        expect(switchWidget.value, isFalse);
+        // Device off
+        await tester.pumpWidget(
+            buildTestWidget(TestFixtures.onlineDevice(deviceOn: false)));
+        expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
       });
     });
 
@@ -227,17 +221,11 @@ void main() {
     });
 
     group('card structure', () {
-      testWidgets('renders inside a Card widget', (tester) async {
-        final device = TestFixtures.onlineDevice();
-        await tester.pumpWidget(buildTestWidget(device));
-
-        expect(find.byType(Card), findsOneWidget);
-      });
-
-      testWidgets('uses device IP as Dismissible key', (tester) async {
+      testWidgets('renders Card with device IP as Dismissible key', (tester) async {
         final device = TestFixtures.onlineDevice(ip: '10.0.0.5');
         await tester.pumpWidget(buildTestWidget(device));
 
+        expect(find.byType(Card), findsOneWidget);
         final dismissible = tester.widget<Dismissible>(find.byType(Dismissible));
         expect(dismissible.key, const Key('10.0.0.5'));
       });

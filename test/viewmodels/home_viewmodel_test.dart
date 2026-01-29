@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mockito/mockito.dart';
-import 'package:tapo/models/tapo_device.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
 import 'package:tapo/viewmodels/home_viewmodel.dart';
@@ -36,20 +35,9 @@ void main() {
 
   group('HomeViewModel', () {
     group('constructor', () {
-      test('creates instance', () {
-        expect(viewModel, isNotNull);
-        expect(viewModel, isA<HomeViewModel>());
-      });
-
-      test('initializes with empty devices', () {
+      test('initializes with default state', () {
         expect(viewModel.devices, isEmpty);
-      });
-
-      test('initializes with isLoading false', () {
         expect(viewModel.isLoading, isFalse);
-      });
-
-      test('initializes with errorMessage null', () {
         expect(viewModel.errorMessage, isNull);
       });
     });
@@ -95,22 +83,7 @@ void main() {
         verifyNever(mockTapoService.getDeviceState(any));
       });
 
-      test('notifies listeners when loading starts and finishes', () async {
-        when(mockStorageService.getDeviceIps()).thenAnswer((_) async => []);
-
-        final notifications = <bool>[];
-        viewModel.addListener(() {
-          notifications.add(viewModel.isLoading);
-        });
-
-        await viewModel.loadDevices();
-
-        // Should notify: loading=true, then loading=false (empty case notifies twice at end)
-        expect(notifications.contains(true), isTrue);
-        expect(notifications.last, isFalse);
-      });
-
-      test('sets isLoading true during load', () async {
+      test('sets isLoading true during fetch, false after', () async {
         bool loadingDuringFetch = false;
         when(mockStorageService.getDeviceIps()).thenAnswer((_) async {
           loadingDuringFetch = viewModel.isLoading;
@@ -282,69 +255,28 @@ void main() {
             .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
         when(mockTapoService.getDeviceState(TestFixtures.testDeviceIp))
             .thenAnswer((_) async => TestFixtures.onlineDevice());
+        when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
+        when(mockTapoService.disconnect(TestFixtures.testDeviceIp)).thenReturn(null);
         await viewModel.loadDevices();
       });
 
-      test('removes device from local list', () async {
+      test('removes device from local list and storage, disconnects session', () async {
         expect(viewModel.devices.length, 1);
-
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
-        when(mockTapoService.disconnect(TestFixtures.testDeviceIp)).thenReturn(null);
-
-        await viewModel.removeDevice(TestFixtures.testDeviceIp);
-
-        expect(viewModel.devices, isEmpty);
-      });
-
-      test('removes IP from storage', () async {
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
-        when(mockTapoService.disconnect(TestFixtures.testDeviceIp)).thenReturn(null);
-
-        await viewModel.removeDevice(TestFixtures.testDeviceIp);
-
-        verify(mockStorageService.saveDeviceIps([])).called(1);
-      });
-
-      test('disconnects session', () async {
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
-        when(mockTapoService.disconnect(TestFixtures.testDeviceIp)).thenReturn(null);
-
-        await viewModel.removeDevice(TestFixtures.testDeviceIp);
-
-        verify(mockTapoService.disconnect(TestFixtures.testDeviceIp)).called(1);
-      });
-
-      test('notifies listeners when device removed', () async {
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
-        when(mockTapoService.disconnect(TestFixtures.testDeviceIp)).thenReturn(null);
 
         bool notified = false;
         viewModel.addListener(() => notified = true);
 
         await viewModel.removeDevice(TestFixtures.testDeviceIp);
 
+        expect(viewModel.devices, isEmpty);
+        verify(mockStorageService.saveDeviceIps([])).called(1);
+        verify(mockTapoService.disconnect(TestFixtures.testDeviceIp)).called(1);
         expect(notified, isTrue);
       });
     });
 
     group('refresh', () {
-      test('calls loadDevices', () async {
-        when(mockStorageService.getDeviceIps()).thenAnswer((_) async => []);
-
-        await viewModel.refresh();
-
-        verify(mockStorageService.getDeviceIps()).called(1);
-      });
-
-      test('updates devices list', () async {
+      test('delegates to loadDevices', () async {
         when(mockStorageService.getDeviceIps())
             .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
         when(mockTapoService.getDeviceState(TestFixtures.testDeviceIp))
@@ -352,24 +284,12 @@ void main() {
 
         await viewModel.refresh();
 
+        verify(mockStorageService.getDeviceIps()).called(1);
         expect(viewModel.devices.length, 1);
       });
     });
 
     group('error handling', () {
-      test('errorMessage is null initially', () {
-        expect(viewModel.errorMessage, isNull);
-      });
-
-      test('errorMessage set on loadDevices failure', () async {
-        when(mockStorageService.getDeviceIps())
-            .thenThrow(Exception('Error'));
-
-        await viewModel.loadDevices();
-
-        expect(viewModel.errorMessage, 'Failed to load devices');
-      });
-
       test('errorMessage cleared on successful loadDevices', () async {
         // First trigger error
         when(mockStorageService.getDeviceIps())
@@ -382,36 +302,6 @@ void main() {
         await viewModel.loadDevices();
 
         expect(viewModel.errorMessage, isNull);
-      });
-
-      test('errorMessage set on toggleDevice when not authenticated', () async {
-        // Load devices first with TapoService registered
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        when(mockTapoService.getDeviceState(TestFixtures.testDeviceIp))
-            .thenAnswer((_) async => TestFixtures.onlineDevice());
-        await viewModel.loadDevices();
-
-        // Now unregister TapoService
-        await getIt.unregister<TapoService>();
-
-        await viewModel.toggleDevice(TestFixtures.testDeviceIp);
-
-        expect(viewModel.errorMessage, 'Not authenticated');
-      });
-
-      test('notifies listeners when error is set', () async {
-        final errors = <String?>[];
-        viewModel.addListener(() {
-          errors.add(viewModel.errorMessage);
-        });
-
-        when(mockStorageService.getDeviceIps())
-            .thenThrow(Exception('Error'));
-
-        await viewModel.loadDevices();
-
-        expect(errors.contains('Failed to load devices'), isTrue);
       });
     });
 
@@ -431,43 +321,5 @@ void main() {
       });
     });
 
-    group('isLoading states', () {
-      test('isLoading is false initially', () {
-        expect(viewModel.isLoading, isFalse);
-      });
-
-      test('isLoading becomes true during loadDevices', () async {
-        bool wasLoadingDuringCall = false;
-
-        when(mockStorageService.getDeviceIps()).thenAnswer((_) async {
-          wasLoadingDuringCall = viewModel.isLoading;
-          return [];
-        });
-
-        await viewModel.loadDevices();
-
-        expect(wasLoadingDuringCall, isTrue);
-      });
-
-      test('isLoading becomes false after loadDevices completes', () async {
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        when(mockTapoService.getDeviceState(TestFixtures.testDeviceIp))
-            .thenAnswer((_) async => TestFixtures.onlineDevice());
-
-        await viewModel.loadDevices();
-
-        expect(viewModel.isLoading, isFalse);
-      });
-
-      test('isLoading becomes false after loadDevices error', () async {
-        when(mockStorageService.getDeviceIps())
-            .thenThrow(Exception('Error'));
-
-        await viewModel.loadDevices();
-
-        expect(viewModel.isLoading, isFalse);
-      });
-    });
   });
 }

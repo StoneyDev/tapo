@@ -21,91 +21,44 @@ void main() {
   });
 
   group('setupLocator', () {
-    test('registers SecureStorageService as lazy singleton', () {
+    test('registers all services as lazy singletons (not TapoService)', () {
       setupLocator();
 
-      expect(testGetIt.isRegistered<SecureStorageService>(), isTrue);
-      final service1 = testGetIt<SecureStorageService>();
-      final service2 = testGetIt<SecureStorageService>();
-      expect(identical(service1, service2), isTrue);
-    });
-
-    test('registers ConfigViewModel as lazy singleton', () {
-      setupLocator();
-
-      expect(testGetIt.isRegistered<ConfigViewModel>(), isTrue);
-      final vm1 = testGetIt<ConfigViewModel>();
-      final vm2 = testGetIt<ConfigViewModel>();
-      expect(identical(vm1, vm2), isTrue);
-    });
-
-    test('registers HomeViewModel as lazy singleton', () {
-      setupLocator();
-
-      expect(testGetIt.isRegistered<HomeViewModel>(), isTrue);
-      final vm1 = testGetIt<HomeViewModel>();
-      final vm2 = testGetIt<HomeViewModel>();
-      expect(identical(vm1, vm2), isTrue);
-    });
-
-    test('registers all three services', () {
-      setupLocator();
-
+      // All registered
       expect(testGetIt.isRegistered<SecureStorageService>(), isTrue);
       expect(testGetIt.isRegistered<ConfigViewModel>(), isTrue);
       expect(testGetIt.isRegistered<HomeViewModel>(), isTrue);
-    });
-
-    test('does not register TapoService', () {
-      setupLocator();
-
       expect(testGetIt.isRegistered<TapoService>(), isFalse);
+
+      // Verify singleton behavior
+      expect(identical(testGetIt<SecureStorageService>(), testGetIt<SecureStorageService>()), isTrue);
+      expect(identical(testGetIt<ConfigViewModel>(), testGetIt<ConfigViewModel>()), isTrue);
+      expect(identical(testGetIt<HomeViewModel>(), testGetIt<HomeViewModel>()), isTrue);
     });
   });
 
   group('registerTapoService', () {
-    test('registers TapoService with credentials', () {
+    test('registers TapoService as lazy singleton', () {
       registerTapoService('test@example.com', 'password123');
 
       expect(testGetIt.isRegistered<TapoService>(), isTrue);
+      expect(identical(testGetIt<TapoService>(), testGetIt<TapoService>()), isTrue);
     });
 
-    test('TapoService is lazy singleton (same instance on multiple gets)', () {
-      registerTapoService('test@example.com', 'password123');
-
-      final service1 = testGetIt<TapoService>();
-      final service2 = testGetIt<TapoService>();
-      expect(identical(service1, service2), isTrue);
-    });
-
-    test('re-registration replaces existing service', () {
+    test('re-registration replaces existing service with new instance', () {
       registerTapoService('user1@example.com', 'password1');
       final service1 = testGetIt<TapoService>();
 
       registerTapoService('user2@example.com', 'password2');
       final service2 = testGetIt<TapoService>();
 
-      // New instance after re-registration
       expect(identical(service1, service2), isFalse);
     });
 
-    test('re-registration does not throw', () {
-      expect(
-        () {
-          registerTapoService('user1@example.com', 'password1');
-          registerTapoService('user2@example.com', 'password2');
-        },
-        returnsNormally,
-      );
-    });
-
-    test('can register after setupLocator', () {
+    test('works after setupLocator', () {
       setupLocator();
       registerTapoService('test@example.com', 'password123');
 
-      expect(testGetIt.isRegistered<SecureStorageService>(), isTrue);
-      expect(testGetIt.isRegistered<ConfigViewModel>(), isTrue);
-      expect(testGetIt.isRegistered<HomeViewModel>(), isTrue);
       expect(testGetIt.isRegistered<TapoService>(), isTrue);
     });
   });

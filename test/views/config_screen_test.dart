@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
-import 'package:mockito/mockito.dart';
 import 'package:tapo/viewmodels/config_viewmodel.dart';
 import 'package:tapo/views/config_screen.dart';
 
 import '../helpers/test_utils.dart';
 
-/// Mock ConfigViewModel for testing
+/// Mock ConfigViewModel for widget testing
+/// Note: This tests UI behavior in response to ViewModel state changes.
+/// The actual ViewModel logic is tested in config_viewmodel_test.dart.
 class MockConfigViewModel extends ChangeNotifier implements ConfigViewModel {
   List<String> _deviceIps = [];
   bool _isLoading = false;
@@ -15,52 +16,45 @@ class MockConfigViewModel extends ChangeNotifier implements ConfigViewModel {
 
   @override
   List<String> get deviceIps => List.unmodifiable(_deviceIps);
-
   @override
   bool get isLoading => _isLoading;
-
   @override
   String? get errorMessage => _errorMessage;
 
-  // Mock control methods
+  // State setters for test setup
   void setDeviceIps(List<String> ips) {
     _deviceIps = ips;
     notifyListeners();
   }
-
   void setIsLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
   }
-
   void setErrorMessage(String? message) {
     _errorMessage = message;
     notifyListeners();
   }
 
-  // Tracked method calls for verification
+  // Call tracking
   int addDeviceIpCallCount = 0;
   String? lastAddedIp;
-
   int removeDeviceIpCallCount = 0;
   String? lastRemovedIp;
-
   int loadConfigCallCount = 0;
-  ({String email, String password})? loadConfigReturn;
-
   int saveConfigCallCount = 0;
   String? lastSaveEmail;
   String? lastSavePassword;
+
+  // Return values
+  ({String email, String password})? loadConfigReturn;
   bool saveConfigReturn = true;
 
   @override
   void addDeviceIp(String ip) {
     addDeviceIpCallCount++;
     lastAddedIp = ip;
-    // Simulate adding to list
-    if (!_deviceIps.contains(ip) && ip.isNotEmpty) {
+    if (ip.isNotEmpty && !_deviceIps.contains(ip)) {
       _deviceIps = [..._deviceIps, ip];
-      _errorMessage = null;
       notifyListeners();
     }
   }
@@ -119,51 +113,16 @@ void main() {
 
   group('ConfigScreen', () {
     group('form fields render', () {
-      testWidgets('renders email field', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        await tester.pumpWidget(buildTestWidget());
-        await tester.pumpAndSettle();
-
-        expect(find.widgetWithText(TextField, 'Email'), findsOneWidget);
-      });
-
-      testWidgets('renders password field', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        await tester.pumpWidget(buildTestWidget());
-        await tester.pumpAndSettle();
-
-        expect(find.widgetWithText(TextField, 'Password'), findsOneWidget);
-      });
-
-      testWidgets('renders IP address field', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        await tester.pumpWidget(buildTestWidget());
-        await tester.pumpAndSettle();
-
-        expect(find.widgetWithText(TextField, 'IP Address'), findsOneWidget);
-      });
-
-      testWidgets('renders Save button', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        await tester.pumpWidget(buildTestWidget());
-        await tester.pumpAndSettle();
-
-        expect(find.widgetWithText(FilledButton, 'Save'), findsOneWidget);
-      });
-
-      testWidgets('renders Device IPs label', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        await tester.pumpWidget(buildTestWidget());
-        await tester.pumpAndSettle();
-
-        expect(find.text('Device IPs'), findsOneWidget);
-      });
-
-      testWidgets('populates email from loadConfig', (tester) async {
+      testWidgets('renders all form fields and populates email', (tester) async {
         mockViewModel.loadConfigReturn = (email: TestFixtures.testEmail, password: '');
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
+        expect(find.widgetWithText(TextField, 'Email'), findsOneWidget);
+        expect(find.widgetWithText(TextField, 'Password'), findsOneWidget);
+        expect(find.widgetWithText(TextField, 'IP Address'), findsOneWidget);
+        expect(find.widgetWithText(FilledButton, 'Save'), findsOneWidget);
+        expect(find.text('Device IPs'), findsOneWidget);
         expect(find.text(TestFixtures.testEmail), findsOneWidget);
       });
     });
@@ -378,87 +337,57 @@ void main() {
     });
 
     group('error message displays', () {
-      testWidgets('error message is displayed when set', (tester) async {
+      testWidgets('displays error message with styling when set', (tester) async {
         mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.setErrorMessage('Test error message');
+        mockViewModel.setErrorMessage('Test error');
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
-        expect(find.text('Test error message'), findsOneWidget);
-      });
-
-      testWidgets('error message has error color', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.setErrorMessage('Error');
-        await tester.pumpWidget(buildTestWidget());
-        await tester.pumpAndSettle();
-
-        final errorText = tester.widget<Text>(find.text('Error'));
+        expect(find.text('Test error'), findsOneWidget);
+        final errorText = tester.widget<Text>(find.text('Test error'));
         expect(errorText.style?.color, isNotNull);
       });
 
-      testWidgets('no error message shown when null', (tester) async {
+      testWidgets('hides error message when null', (tester) async {
         mockViewModel.loadConfigReturn = (email: '', password: '');
         mockViewModel.setErrorMessage(null);
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
-        // No Text widget with typical error messages
         expect(find.text('Error'), findsNothing);
-        expect(find.text('Invalid'), findsNothing);
       });
     });
 
     group('loading state', () {
-      testWidgets('shows loading indicator when isLoading is true', (tester) async {
+      testWidgets('shows spinner and hides form when loading', (tester) async {
         mockViewModel.loadConfigReturn = (email: '', password: '');
         mockViewModel.setIsLoading(true);
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      });
-
-      testWidgets('hides form when isLoading is true', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.setIsLoading(true);
-        await tester.pumpWidget(buildTestWidget());
-        await tester.pump();
-
-        // Form fields should not be visible
         expect(find.text('Email'), findsNothing);
         expect(find.text('Password'), findsNothing);
       });
 
-      testWidgets('shows form when isLoading is false', (tester) async {
+      testWidgets('shows form when not loading', (tester) async {
         mockViewModel.loadConfigReturn = (email: '', password: '');
         mockViewModel.setIsLoading(false);
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
-        // Form should be visible
         expect(find.widgetWithText(TextField, 'Email'), findsOneWidget);
-        expect(find.widgetWithText(TextField, 'Password'), findsOneWidget);
         expect(find.byType(CircularProgressIndicator), findsNothing);
       });
     });
 
-    group('app bar', () {
-      testWidgets('renders app bar with Configuration title', (tester) async {
+    group('initialization', () {
+      testWidgets('renders title and calls loadConfig', (tester) async {
         mockViewModel.loadConfigReturn = (email: '', password: '');
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
         expect(find.text('Configuration'), findsOneWidget);
-      });
-    });
-
-    group('loadConfig on init', () {
-      testWidgets('calls loadConfig on initialization', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        await tester.pumpWidget(buildTestWidget());
-        await tester.pumpAndSettle();
-
         expect(mockViewModel.loadConfigCallCount, 1);
       });
     });

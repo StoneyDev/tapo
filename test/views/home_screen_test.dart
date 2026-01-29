@@ -10,7 +10,9 @@ import 'package:tapo/views/widgets/plug_card.dart';
 
 import '../helpers/test_utils.dart';
 
-/// Mock HomeViewModel for testing
+/// Mock HomeViewModel for widget testing
+/// Note: This tests UI behavior in response to ViewModel state changes.
+/// The actual ViewModel logic is tested in home_viewmodel_test.dart.
 class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
   List<TapoDevice> _devices = [];
   bool _isLoading = false;
@@ -19,42 +21,32 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
 
   @override
   List<TapoDevice> get devices => List.unmodifiable(_devices);
-
   @override
   bool get isLoading => _isLoading;
-
   @override
   String? get errorMessage => _errorMessage;
-
   @override
   bool isToggling(String ip) => _togglingDevices.contains(ip);
 
-  // Mock control methods
+  // State setters
   void setDevices(List<TapoDevice> devices) {
     _devices = devices;
     notifyListeners();
   }
-
   void setIsLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
   }
-
   void setErrorMessage(String? message) {
     _errorMessage = message;
     notifyListeners();
   }
-
   void setToggling(String ip, bool toggling) {
-    if (toggling) {
-      _togglingDevices.add(ip);
-    } else {
-      _togglingDevices.remove(ip);
-    }
+    toggling ? _togglingDevices.add(ip) : _togglingDevices.remove(ip);
     notifyListeners();
   }
 
-  // Tracked method calls
+  // Call tracking
   int loadDevicesCallCount = 0;
   int refreshCallCount = 0;
   int toggleDeviceCallCount = 0;
@@ -63,21 +55,14 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
   String? lastRemovedIp;
 
   @override
-  Future<void> loadDevices() async {
-    loadDevicesCallCount++;
-  }
-
+  Future<void> loadDevices() async => loadDevicesCallCount++;
   @override
-  Future<void> refresh() async {
-    refreshCallCount++;
-  }
-
+  Future<void> refresh() async => refreshCallCount++;
   @override
   Future<void> toggleDevice(String ip) async {
     toggleDeviceCallCount++;
     lastToggledIp = ip;
   }
-
   @override
   Future<void> removeDevice(String ip) async {
     removeDeviceCallCount++;
@@ -85,55 +70,36 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
   }
 }
 
-/// Mock SecureStorageService for testing logout
+/// Mock SecureStorageService for logout testing
 class MockSecureStorageService implements SecureStorageService {
   int clearCredentialsCallCount = 0;
   int clearDeviceIpsCallCount = 0;
 
   @override
-  Future<void> clearCredentials() async {
-    clearCredentialsCallCount++;
-  }
-
+  Future<void> clearCredentials() async => clearCredentialsCallCount++;
   @override
-  Future<void> clearDeviceIps() async {
-    clearDeviceIpsCallCount++;
-  }
-
+  Future<void> clearDeviceIps() async => clearDeviceIpsCallCount++;
   @override
-  Future<({String? email, String? password})> getCredentials() async {
-    return (email: null, password: null);
-  }
-
+  Future<({String? email, String? password})> getCredentials() async =>
+      (email: null, password: null);
   @override
-  Future<List<String>> getDeviceIps() async {
-    return [];
-  }
-
+  Future<List<String>> getDeviceIps() async => [];
   @override
-  Future<bool> hasCredentials() async {
-    return false;
-  }
-
+  Future<bool> hasCredentials() async => false;
   @override
   Future<void> saveCredentials(String email, String password) async {}
-
   @override
   Future<void> saveDeviceIps(List<String> ips) async {}
-
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-/// Mock TapoService for testing logout
+/// Mock TapoService for logout testing
 class MockTapoService implements TapoService {
   int disconnectAllCallCount = 0;
 
   @override
-  void disconnectAll() {
-    disconnectAllCallCount++;
-  }
-
+  void disconnectAll() => disconnectAllCallCount++;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -176,20 +142,15 @@ void main() {
 
   group('HomeScreen', () {
     group('loading state', () {
-      testWidgets('shows loading indicator when isLoading is true', (tester) async {
+      testWidgets('shows spinner when loading, hides otherwise', (tester) async {
         mockViewModel.setIsLoading(true);
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
-
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      });
 
-      testWidgets('hides loading indicator when isLoading is false', (tester) async {
         mockViewModel.setIsLoading(false);
         mockViewModel.setDevices([]);
-        await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
-
         expect(find.byType(CircularProgressIndicator), findsNothing);
       });
     });
@@ -254,45 +215,19 @@ void main() {
     });
 
     group('logout', () {
-      testWidgets('logout button is rendered', (tester) async {
-        mockViewModel.setDevices([]);
-        await tester.pumpWidget(buildTestWidget());
-        await tester.pumpAndSettle();
-
-        expect(find.byIcon(Icons.logout), findsOneWidget);
-      });
-
-      testWidgets('logout clears credentials', (tester) async {
+      testWidgets('clears credentials, disconnects, navigates to config', (tester) async {
         mockViewModel.setDevices([]);
         await tester.pumpWidget(buildTestWidget(withNavigation: true));
         await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.logout), findsOneWidget);
 
         await tester.tap(find.byIcon(Icons.logout));
         await tester.pumpAndSettle();
 
         expect(mockStorageService.clearCredentialsCallCount, 1);
         expect(mockStorageService.clearDeviceIpsCallCount, 1);
-      });
-
-      testWidgets('logout disconnects all devices', (tester) async {
-        mockViewModel.setDevices([]);
-        await tester.pumpWidget(buildTestWidget(withNavigation: true));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byIcon(Icons.logout));
-        await tester.pumpAndSettle();
-
         expect(mockTapoService.disconnectAllCallCount, 1);
-      });
-
-      testWidgets('logout navigates to config screen', (tester) async {
-        mockViewModel.setDevices([]);
-        await tester.pumpWidget(buildTestWidget(withNavigation: true));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byIcon(Icons.logout));
-        await tester.pumpAndSettle();
-
         expect(find.text('Config Screen'), findsOneWidget);
       });
     });
@@ -328,21 +263,12 @@ void main() {
       });
     });
 
-    group('app bar', () {
-      testWidgets('renders app bar with Tapo Devices title', (tester) async {
-        mockViewModel.setDevices([]);
-        await tester.pumpWidget(buildTestWidget());
-        await tester.pumpAndSettle();
-
-        expect(find.text('Tapo Devices'), findsOneWidget);
-      });
-    });
-
-    group('loadDevices on init', () {
-      testWidgets('calls loadDevices on initialization', (tester) async {
+    group('initialization', () {
+      testWidgets('renders title and calls loadDevices', (tester) async {
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
+        expect(find.text('Tapo Devices'), findsOneWidget);
         expect(mockViewModel.loadDevicesCallCount, 1);
       });
     });
