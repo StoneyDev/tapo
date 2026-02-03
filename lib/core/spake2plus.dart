@@ -26,11 +26,13 @@ class Spake2Plus {
   static final ECDomainParameters _curve = ECCurve_secp256r1();
 
   // M and N constants for P-256 (from RFC 9383)
+  // ignore: non_constant_identifier_names, standard crypto notation
   static final ECPoint _M = _curve.curve.decodePoint(
     _hexToBytes(
       '02886e2f97ace46e55ba9dd7242579f2993b64e16ef3dcab95afd497333d8fa12f',
     ),
   )!;
+  // ignore: non_constant_identifier_names, standard crypto notation
   static final ECPoint _N = _curve.curve.decodePoint(
     _hexToBytes(
       '03d8bbd6c639c62937b04d997f38c3770719c629d7014d49a24b4f98baa1292b49',
@@ -38,9 +40,11 @@ class Spake2Plus {
   )!;
 
   // Context tag for TPAP
-  static final Uint8List _contextTag = Uint8List.fromList(utf8.encode('PAKE V1'));
+  static final Uint8List _contextTag =
+      Uint8List.fromList(utf8.encode('PAKE V1'));
 
   BigInt? _x; // Ephemeral private key
+  // ignore: non_constant_identifier_names, standard crypto notation
   ECPoint? _X; // Our public share (X = x*G + w0*M)
   BigInt? _w0;
   BigInt? _w1;
@@ -80,10 +84,10 @@ class Spake2Plus {
     // X = x*G + w0*M
     final xG = _curve.G * _x;
     final w0M = _M * _w0;
-    _X = (xG! + w0M)!;
+    _X = xG! + w0M;
 
     // Return compressed point
-    return _X!.getEncoded(true);
+    return _X!.getEncoded();
   }
 
   /// Process server's public share Y and compute shared secret
@@ -93,6 +97,7 @@ class Spake2Plus {
 
     try {
       // Decode server's share Y
+      // ignore: non_constant_identifier_names
       final Y = _curve.curve.decodePoint(serverShareBytes);
       if (Y == null) return null;
 
@@ -101,6 +106,7 @@ class Spake2Plus {
 
       // Compute Z = x * (Y - w0*N)
       final w0N = _N * _w0;
+      // ignore: non_constant_identifier_names, standard crypto notation
       final YMinusW0N = (Y + (-w0N!))!;
       final Z = YMinusW0N * _x;
 
@@ -145,7 +151,7 @@ class Spake2Plus {
 
       // Store kConfirmV for verifying server's confirmation
       _kConfirmV = kConfirmV;
-      _clientShare = _X!.getEncoded(true);
+      _clientShare = _X!.getEncoded();
 
       // Client confirmation = HMAC(K_confirmP, Y)
       final clientConfirm = Hmac(sha256, kConfirmP).convert(serverShareBytes);
@@ -185,9 +191,8 @@ class Spake2Plus {
     required Uint8List V,
     required Uint8List w0,
   }) {
-    final buffer = BytesBuilder();
+    final buffer = BytesBuilder()
     // Length-prefixed fields
-    buffer
       ..add(_lengthPrefix(context))
       ..add(context)
       ..add(_lengthPrefix(idProver))
@@ -237,7 +242,10 @@ class Spake2Plus {
       // For P-256, verify coordinates are within valid range
       // The field prime is 2^256 - 2^224 + 2^192 + 2^96 - 1
       final fieldSize = BigInt.from(1) << 256;
-      return x >= BigInt.zero && x < fieldSize && y >= BigInt.zero && y < fieldSize;
+      return x >= BigInt.zero &&
+          x < fieldSize &&
+          y >= BigInt.zero &&
+          y < fieldSize;
     } on Exception {
       return false;
     }

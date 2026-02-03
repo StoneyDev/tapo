@@ -8,7 +8,12 @@ import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
 import 'package:tapo/services/widget_data_service.dart';
 
-@GenerateMocks([SecureStorageService, TapoService, FlutterSecureStorage, WidgetDataService])
+@GenerateMocks([
+  SecureStorageService,
+  TapoService,
+  FlutterSecureStorage,
+  WidgetDataService,
+])
 void main() {}
 
 class TestFixtures {

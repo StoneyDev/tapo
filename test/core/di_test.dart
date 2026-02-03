@@ -33,10 +33,26 @@ void main() {
       expect(testGetIt.isRegistered<TapoService>(), isFalse);
 
       // Verify singleton behavior
-      expect(identical(testGetIt<SecureStorageService>(), testGetIt<SecureStorageService>()), isTrue);
-      expect(identical(testGetIt<WidgetDataService>(), testGetIt<WidgetDataService>()), isTrue);
-      expect(identical(testGetIt<ConfigViewModel>(), testGetIt<ConfigViewModel>()), isTrue);
-      expect(identical(testGetIt<HomeViewModel>(), testGetIt<HomeViewModel>()), isTrue);
+      expect(
+        identical(testGetIt<SecureStorageService>(),
+            testGetIt<SecureStorageService>()),
+        isTrue,
+      );
+      expect(
+        identical(testGetIt<WidgetDataService>(),
+            testGetIt<WidgetDataService>()),
+        isTrue,
+      );
+      expect(
+        identical(testGetIt<ConfigViewModel>(),
+            testGetIt<ConfigViewModel>()),
+        isTrue,
+      );
+      expect(
+        identical(testGetIt<HomeViewModel>(),
+            testGetIt<HomeViewModel>()),
+        isTrue,
+      );
     });
   });
 
@@ -45,7 +61,11 @@ void main() {
       registerTapoService('test@example.com', 'password123');
 
       expect(testGetIt.isRegistered<TapoService>(), isTrue);
-      expect(identical(testGetIt<TapoService>(), testGetIt<TapoService>()), isTrue);
+      expect(
+        identical(
+            testGetIt<TapoService>(), testGetIt<TapoService>()),
+        isTrue,
+      );
     });
 
     test('re-registration replaces existing service with new instance', () {

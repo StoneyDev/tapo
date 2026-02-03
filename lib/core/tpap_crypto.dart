@@ -72,7 +72,7 @@ class TpapSessionCipher {
   Uint8List _generateNonce(int seqNum) {
     // Nonce = baseNonce (first 8 bytes) + seq (4 bytes big-endian)
     final nonce = Uint8List(12)..setAll(0, baseNonce.sublist(0, 8));
-    final seqBytes = ByteData(4)..setInt32(0, seqNum, Endian.big);
+    final seqBytes = ByteData(4)..setInt32(0, seqNum);
     nonce.setAll(8, seqBytes.buffer.asUint8List());
     return nonce;
   }
@@ -145,7 +145,9 @@ class TpapSessionCipher {
       );
 
     final output = Uint8List(ciphertext.length - 16);
-    final len = cipher.processBytes(ciphertext, 0, ciphertext.length, output, 0);
+    final len = cipher.processBytes(
+      ciphertext, 0, ciphertext.length, output, 0,
+    );
     cipher.doFinal(output, len);
     return output;
   }

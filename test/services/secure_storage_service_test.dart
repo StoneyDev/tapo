@@ -10,9 +10,9 @@ import '../helpers/test_utils.mocks.dart';
 
 /// Testable subclass that allows injecting a mock FlutterSecureStorage
 class TestableSecureStorageService extends SecureStorageService {
-  final FlutterSecureStorage mockStorage;
-
   TestableSecureStorageService(this.mockStorage);
+
+  final FlutterSecureStorage mockStorage;
 
   @override
   FlutterSecureStorage get storage => mockStorage;
@@ -43,8 +43,10 @@ void main() {
         await service.saveCredentials(
             TestFixtures.testEmail, TestFixtures.testPassword);
 
-        verify(mockStorage.write(key: 'tapo_email', value: TestFixtures.testEmail))
-            .called(1);
+        verify(mockStorage.write(
+          key: 'tapo_email',
+          value: TestFixtures.testEmail,
+        )).called(1);
         verify(mockStorage.write(
                 key: 'tapo_password', value: TestFixtures.testPassword))
             .called(1);
@@ -65,7 +67,7 @@ void main() {
             .thenAnswer((_) async {});
 
         const specialEmail = 'user+test@example.com';
-        const specialPassword = 'p@ss!w0rd#\$%^&*()';
+        const specialPassword = r'p@ss!w0rd#$%^&*()';
 
         await service.saveCredentials(specialEmail, specialPassword);
 

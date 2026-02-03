@@ -37,9 +37,13 @@ void main() {
     });
 
     test('returns correct hash for known input', () {
-      // SHA256("hello") = 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+      // SHA256("hello")
       final result = sha256Hash(utf8.encode('hello'));
-      expect(result, '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824');
+      expect(
+        result,
+        '2cf24dba5fb0a30e26e83b2ac5b9e29e'
+        '1b161e5c1fa7425e73043362938b9824',
+      );
     });
   });
 

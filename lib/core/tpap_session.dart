@@ -30,7 +30,7 @@ class TpapSession {
       {'method': 'get_device_info'},
       {'method': 'handshake'},
       {'method': 'login'},
-      {'method': 'securePassthrough', 'params': {}},
+      {'method': 'securePassthrough', 'params': <String, dynamic>{}},
     ];
 
     for (final endpoint in endpoints) {
@@ -38,8 +38,8 @@ class TpapSession {
         try {
           final uri = Uri.parse('http://$deviceIp$endpoint');
           final request = await _httpClient!.postUrl(uri)
-            ..headers.set('Content-Type', 'application/json');
-          request.add(utf8.encode(jsonEncode(method)));
+            ..headers.set('Content-Type', 'application/json')
+            ..add(utf8.encode(jsonEncode(method)));
           final response = await request.close();
           await response.drain<void>();
         } on Exception {
@@ -92,7 +92,9 @@ class TpapSession {
       );
 
       // Send client share, receive server share
-      final serverShare = await _sendClientShare(clientShare, initResult.transactionId);
+      final serverShare = await _sendClientShare(
+        clientShare, initResult.transactionId,
+      );
       if (serverShare == null) return false;
 
       // Process server share and get confirmation
@@ -162,8 +164,8 @@ class TpapSession {
       );
       final request = await _httpClient!.postUrl(uri)
         ..headers.set('Content-Type', 'application/octet-stream')
-        ..headers.set('Cookie', 'TP_SESSIONID=$_sessionId');
-      request.add(encrypted);
+        ..headers.set('Cookie', 'TP_SESSIONID=$_sessionId')
+        ..add(encrypted);
 
       final response = await request.close();
       if (response.statusCode != 200) return null;
