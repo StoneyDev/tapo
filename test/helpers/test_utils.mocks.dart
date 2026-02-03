@@ -11,6 +11,7 @@ import 'package:mockito/mockito.dart' as _i1;
 import 'package:tapo/models/tapo_device.dart' as _i3;
 import 'package:tapo/services/secure_storage_service.dart' as _i4;
 import 'package:tapo/services/tapo_service.dart' as _i6;
+import 'package:tapo/services/widget_data_service.dart' as _i8;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -463,4 +464,48 @@ class MockFlutterSecureStorage extends _i1.Mock
             returnValue: _i5.Future<bool?>.value(),
           )
           as _i5.Future<bool?>);
+}
+
+/// A class which mocks [WidgetDataService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockWidgetDataService extends _i1.Mock implements _i8.WidgetDataService {
+  MockWidgetDataService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i5.Future<void> saveDeviceState({
+    required String? ip,
+    required String? model,
+    required bool? deviceOn,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveDeviceState, [], {
+              #ip: ip,
+              #model: model,
+              #deviceOn: deviceOn,
+            }),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
+
+  @override
+  _i5.Future<void> saveAllDevices(List<_i3.TapoDevice>? deviceList) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveAllDevices, [deviceList]),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
+
+  @override
+  _i5.Future<void> clearWidgetData() =>
+      (super.noSuchMethod(
+            Invocation.method(#clearWidgetData, []),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
 }

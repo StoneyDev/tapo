@@ -6,8 +6,9 @@ import 'package:tapo/core/klap_crypto.dart';
 import 'package:tapo/models/tapo_device.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
+import 'package:tapo/services/widget_data_service.dart';
 
-@GenerateMocks([SecureStorageService, TapoService, FlutterSecureStorage])
+@GenerateMocks([SecureStorageService, TapoService, FlutterSecureStorage, WidgetDataService])
 void main() {}
 
 class TestFixtures {
