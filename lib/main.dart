@@ -9,8 +9,9 @@ import 'package:tapo/views/config_screen.dart';
 import 'package:tapo/views/home_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   setupLocator();
-  HomeWidget.setAppGroupId('group.com.tapo.tapo');
+  HomeWidget.setAppGroupId('group.stoneydev.tapo');
   HomeWidget.registerInteractivityCallback(widgetBackgroundCallback);
   runApp(const MyApp());
 }
@@ -66,8 +67,6 @@ class _StartupScreenState extends State<_StartupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
