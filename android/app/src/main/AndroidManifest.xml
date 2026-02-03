@@ -49,6 +49,24 @@
                 android:resource="@xml/widget_info" />
         </receiver>
 
+        <!-- Multi-plug list widget -->
+        <receiver
+            android:name=".TapoListWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_list" />
+        </receiver>
+
+        <!-- List widget RemoteViews service -->
+        <service
+            android:name=".TapoListWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="false" />
+
         <!-- home_widget background receiver for Dart callbacks -->
         <receiver
             android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver"
