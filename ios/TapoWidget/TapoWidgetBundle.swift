@@ -5,5 +5,6 @@ import SwiftUI
 struct TapoWidgetBundle: WidgetBundle {
     var body: some Widget {
         TapoWidget()
+        TapoListWidget()
     }
 }

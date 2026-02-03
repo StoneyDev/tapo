@@ -101,3 +101,104 @@ struct TapoWidget: Widget {
         .supportedFamilies([.systemSmall])
     }
 }
+
+// MARK: - List Widget (All Plugs)
+
+struct DeviceListEntry: TimelineEntry {
+    let date: Date
+    let devices: [(model: String, ip: String, deviceOn: Bool)]
+}
+
+struct TapoListWidgetProvider: TimelineProvider {
+    func placeholder(in context: Context) -> DeviceListEntry {
+        DeviceListEntry(date: Date(), devices: [
+            (model: "P110", ip: "192.168.1.1", deviceOn: true),
+            (model: "P100", ip: "192.168.1.2", deviceOn: false),
+        ])
+    }
+
+    func getSnapshot(in context: Context, completion: @escaping (DeviceListEntry) -> Void) {
+        completion(getEntry())
+    }
+
+    func getTimeline(in context: Context, completion: @escaping (Timeline<DeviceListEntry>) -> Void) {
+        let entry = getEntry()
+        completion(Timeline(entries: [entry], policy: .never))
+    }
+
+    private func getEntry() -> DeviceListEntry {
+        let userDefaults = UserDefaults(suiteName: "group.com.tapo.tapo")
+        guard let jsonString = userDefaults?.string(forKey: "devices"),
+              let data = jsonString.data(using: .utf8),
+              let devices = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+              !devices.isEmpty else {
+            return DeviceListEntry(date: Date(), devices: [])
+        }
+
+        let parsed = devices.compactMap { device -> (model: String, ip: String, deviceOn: Bool)? in
+            guard let ip = device["ip"] as? String,
+                  let model = device["model"] as? String else { return nil }
+            let deviceOn = device["deviceOn"] as? Bool ?? false
+            return (model: model, ip: ip, deviceOn: deviceOn)
+        }
+
+        return DeviceListEntry(date: Date(), devices: parsed)
+    }
+}
+
+struct TapoListWidgetEntryView: View {
+    var entry: DeviceListEntry
+
+    private let deepPurple = Color(red: 103.0/255.0, green: 58.0/255.0, blue: 183.0/255.0)
+    private let grey = Color(red: 158.0/255.0, green: 158.0/255.0, blue: 183.0/255.0)
+
+    var body: some View {
+        if entry.devices.isEmpty {
+            Text("No plugs available")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .containerBackground(for: .widget) {
+                    Color(.systemBackground)
+                }
+        } else {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Tapo Plugs")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .padding(.bottom, 2)
+                ForEach(entry.devices, id: \.ip) { device in
+                    Link(destination: URL(string: "tapotoggle://toggle?ip=\(device.ip)")!) {
+                        HStack {
+                            Circle()
+                                .fill(device.deviceOn ? deepPurple : grey)
+                                .frame(width: 10, height: 10)
+                            Text(device.model)
+                                .font(.subheadline)
+                                .foregroundColor(.primary)
+                            Spacer()
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding()
+            .containerBackground(for: .widget) {
+                Color(.systemBackground)
+            }
+        }
+    }
+}
+
+struct TapoListWidget: Widget {
+    let kind: String = "TapoListWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: TapoListWidgetProvider()) { entry in
+            TapoListWidgetEntryView(entry: entry)
+        }
+        .configurationDisplayName("Tapo Plugs")
+        .description("View and toggle all Tapo smart plugs.")
+        .supportedFamilies([.systemMedium, .systemLarge])
+    }
+}
