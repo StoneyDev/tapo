@@ -168,10 +168,7 @@ void main() {
       });
 
       test('returns null on error_code != 0', () async {
-        client.mockResponse = {
-          'error_code': -1,
-          'result': null,
-        };
+        client.mockResponse = {'error_code': -1, 'result': null};
 
         final result = await client.getDeviceInfo();
 
@@ -187,10 +184,7 @@ void main() {
       });
 
       test('returns null when result is null', () async {
-        client.mockResponse = {
-          'error_code': 0,
-          'result': null,
-        };
+        client.mockResponse = {'error_code': 0, 'result': null};
 
         final result = await client.getDeviceInfo();
 

@@ -32,10 +32,7 @@ void main() {
     test('isEstablished is false initially', () {
       final session = TpapSession(
         deviceIp: '192.168.1.100',
-        credentials: TpapCredentials(
-          email: 'test@test.com',
-          password: 'pass',
-        ),
+        credentials: TpapCredentials(email: 'test@test.com', password: 'pass'),
       );
 
       expect(session.isEstablished, isFalse);
@@ -44,10 +41,7 @@ void main() {
     test('request returns null when not established', () async {
       final session = TpapSession(
         deviceIp: '192.168.1.100',
-        credentials: TpapCredentials(
-          email: 'test@test.com',
-          password: 'pass',
-        ),
+        credentials: TpapCredentials(email: 'test@test.com', password: 'pass'),
       );
 
       final result = await session.request({'method': 'get_device_info'});
@@ -57,10 +51,7 @@ void main() {
     test('close can be called safely when not connected', () async {
       final session = TpapSession(
         deviceIp: '192.168.1.100',
-        credentials: TpapCredentials(
-          email: 'test@test.com',
-          password: 'pass',
-        ),
+        credentials: TpapCredentials(email: 'test@test.com', password: 'pass'),
       );
 
       // Should not throw

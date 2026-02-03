@@ -48,9 +48,9 @@ void main() {
       });
 
       test('returns null when result key is missing', () async {
-        when(mockSession.request(any)).thenAnswer(
-          (_) async => {'error_code': 0},
-        );
+        when(
+          mockSession.request(any),
+        ).thenAnswer((_) async => {'error_code': 0});
 
         final result = await client.getDeviceInfo();
 
@@ -60,25 +60,31 @@ void main() {
 
     group('setDeviceOn', () {
       test('sends correct request to turn on', () async {
-        when(mockSession.request({
-          'method': 'set_device_info',
-          'params': {'device_on': true},
-        })).thenAnswer((_) async => {'error_code': 0});
+        when(
+          mockSession.request({
+            'method': 'set_device_info',
+            'params': {'device_on': true},
+          }),
+        ).thenAnswer((_) async => {'error_code': 0});
 
         final result = await client.setDeviceOn(on: true);
 
         expect(result, isTrue);
-        verify(mockSession.request({
-          'method': 'set_device_info',
-          'params': {'device_on': true},
-        })).called(1);
+        verify(
+          mockSession.request({
+            'method': 'set_device_info',
+            'params': {'device_on': true},
+          }),
+        ).called(1);
       });
 
       test('sends correct request to turn off', () async {
-        when(mockSession.request({
-          'method': 'set_device_info',
-          'params': {'device_on': false},
-        })).thenAnswer((_) async => {'error_code': 0});
+        when(
+          mockSession.request({
+            'method': 'set_device_info',
+            'params': {'device_on': false},
+          }),
+        ).thenAnswer((_) async => {'error_code': 0});
 
         final result = await client.setDeviceOn(on: false);
 
@@ -125,9 +131,9 @@ void main() {
       });
 
       test('returns null when result key is missing', () async {
-        when(mockSession.request(any)).thenAnswer(
-          (_) async => {'error_code': 0},
-        );
+        when(
+          mockSession.request(any),
+        ).thenAnswer((_) async => {'error_code': 0});
 
         final result = await client.getEnergyUsage();
 

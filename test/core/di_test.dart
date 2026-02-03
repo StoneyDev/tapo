@@ -34,23 +34,25 @@ void main() {
 
       // Verify singleton behavior
       expect(
-        identical(testGetIt<SecureStorageService>(),
-            testGetIt<SecureStorageService>()),
+        identical(
+          testGetIt<SecureStorageService>(),
+          testGetIt<SecureStorageService>(),
+        ),
         isTrue,
       );
       expect(
-        identical(testGetIt<WidgetDataService>(),
-            testGetIt<WidgetDataService>()),
+        identical(
+          testGetIt<WidgetDataService>(),
+          testGetIt<WidgetDataService>(),
+        ),
         isTrue,
       );
       expect(
-        identical(testGetIt<ConfigViewModel>(),
-            testGetIt<ConfigViewModel>()),
+        identical(testGetIt<ConfigViewModel>(), testGetIt<ConfigViewModel>()),
         isTrue,
       );
       expect(
-        identical(testGetIt<HomeViewModel>(),
-            testGetIt<HomeViewModel>()),
+        identical(testGetIt<HomeViewModel>(), testGetIt<HomeViewModel>()),
         isTrue,
       );
     });
@@ -62,8 +64,7 @@ void main() {
 
       expect(testGetIt.isRegistered<TapoService>(), isTrue);
       expect(
-        identical(
-            testGetIt<TapoService>(), testGetIt<TapoService>()),
+        identical(testGetIt<TapoService>(), testGetIt<TapoService>()),
         isTrue,
       );
     });

@@ -204,10 +204,7 @@ void main() {
 
       test('generates correct authHash from credentials', () {
         // Verify generateAuthHash doesn't throw
-        generateAuthHash(
-          TestFixtures.testEmail,
-          TestFixtures.testPassword,
-        );
+        generateAuthHash(TestFixtures.testEmail, TestFixtures.testPassword);
 
         final service = TapoService.fromCredentials(
           TestFixtures.testEmail,
@@ -319,27 +316,27 @@ void main() {
       test('returns offline device when getDeviceInfo returns null', () async {
         service.klapHandshakeSuccess = true;
         await service.connectToDevice(TestFixtures.testDeviceIp);
-        service.mockClients[TestFixtures.testDeviceIp]!
-            .deviceInfoResponse = null;
+        service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse =
+            null;
 
-        final device =
-            await service.getDeviceState(TestFixtures.testDeviceIp);
+        final device = await service.getDeviceState(TestFixtures.testDeviceIp);
 
         expect(device.isOnline, isFalse);
       });
 
       test(
-          'disconnects and returns offline when getDeviceInfo fails',
-          () async {
-        service.klapHandshakeSuccess = true;
-        await service.connectToDevice(TestFixtures.testDeviceIp);
-        service.mockClients[TestFixtures.testDeviceIp]!
-            .deviceInfoResponse = null;
+        'disconnects and returns offline when getDeviceInfo fails',
+        () async {
+          service.klapHandshakeSuccess = true;
+          await service.connectToDevice(TestFixtures.testDeviceIp);
+          service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse =
+              null;
 
-        await service.getDeviceState(TestFixtures.testDeviceIp);
+          await service.getDeviceState(TestFixtures.testDeviceIp);
 
-        expect(service.hasSession(TestFixtures.testDeviceIp), isFalse);
-      });
+          expect(service.hasSession(TestFixtures.testDeviceIp), isFalse);
+        },
+      );
 
       test('auto-connects if not already connected', () async {
         service.klapHandshakeSuccess = true;
@@ -385,8 +382,7 @@ void main() {
       test('toggles device on to off', () async {
         service.klapHandshakeSuccess = true;
         await service.connectToDevice(TestFixtures.testDeviceIp);
-        service.mockClients[TestFixtures.testDeviceIp]!
-            .deviceInfoResponse =
+        service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse =
             TestFixtures.deviceInfoResponse();
 
         final result = await service.toggleDevice(TestFixtures.testDeviceIp);
@@ -398,8 +394,7 @@ void main() {
       test('toggles device off to on', () async {
         service.klapHandshakeSuccess = true;
         await service.connectToDevice(TestFixtures.testDeviceIp);
-        service.mockClients[TestFixtures.testDeviceIp]!
-            .deviceInfoResponse =
+        service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse =
             TestFixtures.deviceInfoResponse(deviceOn: false);
 
         final result = await service.toggleDevice(TestFixtures.testDeviceIp);
@@ -418,15 +413,11 @@ void main() {
         expect(result.isOnline, isFalse);
       });
 
-      test('returns offline state when setDeviceOn fails',
-          () async {
+      test('returns offline state when setDeviceOn fails', () async {
         service.klapHandshakeSuccess = true;
-        await service.connectToDevice(
-          TestFixtures.testDeviceIp,
-        );
+        await service.connectToDevice(TestFixtures.testDeviceIp);
         service.mockClients[TestFixtures.testDeviceIp]!
-          ..deviceInfoResponse =
-              TestFixtures.deviceInfoResponse()
+          ..deviceInfoResponse = TestFixtures.deviceInfoResponse()
           ..setDeviceOnSuccess = false;
 
         final result = await service.toggleDevice(TestFixtures.testDeviceIp);
@@ -436,12 +427,9 @@ void main() {
 
       test('disconnects when setDeviceOn fails', () async {
         service.klapHandshakeSuccess = true;
-        await service.connectToDevice(
-          TestFixtures.testDeviceIp,
-        );
+        await service.connectToDevice(TestFixtures.testDeviceIp);
         service.mockClients[TestFixtures.testDeviceIp]!
-          ..deviceInfoResponse =
-              TestFixtures.deviceInfoResponse()
+          ..deviceInfoResponse = TestFixtures.deviceInfoResponse()
           ..setDeviceOnSuccess = false;
 
         await service.toggleDevice(TestFixtures.testDeviceIp);

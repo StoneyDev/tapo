@@ -271,14 +271,11 @@ void main() {
       });
 
       test('first 12 bytes are base IV', () {
-        session.setIv(Uint8List.fromList(
-          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-        ));
-        final iv = session.generateIv();
-        expect(
-          iv.sublist(0, 12),
-          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        session.setIv(
+          Uint8List.fromList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
         );
+        final iv = session.generateIv();
+        expect(iv.sublist(0, 12), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
       });
 
       test('last 4 bytes are seq as big-endian int32', () {
@@ -325,9 +322,9 @@ void main() {
         );
 
         final result = await realSession.handshake().timeout(
-              const Duration(seconds: 2),
-              onTimeout: () => false,
-            );
+          const Duration(seconds: 2),
+          onTimeout: () => false,
+        );
 
         expect(result, isFalse);
         expect(realSession.isEstablished, isFalse);

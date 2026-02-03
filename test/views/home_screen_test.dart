@@ -14,23 +14,20 @@ import '../helpers/test_utils.dart';
 /// Note: This tests UI behavior in response to
 /// ViewModel state changes. The actual ViewModel logic
 /// is tested in home_viewmodel_test.dart.
-class MockHomeViewModel extends ChangeNotifier
-    implements HomeViewModel {
+class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
   List<TapoDevice> _devices = [];
   bool _isLoading = false;
   String? _errorMessage;
   final Set<String> _togglingDevices = {};
 
   @override
-  List<TapoDevice> get devices =>
-      List.unmodifiable(_devices);
+  List<TapoDevice> get devices => List.unmodifiable(_devices);
   @override
   bool get isLoading => _isLoading;
   @override
   String? get errorMessage => _errorMessage;
   @override
-  bool isToggling(String ip) =>
-      _togglingDevices.contains(ip);
+  bool isToggling(String ip) => _togglingDevices.contains(ip);
 
   // State setters
   void setDevices(List<TapoDevice> devices) {
@@ -48,13 +45,8 @@ class MockHomeViewModel extends ChangeNotifier
     notifyListeners();
   }
 
-  void setToggling(
-    String ip, {
-    required bool toggling,
-  }) {
-    toggling
-        ? _togglingDevices.add(ip)
-        : _togglingDevices.remove(ip);
+  void setToggling(String ip, {required bool toggling}) {
+    toggling ? _togglingDevices.add(ip) : _togglingDevices.remove(ip);
     notifyListeners();
   }
 
@@ -67,8 +59,7 @@ class MockHomeViewModel extends ChangeNotifier
   String? lastRemovedIp;
 
   @override
-  Future<void> loadDevices() async =>
-      loadDevicesCallCount++;
+  Future<void> loadDevices() async => loadDevicesCallCount++;
   @override
   Future<void> refresh() async => refreshCallCount++;
   @override
@@ -85,35 +76,27 @@ class MockHomeViewModel extends ChangeNotifier
 }
 
 /// Mock SecureStorageService for logout testing
-class MockSecureStorageService
-    implements SecureStorageService {
+class MockSecureStorageService implements SecureStorageService {
   int clearCredentialsCallCount = 0;
   int clearDeviceIpsCallCount = 0;
 
   @override
-  Future<void> clearCredentials() async =>
-      clearCredentialsCallCount++;
+  Future<void> clearCredentials() async => clearCredentialsCallCount++;
   @override
-  Future<void> clearDeviceIps() async =>
-      clearDeviceIpsCallCount++;
+  Future<void> clearDeviceIps() async => clearDeviceIpsCallCount++;
   @override
-  Future<({String? email, String? password})>
-      getCredentials() async =>
-          (email: null, password: null);
+  Future<({String? email, String? password})> getCredentials() async =>
+      (email: null, password: null);
   @override
   Future<List<String>> getDeviceIps() async => [];
   @override
   Future<bool> hasCredentials() async => false;
   @override
-  Future<void> saveCredentials(
-    String email,
-    String password,
-  ) async {}
+  Future<void> saveCredentials(String email, String password) async {}
   @override
   Future<void> saveDeviceIps(List<String> ips) async {}
   @override
-  dynamic noSuchMethod(Invocation invocation) =>
-      super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 /// Mock TapoService for logout testing
@@ -123,8 +106,7 @@ class MockTapoService implements TapoService {
   @override
   void disconnectAll() => disconnectAllCallCount++;
   @override
-  dynamic noSuchMethod(Invocation invocation) =>
-      super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
@@ -141,9 +123,7 @@ void main() {
 
     getIt
       ..registerSingleton<HomeViewModel>(mockViewModel)
-      ..registerSingleton<SecureStorageService>(
-        mockStorageService,
-      )
+      ..registerSingleton<SecureStorageService>(mockStorageService)
       ..registerSingleton<TapoService>(mockTapoService);
   });
 
@@ -151,115 +131,71 @@ void main() {
     await getIt.reset();
   });
 
-  Widget buildTestWidget({
-    bool withNavigation = false,
-  }) {
+  Widget buildTestWidget({bool withNavigation = false}) {
     if (withNavigation) {
       return MaterialApp(
         initialRoute: '/home',
         routes: {
           '/home': (_) => const HomeScreen(),
-          '/config': (_) => const Scaffold(
-                body: Text('Config Screen'),
-              ),
+          '/config': (_) => const Scaffold(body: Text('Config Screen')),
         },
       );
     }
-    return const MaterialApp(
-      home: HomeScreen(),
-    );
+    return const MaterialApp(home: HomeScreen());
   }
 
   group('HomeScreen', () {
     group('loading state', () {
-      testWidgets(
-        'shows spinner when loading, hides otherwise',
-        (tester) async {
-          mockViewModel.setIsLoading(loading: true);
-          await tester.pumpWidget(buildTestWidget());
-          await tester.pump();
-          expect(
-            find.byType(CircularProgressIndicator),
-            findsOneWidget,
-          );
+      testWidgets('shows spinner when loading, hides otherwise', (
+        tester,
+      ) async {
+        mockViewModel.setIsLoading(loading: true);
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pump();
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-          mockViewModel
-            ..setIsLoading(loading: false)
-            ..setDevices([]);
-          await tester.pumpAndSettle();
-          expect(
-            find.byType(CircularProgressIndicator),
-            findsNothing,
-          );
-        },
-      );
+        mockViewModel
+          ..setIsLoading(loading: false)
+          ..setDevices([]);
+        await tester.pumpAndSettle();
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+      });
     });
 
     group('device list', () {
-      testWidgets(
-        'renders PlugCards for each device',
-        (tester) async {
-          mockViewModel.setDevices([
-            TestFixtures.onlineDevice(
-              ip: '10.0.0.1',
-              nickname: 'Device 1',
-            ),
-            TestFixtures.onlineDevice(
-              ip: '10.0.0.2',
-              nickname: 'Device 2',
-            ),
-          ]);
-          await tester.pumpWidget(buildTestWidget());
-          await tester.pumpAndSettle();
+      testWidgets('renders PlugCards for each device', (tester) async {
+        mockViewModel.setDevices([
+          TestFixtures.onlineDevice(ip: '10.0.0.1', nickname: 'Device 1'),
+          TestFixtures.onlineDevice(ip: '10.0.0.2', nickname: 'Device 2'),
+        ]);
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
 
-          expect(
-            find.byType(PlugCard),
-            findsNWidgets(2),
-          );
-          expect(
-            find.text('Device 1'),
-            findsOneWidget,
-          );
-          expect(
-            find.text('Device 2'),
-            findsOneWidget,
-          );
-        },
-      );
+        expect(find.byType(PlugCard), findsNWidgets(2));
+        expect(find.text('Device 1'), findsOneWidget);
+        expect(find.text('Device 2'), findsOneWidget);
+      });
 
-      testWidgets(
-        'displays empty state message when no devices',
-        (tester) async {
-          mockViewModel.setDevices([]);
-          await tester.pumpWidget(buildTestWidget());
-          await tester.pumpAndSettle();
+      testWidgets('displays empty state message when no devices', (
+        tester,
+      ) async {
+        mockViewModel.setDevices([]);
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
 
-          expect(
-            find.text('No devices configured'),
-            findsOneWidget,
-          );
-        },
-      );
+        expect(find.text('No devices configured'), findsOneWidget);
+      });
 
-      testWidgets(
-        'displays error message with retry button',
-        (tester) async {
-          mockViewModel.setErrorMessage(
-            'Connection failed',
-          );
-          await tester.pumpWidget(buildTestWidget());
-          await tester.pumpAndSettle();
+      testWidgets('displays error message with retry button', (tester) async {
+        mockViewModel.setErrorMessage('Connection failed');
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
 
-          expect(
-            find.text('Connection failed'),
-            findsOneWidget,
-          );
-          expect(find.text('Retry'), findsOneWidget);
-        },
-      );
+        expect(find.text('Connection failed'), findsOneWidget);
+        expect(find.text('Retry'), findsOneWidget);
+      });
 
-      testWidgets('retry button calls refresh',
-          (tester) async {
+      testWidgets('retry button calls refresh', (tester) async {
         mockViewModel.setErrorMessage('Error');
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
@@ -272,19 +208,13 @@ void main() {
     });
 
     group('pull to refresh', () {
-      testWidgets('pull down triggers refresh',
-          (tester) async {
-        mockViewModel.setDevices([
-          TestFixtures.onlineDevice(ip: '10.0.0.1'),
-        ]);
+      testWidgets('pull down triggers refresh', (tester) async {
+        mockViewModel.setDevices([TestFixtures.onlineDevice(ip: '10.0.0.1')]);
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
         // Perform pull to refresh
-        await tester.drag(
-          find.byType(ListView),
-          const Offset(0, 300),
-        );
+        await tester.drag(find.byType(ListView), const Offset(0, 300));
         await tester.pumpAndSettle();
 
         expect(mockViewModel.refreshCallCount, 1);
@@ -292,103 +222,56 @@ void main() {
     });
 
     group('logout', () {
-      testWidgets(
-        'clears credentials, disconnects, navigates',
-        (tester) async {
-          mockViewModel.setDevices([]);
-          await tester.pumpWidget(
-            buildTestWidget(withNavigation: true),
-          );
-          await tester.pumpAndSettle();
+      testWidgets('clears credentials, disconnects, navigates', (tester) async {
+        mockViewModel.setDevices([]);
+        await tester.pumpWidget(buildTestWidget(withNavigation: true));
+        await tester.pumpAndSettle();
 
-          expect(
-            find.byIcon(Icons.logout),
-            findsOneWidget,
-          );
+        expect(find.byIcon(Icons.logout), findsOneWidget);
 
-          await tester.tap(find.byIcon(Icons.logout));
-          await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.logout));
+        await tester.pumpAndSettle();
 
-          expect(
-            mockStorageService
-                .clearCredentialsCallCount,
-            1,
-          );
-          expect(
-            mockStorageService.clearDeviceIpsCallCount,
-            1,
-          );
-          expect(
-            mockTapoService.disconnectAllCallCount,
-            1,
-          );
-          expect(
-            find.text('Config Screen'),
-            findsOneWidget,
-          );
-        },
-      );
+        expect(mockStorageService.clearCredentialsCallCount, 1);
+        expect(mockStorageService.clearDeviceIpsCallCount, 1);
+        expect(mockTapoService.disconnectAllCallCount, 1);
+        expect(find.text('Config Screen'), findsOneWidget);
+      });
     });
 
     group('device interactions', () {
-      testWidgets(
-        'device toggle triggers toggleDevice',
-        (tester) async {
-          mockViewModel.setDevices([
-            TestFixtures.onlineDevice(
-              ip: '10.0.0.1',
-              deviceOn: false,
-            ),
-          ]);
-          await tester.pumpWidget(buildTestWidget());
-          await tester.pumpAndSettle();
+      testWidgets('device toggle triggers toggleDevice', (tester) async {
+        mockViewModel.setDevices([
+          TestFixtures.onlineDevice(ip: '10.0.0.1', deviceOn: false),
+        ]);
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
 
-          // Tap the switch to toggle
-          await tester.tap(find.byType(Switch));
-          await tester.pump();
+        // Tap the switch to toggle
+        await tester.tap(find.byType(Switch));
+        await tester.pump();
 
-          expect(
-            mockViewModel.toggleDeviceCallCount,
-            1,
-          );
-          expect(
-            mockViewModel.lastToggledIp,
-            '10.0.0.1',
-          );
-        },
-      );
+        expect(mockViewModel.toggleDeviceCallCount, 1);
+        expect(mockViewModel.lastToggledIp, '10.0.0.1');
+      });
 
-      testWidgets(
-        'isToggling state passed to PlugCard',
-        (tester) async {
-          mockViewModel
-            ..setDevices([
-              TestFixtures.onlineDevice(
-                ip: '10.0.0.1',
-              ),
-            ])
-            ..setToggling(
-              '10.0.0.1',
-              toggling: true,
-            );
-          await tester.pumpWidget(buildTestWidget());
-          // Use pump() instead of pumpAndSettle()
-          // because CircularProgressIndicator animates
-          await tester.pump();
+      testWidgets('isToggling state passed to PlugCard', (tester) async {
+        mockViewModel
+          ..setDevices([TestFixtures.onlineDevice(ip: '10.0.0.1')])
+          ..setToggling('10.0.0.1', toggling: true);
+        await tester.pumpWidget(buildTestWidget());
+        // Use pump() instead of pumpAndSettle()
+        // because CircularProgressIndicator animates
+        await tester.pump();
 
-          // When toggling, PlugCard shows spinner
-          expect(
-            find.byType(CircularProgressIndicator),
-            findsOneWidget,
-          );
-          expect(find.byType(Switch), findsNothing);
-        },
-      );
+        // When toggling, PlugCard shows spinner
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(find.byType(Switch), findsNothing);
+      });
     });
 
     group('app lifecycle', () {
-      testWidgets('app resume triggers refresh',
-          (tester) async {
+      testWidgets('app resume triggers refresh', (tester) async {
         mockViewModel.setDevices([]);
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
@@ -407,22 +290,13 @@ void main() {
     });
 
     group('initialization', () {
-      testWidgets(
-        'renders title and calls loadDevices',
-        (tester) async {
-          await tester.pumpWidget(buildTestWidget());
-          await tester.pump();
+      testWidgets('renders title and calls loadDevices', (tester) async {
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pump();
 
-          expect(
-            find.text('Tapo Devices'),
-            findsOneWidget,
-          );
-          expect(
-            mockViewModel.loadDevicesCallCount,
-            1,
-          );
-        },
-      );
+        expect(find.text('Tapo Devices'), findsOneWidget);
+        expect(mockViewModel.loadDevicesCallCount, 1);
+      });
     });
   });
 }

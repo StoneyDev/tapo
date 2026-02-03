@@ -58,16 +58,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _logout(BuildContext context) async {
-    // Disconnect all active sessions first
-    final getIt = GetIt.instance;
-    if (getIt.isRegistered<TapoService>()) {
-      getIt<TapoService>().disconnectAll();
-      getIt.unregister<TapoService>();
+    final locator = GetIt.instance;
+    if (locator.isRegistered<TapoService>()) {
+      locator<TapoService>().disconnectAll();
+      locator.unregister<TapoService>();
     }
 
     final storage = di<SecureStorageService>();
     await storage.clearCredentials();
     await storage.clearDeviceIps();
+
     if (context.mounted) {
       await Navigator.pushReplacementNamed(context, '/config');
     }
@@ -88,10 +88,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
             const SizedBox(height: 16),
-            FilledButton(
-              onPressed: vm.refresh,
-              child: const Text('Retry'),
-            ),
+            FilledButton(onPressed: vm.refresh, child: const Text('Retry')),
           ],
         ),
       );

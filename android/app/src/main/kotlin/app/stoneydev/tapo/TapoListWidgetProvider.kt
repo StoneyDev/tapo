@@ -1,4 +1,4 @@
-package com.tapo.tapo
+package app.stoneydev.tapo
 
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider

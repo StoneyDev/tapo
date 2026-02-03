@@ -32,12 +32,14 @@ void main() {
 
     // Stub widget data service methods by default
     when(mockWidgetDataService.saveAllDevices(any)).thenAnswer((_) async {});
-    when(mockWidgetDataService.saveDeviceState(
-      ip: anyNamed('ip'),
-      model: anyNamed('model'),
-      deviceOn: anyNamed('deviceOn'),
-      isOnline: anyNamed('isOnline'),
-    )).thenAnswer((_) async {});
+    when(
+      mockWidgetDataService.saveDeviceState(
+        ip: anyNamed('ip'),
+        model: anyNamed('model'),
+        deviceOn: anyNamed('deviceOn'),
+        isOnline: anyNamed('isOnline'),
+      ),
+    ).thenAnswer((_) async {});
 
     // Now create ViewModel - it will use the registered mocks
     viewModel = HomeViewModel();
@@ -57,61 +59,47 @@ void main() {
     });
 
     group('loadDevices', () {
-      test('fetches IPs from storage and device states from service',
-          () async {
-        when(mockStorageService.getDeviceIps()).thenAnswer(
-          (_) async => [TestFixtures.testDeviceIp],
-        );
-        when(mockTapoService.getDeviceState(
-          TestFixtures.testDeviceIp,
-        )).thenAnswer(
-          (_) async => TestFixtures.onlineDevice(),
-        );
+      test('fetches IPs from storage and device states from service', () async {
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
 
         await viewModel.loadDevices();
 
         expect(viewModel.devices.length, 1);
-        expect(
-          viewModel.devices.first.ip,
-          TestFixtures.testDeviceIp,
-        );
-        verify(mockStorageService.getDeviceIps())
-            .called(1);
-        verify(mockTapoService.getDeviceState(
-          TestFixtures.testDeviceIp,
-        )).called(1);
+        expect(viewModel.devices.first.ip, TestFixtures.testDeviceIp);
+        verify(mockStorageService.getDeviceIps()).called(1);
+        verify(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).called(1);
       });
 
-      test('fetches multiple devices in parallel',
-          () async {
+      test('fetches multiple devices in parallel', () async {
         when(mockStorageService.getDeviceIps()).thenAnswer(
-          (_) async => [
-            TestFixtures.testDeviceIp,
-            TestFixtures.testDeviceIp2,
-          ],
+          (_) async => [TestFixtures.testDeviceIp, TestFixtures.testDeviceIp2],
         );
-        when(mockTapoService.getDeviceState(
-          TestFixtures.testDeviceIp,
-        )).thenAnswer(
-          (_) async => TestFixtures.onlineDevice(),
-        );
-        when(mockTapoService.getDeviceState(
-          TestFixtures.testDeviceIp2,
-        )).thenAnswer(
-          (_) async => TestFixtures.onlineDevice(
-            ip: TestFixtures.testDeviceIp2,
-          ),
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp2),
+        ).thenAnswer(
+          (_) async =>
+              TestFixtures.onlineDevice(ip: TestFixtures.testDeviceIp2),
         );
 
         await viewModel.loadDevices();
 
         expect(viewModel.devices.length, 2);
-        verify(mockTapoService.getDeviceState(
-          TestFixtures.testDeviceIp,
-        )).called(1);
-        verify(mockTapoService.getDeviceState(
-          TestFixtures.testDeviceIp2,
-        )).called(1);
+        verify(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).called(1);
+        verify(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp2),
+        ).called(1);
       });
 
       test('handles empty IP list', () async {
@@ -124,8 +112,7 @@ void main() {
         verifyNever(mockTapoService.getDeviceState(any));
       });
 
-      test('sets isLoading true during fetch, false after',
-          () async {
+      test('sets isLoading true during fetch, false after', () async {
         var loadingDuringFetch = false;
         when(mockStorageService.getDeviceIps()).thenAnswer((_) async {
           loadingDuringFetch = viewModel.isLoading;
@@ -138,22 +125,18 @@ void main() {
         expect(viewModel.isLoading, isFalse);
       });
 
-      test('sets errorMessage when TapoService not registered',
-          () async {
+      test('sets errorMessage when TapoService not registered', () async {
         // Create new ViewModel without TapoService registered
         await getIt.reset();
         getIt
-          ..registerSingleton<SecureStorageService>(
-            mockStorageService,
-          )
-          ..registerSingleton<WidgetDataService>(
-            mockWidgetDataService,
-          );
+          ..registerSingleton<SecureStorageService>(mockStorageService)
+          ..registerSingleton<WidgetDataService>(mockWidgetDataService);
         // Intentionally not registering TapoService
         final vmWithoutTapo = HomeViewModel();
 
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
 
         await vmWithoutTapo.loadDevices();
 
@@ -162,8 +145,9 @@ void main() {
       });
 
       test('sets errorMessage on exception', () async {
-        when(mockStorageService.getDeviceIps())
-            .thenThrow(Exception('Storage error'));
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenThrow(Exception('Storage error'));
 
         await viewModel.loadDevices();
 
@@ -171,10 +155,12 @@ void main() {
       });
 
       test('syncs widget data after loading devices', () async {
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        when(mockTapoService.getDeviceState(TestFixtures.testDeviceIp))
-            .thenAnswer((_) async => TestFixtures.onlineDevice());
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
 
         await viewModel.loadDevices();
 
@@ -196,92 +182,70 @@ void main() {
       });
 
       test('returns true while device is being toggled', () async {
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        when(mockTapoService.getDeviceState(TestFixtures.testDeviceIp))
-            .thenAnswer((_) async => TestFixtures.onlineDevice());
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
 
         await viewModel.loadDevices();
 
         // Make toggleDevice take time so we can check isToggling
         var wasToggling = false;
-        when(mockTapoService.toggleDevice(
-          TestFixtures.testDeviceIp,
-        )).thenAnswer((_) async {
-          wasToggling = viewModel.isToggling(
-            TestFixtures.testDeviceIp,
-          );
+        when(
+          mockTapoService.toggleDevice(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async {
+          wasToggling = viewModel.isToggling(TestFixtures.testDeviceIp);
           return TestFixtures.onlineDevice(deviceOn: false);
         });
 
-        await viewModel.toggleDevice(
-          TestFixtures.testDeviceIp,
-        );
+        await viewModel.toggleDevice(TestFixtures.testDeviceIp);
 
         expect(wasToggling, isTrue);
-        expect(
-          viewModel.isToggling(TestFixtures.testDeviceIp),
-          isFalse,
-        );
+        expect(viewModel.isToggling(TestFixtures.testDeviceIp), isFalse);
       });
     });
 
     group('toggleDevice', () {
       setUp(() async {
-        when(mockStorageService.getDeviceIps()).thenAnswer(
-          (_) async => [TestFixtures.testDeviceIp],
-        );
-        when(mockTapoService.getDeviceState(
-          TestFixtures.testDeviceIp,
-        )).thenAnswer(
-          (_) async => TestFixtures.onlineDevice(),
-        );
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
         await viewModel.loadDevices();
       });
 
       test('calls TapoService.toggleDevice', () async {
-        when(mockTapoService.toggleDevice(
-          TestFixtures.testDeviceIp,
-        )).thenAnswer(
-          (_) async =>
-              TestFixtures.onlineDevice(deviceOn: false),
-        );
+        when(
+          mockTapoService.toggleDevice(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice(deviceOn: false));
 
-        await viewModel.toggleDevice(
-          TestFixtures.testDeviceIp,
-        );
+        await viewModel.toggleDevice(TestFixtures.testDeviceIp);
 
-        verify(mockTapoService.toggleDevice(
-          TestFixtures.testDeviceIp,
-        )).called(1);
+        verify(
+          mockTapoService.toggleDevice(TestFixtures.testDeviceIp),
+        ).called(1);
       });
 
-      test('updates device in list with toggled state',
-          () async {
+      test('updates device in list with toggled state', () async {
         expect(viewModel.devices.first.deviceOn, isTrue);
 
-        when(mockTapoService.toggleDevice(
-          TestFixtures.testDeviceIp,
-        )).thenAnswer(
-          (_) async =>
-              TestFixtures.onlineDevice(deviceOn: false),
-        );
+        when(
+          mockTapoService.toggleDevice(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice(deviceOn: false));
 
-        await viewModel.toggleDevice(
-          TestFixtures.testDeviceIp,
-        );
+        await viewModel.toggleDevice(TestFixtures.testDeviceIp);
 
         expect(viewModel.devices.first.deviceOn, isFalse);
       });
 
-      test('notifies listeners at start and end of toggle',
-          () async {
-        when(mockTapoService.toggleDevice(
-          TestFixtures.testDeviceIp,
-        )).thenAnswer(
-          (_) async =>
-              TestFixtures.onlineDevice(deviceOn: false),
-        );
+      test('notifies listeners at start and end of toggle', () async {
+        when(
+          mockTapoService.toggleDevice(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice(deviceOn: false));
 
         var notificationCount = 0;
         viewModel.addListener(() => notificationCount++);
@@ -292,23 +256,20 @@ void main() {
         expect(notificationCount, 2);
       });
 
-      test('sets errorMessage when TapoService not registered',
-          () async {
+      test('sets errorMessage when TapoService not registered', () async {
         // Create new ViewModel without TapoService registered
         await getIt.reset();
         getIt
-          ..registerSingleton<SecureStorageService>(
-            mockStorageService,
-          )
-          ..registerSingleton<WidgetDataService>(
-            mockWidgetDataService,
-          );
+          ..registerSingleton<SecureStorageService>(mockStorageService)
+          ..registerSingleton<WidgetDataService>(mockWidgetDataService);
         // Need TapoService temporarily to load devices
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
         getIt.registerSingleton<TapoService>(mockTapoService);
-        when(mockTapoService.getDeviceState(TestFixtures.testDeviceIp))
-            .thenAnswer((_) async => TestFixtures.onlineDevice());
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
 
         final vmWithoutTapo = HomeViewModel();
         await vmWithoutTapo.loadDevices();
@@ -328,116 +289,162 @@ void main() {
       });
 
       test('rate limits rapid toggles', () async {
-        when(mockTapoService.toggleDevice(
-          TestFixtures.testDeviceIp,
-        )).thenAnswer(
-          (_) async =>
-              TestFixtures.onlineDevice(deviceOn: false),
-        );
+        when(
+          mockTapoService.toggleDevice(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice(deviceOn: false));
 
         // First toggle should work
-        await viewModel.toggleDevice(
-          TestFixtures.testDeviceIp,
-        );
+        await viewModel.toggleDevice(TestFixtures.testDeviceIp);
         // Immediate second toggle should be ignored
-        await viewModel.toggleDevice(
-          TestFixtures.testDeviceIp,
-        );
+        await viewModel.toggleDevice(TestFixtures.testDeviceIp);
 
-        verify(mockTapoService.toggleDevice(
-          TestFixtures.testDeviceIp,
-        )).called(1);
+        verify(
+          mockTapoService.toggleDevice(TestFixtures.testDeviceIp),
+        ).called(1);
       });
 
       test('syncs widget data after toggle', () async {
-        when(mockTapoService.toggleDevice(
-          TestFixtures.testDeviceIp,
-        )).thenAnswer(
-          (_) async =>
-              TestFixtures.onlineDevice(deviceOn: false),
-        );
+        when(
+          mockTapoService.toggleDevice(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice(deviceOn: false));
 
         await viewModel.toggleDevice(TestFixtures.testDeviceIp);
 
-        verify(mockWidgetDataService.saveDeviceState(
-          ip: TestFixtures.testDeviceIp,
-          model: 'P110',
-          deviceOn: false,
-        )).called(1);
+        verify(
+          mockWidgetDataService.saveDeviceState(
+            ip: TestFixtures.testDeviceIp,
+            model: 'P110',
+            deviceOn: false,
+          ),
+        ).called(1);
       });
 
-      test('removes device from togglingDevices on exception', () async {
-        when(mockTapoService.toggleDevice(TestFixtures.testDeviceIp))
-            .thenThrow(Exception('Toggle failed'));
+      test('sets errorMessage on exception', () async {
+        when(
+          mockTapoService.toggleDevice(TestFixtures.testDeviceIp),
+        ).thenThrow(Exception('Toggle failed'));
 
-        // Exception bubbles up but finally block should still run
-        try {
-          await viewModel.toggleDevice(
-            TestFixtures.testDeviceIp,
-          );
-        } on Exception {
-          // Expected
-        }
+        await viewModel.toggleDevice(TestFixtures.testDeviceIp);
 
+        expect(viewModel.errorMessage, 'Failed to toggle device');
         expect(viewModel.isToggling(TestFixtures.testDeviceIp), isFalse);
+      });
+
+      test('clears errorMessage on successful toggle', () async {
+        // First trigger an error
+        when(
+          mockTapoService.toggleDevice(TestFixtures.testDeviceIp),
+        ).thenThrow(Exception('Toggle failed'));
+        await viewModel.toggleDevice(TestFixtures.testDeviceIp);
+        expect(viewModel.errorMessage, isNotNull);
+
+        // Reset cooldown by waiting or using a different device
+        // Instead, reload devices to clear rate limit state
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
+        await viewModel.loadDevices();
+
+        // Successful toggle should clear error
+        when(
+          mockTapoService.toggleDevice(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice(deviceOn: false));
+        await viewModel.toggleDevice(TestFixtures.testDeviceIp);
+
+        expect(viewModel.errorMessage, isNull);
       });
     });
 
     group('removeDevice', () {
       setUp(() async {
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        when(mockTapoService.getDeviceState(TestFixtures.testDeviceIp))
-            .thenAnswer((_) async => TestFixtures.onlineDevice());
-        when(mockStorageService.saveDeviceIps(any))
-            .thenAnswer((_) async {});
-        when(mockTapoService.disconnect(
-          TestFixtures.testDeviceIp,
-        )).thenReturn(null);
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
+        when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
+        when(
+          mockTapoService.disconnect(TestFixtures.testDeviceIp),
+        ).thenReturn(null);
         await viewModel.loadDevices();
       });
 
-      test(
-          'removes device from local list and storage, '
+      test('removes device from local list and storage, '
           'disconnects session', () async {
         expect(viewModel.devices.length, 1);
 
         var notified = false;
         viewModel.addListener(() => notified = true);
 
-        await viewModel.removeDevice(
-          TestFixtures.testDeviceIp,
-        );
+        await viewModel.removeDevice(TestFixtures.testDeviceIp);
 
         expect(viewModel.devices, isEmpty);
-        verify(mockStorageService.saveDeviceIps([]))
-            .called(1);
-        verify(mockTapoService.disconnect(
-          TestFixtures.testDeviceIp,
-        )).called(1);
+        verify(mockStorageService.saveDeviceIps([])).called(1);
+        verify(mockTapoService.disconnect(TestFixtures.testDeviceIp)).called(1);
         expect(notified, isTrue);
+      });
+
+      test('syncs widget data after removal', () async {
+        await viewModel.removeDevice(TestFixtures.testDeviceIp);
+
+        verify(mockWidgetDataService.saveAllDevices([])).called(1);
       });
     });
 
     group('refresh', () {
       test('delegates to loadDevices', () async {
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        when(mockTapoService.getDeviceState(TestFixtures.testDeviceIp))
-            .thenAnswer((_) async => TestFixtures.onlineDevice());
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
 
         await viewModel.refresh();
 
         verify(mockStorageService.getDeviceIps()).called(1);
         expect(viewModel.devices.length, 1);
       });
+
+      test('skips refresh within cooldown period', () async {
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
+
+        await viewModel.refresh();
+        // Immediate second refresh should be skipped
+        await viewModel.refresh();
+
+        verify(mockStorageService.getDeviceIps()).called(1);
+      });
+
+      test('loadDevices bypasses cooldown', () async {
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
+
+        await viewModel.loadDevices();
+        // Direct loadDevices call ignores cooldown
+        await viewModel.loadDevices();
+
+        verify(mockStorageService.getDeviceIps()).called(2);
+      });
     });
 
     group('error handling', () {
       test('errorMessage cleared on successful loadDevices', () async {
         // First trigger error
-        when(mockStorageService.getDeviceIps())
-            .thenThrow(Exception('Error'));
+        when(mockStorageService.getDeviceIps()).thenThrow(Exception('Error'));
         await viewModel.loadDevices();
         expect(viewModel.errorMessage, isNotNull);
 
@@ -451,10 +458,12 @@ void main() {
 
     group('devices immutability', () {
       test('devices returns unmodifiable list', () async {
-        when(mockStorageService.getDeviceIps())
-            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        when(mockTapoService.getDeviceState(TestFixtures.testDeviceIp))
-            .thenAnswer((_) async => TestFixtures.onlineDevice());
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
 
         await viewModel.loadDevices();
 
@@ -464,6 +473,5 @@ void main() {
         );
       });
     });
-
   });
 }

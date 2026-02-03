@@ -1,4 +1,4 @@
-package com.tapo.tapo
+package app.stoneydev.tapo
 
 import android.content.Context
 import android.content.Intent
@@ -20,12 +20,6 @@ class TapoListRemoteViewsFactory(
 ) : RemoteViewsService.RemoteViewsFactory {
 
     private val devices = mutableListOf<JSONObject>()
-
-    companion object {
-        private const val COLOR_ON = 0xFF673AB7.toInt()  // deepPurple
-        private const val COLOR_OFF = 0xFF9E9E9E.toInt() // grey
-        private const val COLOR_OFFLINE = 0xFFD32F2F.toInt() // red
-    }
 
     override fun onCreate() {
         loadDevices()
@@ -53,7 +47,7 @@ class TapoListRemoteViewsFactory(
 
             views.setTextViewText(R.id.list_item_model, model)
 
-            val color = if (!isOnline) COLOR_OFFLINE else if (deviceOn) COLOR_ON else COLOR_OFF
+            val color = WidgetColors.statusColor(isOnline, deviceOn)
             views.setInt(R.id.list_item_indicator, "setBackgroundColor", color)
             views.setInt(R.id.list_item_container, "setBackgroundColor", color)
 

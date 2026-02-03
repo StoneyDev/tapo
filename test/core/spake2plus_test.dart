@@ -96,12 +96,9 @@ void main() {
         spake.generatePublicShare(Uint8List(16), 1000);
 
         // Invalid point encoding - may throw or return null
-        final invalidShare = Uint8List.fromList(
-          [0xFF, ...List.filled(32, 0)],
-        );
+        final invalidShare = Uint8List.fromList([0xFF, ...List.filled(32, 0)]);
         try {
-          final result =
-              spake.processServerShare(invalidShare);
+          final result = spake.processServerShare(invalidShare);
           expect(result, isNull);
           // ignore: avoid_catching_errors, pointycastle throws ArgumentError
         } on ArgumentError {

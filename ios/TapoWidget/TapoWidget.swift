@@ -2,6 +2,33 @@ import WidgetKit
 import SwiftUI
 import AppIntents
 
+// MARK: - Shared Constants & Helpers
+
+private let appGroupId = "group.stoneydev.tapo"
+private let devicesKey = "devices"
+
+private let colorOn = Color(red: 103.0/255.0, green: 58.0/255.0, blue: 183.0/255.0)
+private let colorOff = Color(red: 158.0/255.0, green: 158.0/255.0, blue: 158.0/255.0)
+private let colorOffline = Color(red: 211.0/255.0, green: 47.0/255.0, blue: 47.0/255.0)
+
+private func statusColor(isOnline: Bool, deviceOn: Bool) -> Color {
+    if !isOnline { return colorOffline }
+    return deviceOn ? colorOn : colorOff
+}
+
+/// Load raw device dictionaries from shared UserDefaults.
+func loadDevicesFromStorage() -> [[String: Any]] {
+    let userDefaults = UserDefaults(suiteName: appGroupId)
+    guard let jsonString = userDefaults?.string(forKey: devicesKey),
+          let data = jsonString.data(using: .utf8),
+          let devices = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+        return []
+    }
+    return devices
+}
+
+// MARK: - Single Plug Widget
+
 struct DeviceEntry: TimelineEntry {
     let date: Date
     let model: String
@@ -29,15 +56,11 @@ struct TapoWidgetProvider: AppIntentTimelineProvider {
     }
 
     private func getEntry(for configuration: SelectDeviceIntent) -> DeviceEntry {
-        let userDefaults = UserDefaults(suiteName: "group.com.tapo.tapo")
-        guard let jsonString = userDefaults?.string(forKey: "devices"),
-              let data = jsonString.data(using: .utf8),
-              let devices = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
-              !devices.isEmpty else {
+        let devices = loadDevicesFromStorage()
+        guard !devices.isEmpty else {
             return DeviceEntry(date: Date(), model: "No device", ip: "", deviceOn: false, isOnline: true, hasDevice: false)
         }
 
-        // Find selected device by IP from intent
         let selectedIp = configuration.device?.id
         let device: [String: Any]
         if let ip = selectedIp, let found = devices.first(where: { ($0["ip"] as? String) == ip }) {
@@ -48,28 +71,26 @@ struct TapoWidgetProvider: AppIntentTimelineProvider {
             return DeviceEntry(date: Date(), model: "No device", ip: "", deviceOn: false, isOnline: true, hasDevice: false)
         }
 
-        let model = device["model"] as? String ?? "Unknown"
-        let ip = device["ip"] as? String ?? ""
-        let deviceOn = device["deviceOn"] as? Bool ?? false
-        let isOnline = device["isOnline"] as? Bool ?? true
-
-        return DeviceEntry(date: Date(), model: model, ip: ip, deviceOn: deviceOn, isOnline: isOnline, hasDevice: true)
+        return DeviceEntry(
+            date: Date(),
+            model: device["model"] as? String ?? "Unknown",
+            ip: device["ip"] as? String ?? "",
+            deviceOn: device["deviceOn"] as? Bool ?? false,
+            isOnline: device["isOnline"] as? Bool ?? true,
+            hasDevice: true
+        )
     }
 }
 
 struct TapoWidgetEntryView: View {
     var entry: DeviceEntry
 
-    private let deepPurple = Color(red: 103.0/255.0, green: 58.0/255.0, blue: 183.0/255.0)
-    private let grey = Color(red: 158.0/255.0, green: 158.0/255.0, blue: 158.0/255.0)
-    private let offline = Color(red: 211.0/255.0, green: 47.0/255.0, blue: 47.0/255.0)
-
     var body: some View {
         if entry.hasDevice && !entry.ip.isEmpty {
             Link(destination: URL(string: "tapotoggle://toggle?ip=\(entry.ip)")!) {
                 HStack {
                     Circle()
-                        .fill(!entry.isOnline ? offline : entry.deviceOn ? deepPurple : grey)
+                        .fill(statusColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn))
                         .frame(width: 12, height: 12)
                     Text(entry.model)
                         .font(.headline)
@@ -130,11 +151,8 @@ struct TapoListWidgetProvider: TimelineProvider {
     }
 
     private func getEntry() -> DeviceListEntry {
-        let userDefaults = UserDefaults(suiteName: "group.com.tapo.tapo")
-        guard let jsonString = userDefaults?.string(forKey: "devices"),
-              let data = jsonString.data(using: .utf8),
-              let devices = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
-              !devices.isEmpty else {
+        let devices = loadDevicesFromStorage()
+        guard !devices.isEmpty else {
             return DeviceListEntry(date: Date(), devices: [])
         }
 
@@ -152,10 +170,6 @@ struct TapoListWidgetProvider: TimelineProvider {
 
 struct TapoListWidgetEntryView: View {
     var entry: DeviceListEntry
-
-    private let deepPurple = Color(red: 103.0/255.0, green: 58.0/255.0, blue: 183.0/255.0)
-    private let grey = Color(red: 158.0/255.0, green: 158.0/255.0, blue: 158.0/255.0)
-    private let offline = Color(red: 211.0/255.0, green: 47.0/255.0, blue: 47.0/255.0)
 
     var body: some View {
         if entry.devices.isEmpty {
@@ -175,7 +189,7 @@ struct TapoListWidgetEntryView: View {
                     Link(destination: URL(string: "tapotoggle://toggle?ip=\(device.ip)")!) {
                         HStack {
                             Circle()
-                                .fill(!device.isOnline ? offline : device.deviceOn ? deepPurple : grey)
+                                .fill(statusColor(isOnline: device.isOnline, deviceOn: device.deviceOn))
                                 .frame(width: 10, height: 10)
                             Text(device.model)
                                 .font(.subheadline)

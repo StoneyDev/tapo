@@ -30,34 +30,25 @@ class TestFixtures {
     String nickname = 'Test Plug',
     String model = 'P110',
     bool deviceOn = true,
-  }) =>
-      TapoDevice(
-        ip: ip,
-        nickname: nickname,
-        model: model,
-        deviceOn: deviceOn,
-        isOnline: true,
-      );
+  }) => TapoDevice(
+    ip: ip,
+    nickname: nickname,
+    model: model,
+    deviceOn: deviceOn,
+    isOnline: true,
+  );
 
-  static TapoDevice offlineDevice({
-    String ip = testDeviceIp,
-  }) =>
-      TapoDevice(
-        ip: ip,
-        nickname: 'Unknown',
-        model: 'Unknown',
-        deviceOn: false,
-        isOnline: false,
-      );
+  static TapoDevice offlineDevice({String ip = testDeviceIp}) => TapoDevice(
+    ip: ip,
+    nickname: 'Unknown',
+    model: 'Unknown',
+    deviceOn: false,
+    isOnline: false,
+  );
 
   static Map<String, dynamic> deviceInfoResponse({
     String nickname = 'Test Plug',
     String model = 'P110',
     bool deviceOn = true,
-  }) =>
-      {
-        'nickname': nickname,
-        'model': model,
-        'device_on': deviceOn,
-      };
+  }) => {'nickname': nickname, 'model': model, 'device_on': deviceOn};
 }

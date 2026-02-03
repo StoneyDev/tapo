@@ -5,8 +5,8 @@ import 'package:tapo/services/secure_storage_service.dart';
 
 class ConfigViewModel extends ChangeNotifier {
   ConfigViewModel({SecureStorageService? storageService})
-      : _storageService =
-            storageService ?? GetIt.instance<SecureStorageService>();
+    : _storageService =
+          storageService ?? GetIt.instance<SecureStorageService>();
 
   final SecureStorageService _storageService;
 

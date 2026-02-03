@@ -40,8 +40,9 @@ class Spake2Plus {
   )!;
 
   // Context tag for TPAP
-  static final Uint8List _contextTag =
-      Uint8List.fromList(utf8.encode('PAKE V1'));
+  static final Uint8List _contextTag = Uint8List.fromList(
+    utf8.encode('PAKE V1'),
+  );
 
   BigInt? _x; // Ephemeral private key
   // ignore: non_constant_identifier_names, standard crypto notation
@@ -54,8 +55,9 @@ class Spake2Plus {
   /// Derive w0 and w1 from password using PBKDF2
   void _deriveW(Uint8List serverSalt, int serverIterations) {
     final effectiveSalt = serverSalt.isNotEmpty ? serverSalt : salt;
-    final effectiveIterations =
-        serverIterations > 0 ? serverIterations : iterations;
+    final effectiveIterations = serverIterations > 0
+        ? serverIterations
+        : iterations;
 
     // PBKDF2-HMAC-SHA256 to derive 80 bytes (640 bits as per RFC)
     final pbkdf2 = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64))
@@ -192,7 +194,7 @@ class Spake2Plus {
     required Uint8List w0,
   }) {
     final buffer = BytesBuilder()
-    // Length-prefixed fields
+      // Length-prefixed fields
       ..add(_lengthPrefix(context))
       ..add(context)
       ..add(_lengthPrefix(idProver))
@@ -254,8 +256,9 @@ class Spake2Plus {
   BigInt _randomBigInt(BigInt max, Random random) {
     final bytes = (max.bitLength + 7) ~/ 8;
     while (true) {
-      final randomBytes =
-          Uint8List.fromList(List.generate(bytes, (_) => random.nextInt(256)));
+      final randomBytes = Uint8List.fromList(
+        List.generate(bytes, (_) => random.nextInt(256)),
+      );
       final value = _bytesToBigInt(randomBytes);
       if (value > BigInt.zero && value < max) {
         return value;
@@ -288,5 +291,4 @@ class Spake2Plus {
     }
     return result;
   }
-
 }

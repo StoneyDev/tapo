@@ -15,26 +15,20 @@ struct DeviceItem: AppEntity {
 
 struct DeviceQuery: EntityQuery {
     func entities(for identifiers: [DeviceItem.ID]) async throws -> [DeviceItem] {
-        let all = loadDevices()
+        let all = deviceItems()
         return all.filter { identifiers.contains($0.id) }
     }
 
     func suggestedEntities() async throws -> [DeviceItem] {
-        return loadDevices()
+        return deviceItems()
     }
 
     func defaultResult() async -> DeviceItem? {
-        return loadDevices().first
+        return deviceItems().first
     }
 
-    private func loadDevices() -> [DeviceItem] {
-        let userDefaults = UserDefaults(suiteName: "group.com.tapo.tapo")
-        guard let jsonString = userDefaults?.string(forKey: "devices"),
-              let data = jsonString.data(using: .utf8),
-              let devices = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-            return []
-        }
-        return devices.compactMap { device in
+    private func deviceItems() -> [DeviceItem] {
+        loadDevicesFromStorage().compactMap { device in
             guard let ip = device["ip"] as? String,
                   let model = device["model"] as? String else { return nil }
             return DeviceItem(id: ip, model: model)

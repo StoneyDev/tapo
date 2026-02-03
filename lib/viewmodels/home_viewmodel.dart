@@ -15,6 +15,8 @@ class HomeViewModel extends ChangeNotifier {
   final Set<String> _togglingDevices = {};
   final Map<String, DateTime> _lastToggleTime = {};
   static const _toggleCooldown = Duration(milliseconds: 500);
+  DateTime? _lastLoadTime;
+  static const _loadCooldown = Duration(seconds: 2);
 
   List<TapoDevice> get devices => List.unmodifiable(_devices);
   bool get isLoading => _isLoading;
@@ -23,8 +25,15 @@ class HomeViewModel extends ChangeNotifier {
   /// Check if a specific device is currently being toggled
   bool isToggling(String ip) => _togglingDevices.contains(ip);
 
-  /// Refresh devices (alias for loadDevices)
-  Future<void> refresh() => loadDevices();
+  /// Refresh devices with cooldown to avoid redundant network calls
+  Future<void> refresh() {
+    final now = DateTime.now();
+    if (_lastLoadTime != null &&
+        now.difference(_lastLoadTime!) < _loadCooldown) {
+      return Future.value();
+    }
+    return loadDevices();
+  }
 
   /// Load all configured devices and fetch their states
   Future<void> loadDevices() async {
@@ -33,7 +42,6 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Get configured device IPs
       final ips = await _storageService.getDeviceIps();
       if (ips.isEmpty) {
         _devices = [];
@@ -42,7 +50,6 @@ class HomeViewModel extends ChangeNotifier {
         return;
       }
 
-      // Check if TapoService is registered
       if (!getIt.isRegistered<TapoService>()) {
         _errorMessage = 'Not authenticated';
         _isLoading = false;
@@ -51,12 +58,8 @@ class HomeViewModel extends ChangeNotifier {
       }
 
       final tapoService = getIt<TapoService>();
-
-      // Fetch state for all devices in parallel
       _devices = await Future.wait(ips.map(tapoService.getDeviceState));
-      _errorMessage = null;
-
-      // Sync widget data
+      _lastLoadTime = DateTime.now();
       await _widgetDataService.saveAllDevices(_devices);
     } on Exception {
       _errorMessage = 'Failed to load devices';
@@ -68,16 +71,14 @@ class HomeViewModel extends ChangeNotifier {
 
   /// Remove device from configuration
   Future<void> removeDevice(String ip) async {
-    // Remove from local list
     _devices = _devices.where((d) => d.ip != ip).toList();
     notifyListeners();
 
-    // Remove from storage
     final ips = await _storageService.getDeviceIps();
     ips.remove(ip);
     await _storageService.saveDeviceIps(ips);
+    await _widgetDataService.saveAllDevices(_devices);
 
-    // Disconnect session if exists
     if (getIt.isRegistered<TapoService>()) {
       getIt<TapoService>().disconnect(ip);
     }
@@ -91,34 +92,32 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
-    // Rate limiting - prevent rapid toggles
     final lastToggle = _lastToggleTime[ip];
     if (lastToggle != null &&
         DateTime.now().difference(lastToggle) < _toggleCooldown) {
-      return; // Ignore rapid toggle requests
+      return;
     }
     _lastToggleTime[ip] = DateTime.now();
 
-    // Find device index
     final index = _devices.indexWhere((d) => d.ip == ip);
     if (index == -1) return;
 
-    // Mark as toggling
     _togglingDevices.add(ip);
     notifyListeners();
 
     try {
-      final tapoService = getIt<TapoService>();
-      final updatedDevice = await tapoService.toggleDevice(ip);
+      final updatedDevice = await getIt<TapoService>().toggleDevice(ip);
       _devices = List.from(_devices)..[index] = updatedDevice;
+      _errorMessage = null;
 
-      // Sync widget data for toggled device
       await _widgetDataService.saveDeviceState(
         ip: updatedDevice.ip,
         model: updatedDevice.model,
         deviceOn: updatedDevice.deviceOn,
         isOnline: updatedDevice.isOnline,
       );
+    } on Exception {
+      _errorMessage = 'Failed to toggle device';
     } finally {
       _togglingDevices.remove(ip);
       notifyListeners();

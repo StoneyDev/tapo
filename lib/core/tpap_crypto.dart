@@ -133,20 +133,18 @@ class TpapSessionCipher {
   }
 
   Uint8List _decryptChaCha20Poly1305(Uint8List ciphertext, Uint8List nonce) {
-    final cipher = ChaCha20Poly1305(ChaCha7539Engine(), Poly1305())
-      ..init(
-        false,
-        AEADParameters(
-          KeyParameter(key),
-          128,
-          nonce,
-          Uint8List(0),
-        ),
-      );
+    final cipher = ChaCha20Poly1305(
+      ChaCha7539Engine(),
+      Poly1305(),
+    )..init(false, AEADParameters(KeyParameter(key), 128, nonce, Uint8List(0)));
 
     final output = Uint8List(ciphertext.length - 16);
     final len = cipher.processBytes(
-      ciphertext, 0, ciphertext.length, output, 0,
+      ciphertext,
+      0,
+      ciphertext.length,
+      output,
+      0,
     );
     cipher.doFinal(output, len);
     return output;
