@@ -263,6 +263,23 @@ void main() {
       });
     });
 
+    group('app lifecycle', () {
+      testWidgets('app resume triggers refresh', (tester) async {
+        mockViewModel.setDevices([]);
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        // Reset count since loadDevices is called in initState
+        mockViewModel.refreshCallCount = 0;
+
+        // Simulate app resume
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+        await tester.pump();
+
+        expect(mockViewModel.refreshCallCount, 1);
+      });
+    });
+
     group('initialization', () {
       testWidgets('renders title and calls loadDevices', (tester) async {
         await tester.pumpWidget(buildTestWidget());

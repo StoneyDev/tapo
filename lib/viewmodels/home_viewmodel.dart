@@ -117,6 +117,7 @@ class HomeViewModel extends ChangeNotifier {
         ip: updatedDevice.ip,
         model: updatedDevice.model,
         deviceOn: updatedDevice.deviceOn,
+        isOnline: updatedDevice.isOnline,
       );
     } finally {
       _togglingDevices.remove(ip);

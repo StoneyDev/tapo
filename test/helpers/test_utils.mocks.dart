@@ -479,12 +479,14 @@ class MockWidgetDataService extends _i1.Mock implements _i8.WidgetDataService {
     required String? ip,
     required String? model,
     required bool? deviceOn,
+    bool? isOnline = true,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#saveDeviceState, [], {
               #ip: ip,
               #model: model,
               #deviceOn: deviceOn,
+              #isOnline: isOnline,
             }),
             returnValue: _i5.Future<void>.value(),
             returnValueForMissingStub: _i5.Future<void>.value(),

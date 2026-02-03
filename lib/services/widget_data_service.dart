@@ -13,10 +13,16 @@ class WidgetDataService {
     required String ip,
     required String model,
     required bool deviceOn,
+    bool isOnline = true,
   }) async {
     final devices = await _readDevices();
     final index = devices.indexWhere((d) => d['ip'] == ip);
-    final entry = {'ip': ip, 'model': model, 'deviceOn': deviceOn};
+    final entry = {
+      'ip': ip,
+      'model': model,
+      'deviceOn': deviceOn,
+      'isOnline': isOnline,
+    };
 
     if (index >= 0) {
       devices[index] = entry;
@@ -35,6 +41,7 @@ class WidgetDataService {
             'ip': d.ip,
             'model': d.model,
             'deviceOn': d.deviceOn,
+            'isOnline': d.isOnline,
           },
         )
         .toList();

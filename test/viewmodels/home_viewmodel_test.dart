@@ -35,6 +35,7 @@ void main() {
       ip: anyNamed('ip'),
       model: anyNamed('model'),
       deviceOn: anyNamed('deviceOn'),
+      isOnline: anyNamed('isOnline'),
     )).thenAnswer((_) async {});
 
     // Now create ViewModel - it will use the registered mocks
@@ -275,6 +276,7 @@ void main() {
           ip: TestFixtures.testDeviceIp,
           model: 'P110',
           deviceOn: false,
+          isOnline: true,
         )).called(1);
       });
 

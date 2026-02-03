@@ -7,6 +7,7 @@ struct DeviceEntry: TimelineEntry {
     let model: String
     let ip: String
     let deviceOn: Bool
+    let isOnline: Bool
     let hasDevice: Bool
 }
 
@@ -15,7 +16,7 @@ struct TapoWidgetProvider: AppIntentTimelineProvider {
     typealias Intent = SelectDeviceIntent
 
     func placeholder(in context: Context) -> DeviceEntry {
-        DeviceEntry(date: Date(), model: "P110", ip: "", deviceOn: false, hasDevice: true)
+        DeviceEntry(date: Date(), model: "P110", ip: "", deviceOn: false, isOnline: true, hasDevice: true)
     }
 
     func snapshot(for configuration: SelectDeviceIntent, in context: Context) async -> DeviceEntry {
@@ -33,7 +34,7 @@ struct TapoWidgetProvider: AppIntentTimelineProvider {
               let data = jsonString.data(using: .utf8),
               let devices = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
               !devices.isEmpty else {
-            return DeviceEntry(date: Date(), model: "No device", ip: "", deviceOn: false, hasDevice: false)
+            return DeviceEntry(date: Date(), model: "No device", ip: "", deviceOn: false, isOnline: true, hasDevice: false)
         }
 
         // Find selected device by IP from intent
@@ -44,14 +45,15 @@ struct TapoWidgetProvider: AppIntentTimelineProvider {
         } else if let first = devices.first {
             device = first
         } else {
-            return DeviceEntry(date: Date(), model: "No device", ip: "", deviceOn: false, hasDevice: false)
+            return DeviceEntry(date: Date(), model: "No device", ip: "", deviceOn: false, isOnline: true, hasDevice: false)
         }
 
         let model = device["model"] as? String ?? "Unknown"
         let ip = device["ip"] as? String ?? ""
         let deviceOn = device["deviceOn"] as? Bool ?? false
+        let isOnline = device["isOnline"] as? Bool ?? true
 
-        return DeviceEntry(date: Date(), model: model, ip: ip, deviceOn: deviceOn, hasDevice: true)
+        return DeviceEntry(date: Date(), model: model, ip: ip, deviceOn: deviceOn, isOnline: isOnline, hasDevice: true)
     }
 }
 
@@ -60,13 +62,14 @@ struct TapoWidgetEntryView: View {
 
     private let deepPurple = Color(red: 103.0/255.0, green: 58.0/255.0, blue: 183.0/255.0)
     private let grey = Color(red: 158.0/255.0, green: 158.0/255.0, blue: 158.0/255.0)
+    private let offline = Color(red: 211.0/255.0, green: 47.0/255.0, blue: 47.0/255.0)
 
     var body: some View {
         if entry.hasDevice && !entry.ip.isEmpty {
             Link(destination: URL(string: "tapotoggle://toggle?ip=\(entry.ip)")!) {
                 HStack {
                     Circle()
-                        .fill(entry.deviceOn ? deepPurple : grey)
+                        .fill(!entry.isOnline ? offline : entry.deviceOn ? deepPurple : grey)
                         .frame(width: 12, height: 12)
                     Text(entry.model)
                         .font(.headline)
@@ -106,14 +109,14 @@ struct TapoWidget: Widget {
 
 struct DeviceListEntry: TimelineEntry {
     let date: Date
-    let devices: [(model: String, ip: String, deviceOn: Bool)]
+    let devices: [(model: String, ip: String, deviceOn: Bool, isOnline: Bool)]
 }
 
 struct TapoListWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> DeviceListEntry {
         DeviceListEntry(date: Date(), devices: [
-            (model: "P110", ip: "192.168.1.1", deviceOn: true),
-            (model: "P100", ip: "192.168.1.2", deviceOn: false),
+            (model: "P110", ip: "192.168.1.1", deviceOn: true, isOnline: true),
+            (model: "P100", ip: "192.168.1.2", deviceOn: false, isOnline: true),
         ])
     }
 
@@ -135,11 +138,12 @@ struct TapoListWidgetProvider: TimelineProvider {
             return DeviceListEntry(date: Date(), devices: [])
         }
 
-        let parsed = devices.compactMap { device -> (model: String, ip: String, deviceOn: Bool)? in
+        let parsed = devices.compactMap { device -> (model: String, ip: String, deviceOn: Bool, isOnline: Bool)? in
             guard let ip = device["ip"] as? String,
                   let model = device["model"] as? String else { return nil }
             let deviceOn = device["deviceOn"] as? Bool ?? false
-            return (model: model, ip: ip, deviceOn: deviceOn)
+            let isOnline = device["isOnline"] as? Bool ?? true
+            return (model: model, ip: ip, deviceOn: deviceOn, isOnline: isOnline)
         }
 
         return DeviceListEntry(date: Date(), devices: parsed)
@@ -150,7 +154,8 @@ struct TapoListWidgetEntryView: View {
     var entry: DeviceListEntry
 
     private let deepPurple = Color(red: 103.0/255.0, green: 58.0/255.0, blue: 183.0/255.0)
-    private let grey = Color(red: 158.0/255.0, green: 158.0/255.0, blue: 183.0/255.0)
+    private let grey = Color(red: 158.0/255.0, green: 158.0/255.0, blue: 158.0/255.0)
+    private let offline = Color(red: 211.0/255.0, green: 47.0/255.0, blue: 47.0/255.0)
 
     var body: some View {
         if entry.devices.isEmpty {
@@ -170,7 +175,7 @@ struct TapoListWidgetEntryView: View {
                     Link(destination: URL(string: "tapotoggle://toggle?ip=\(device.ip)")!) {
                         HStack {
                             Circle()
-                                .fill(device.deviceOn ? deepPurple : grey)
+                                .fill(!device.isOnline ? offline : device.deviceOn ? deepPurple : grey)
                                 .frame(width: 10, height: 10)
                             Text(device.model)
                                 .font(.subheadline)

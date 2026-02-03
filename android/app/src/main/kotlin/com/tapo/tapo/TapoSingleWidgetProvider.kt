@@ -25,6 +25,7 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
     companion object {
         private const val COLOR_ON = 0xFF673AB7.toInt()  // deepPurple
         private const val COLOR_OFF = 0xFF9E9E9E.toInt() // grey
+        private const val COLOR_OFFLINE = 0xFFD32F2F.toInt() // red
 
         fun updateWidget(
             context: Context,
@@ -41,6 +42,7 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
             val devicesJson = widgetData.getString("devices", null)
             var modelText = "No device"
             var deviceOn = false
+            var isOnline = true
 
             if (deviceIp != null && devicesJson != null) {
                 try {
@@ -50,6 +52,7 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
                         if (device.getString("ip") == deviceIp) {
                             modelText = device.getString("model")
                             deviceOn = device.getBoolean("deviceOn")
+                            isOnline = device.optBoolean("isOnline", true)
                             break
                         }
                     }
@@ -62,7 +65,7 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
             views.setTextViewText(R.id.widget_model_text, modelText)
 
             // Set background color based on device state
-            val bgColor = if (deviceOn) COLOR_ON else COLOR_OFF
+            val bgColor = if (!isOnline) COLOR_OFFLINE else if (deviceOn) COLOR_ON else COLOR_OFF
             views.setInt(R.id.widget_container, "setBackgroundColor", bgColor)
 
             // Set tap action to toggle device via Dart callback
