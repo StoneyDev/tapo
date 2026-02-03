@@ -1,13 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:tapo/core/di.dart';
 import 'package:tapo/services/secure_storage_service.dart';
+import 'package:tapo/services/widget_callback.dart';
 import 'package:tapo/views/config_screen.dart';
 import 'package:tapo/views/home_screen.dart';
 
 void main() {
   setupLocator();
+  HomeWidget.registerInteractivityCallback(widgetBackgroundCallback);
   runApp(const MyApp());
 }
 
