@@ -10,6 +10,7 @@ import 'package:tapo/views/home_screen.dart';
 
 void main() {
   setupLocator();
+  HomeWidget.setAppGroupId('group.com.tapo.tapo');
   HomeWidget.registerInteractivityCallback(widgetBackgroundCallback);
   runApp(const MyApp());
 }

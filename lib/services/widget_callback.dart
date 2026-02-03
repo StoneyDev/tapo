@@ -15,6 +15,7 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
   if (ip == null || ip.isEmpty) return;
 
   WidgetsFlutterBinding.ensureInitialized();
+  await HomeWidget.setAppGroupId('group.com.tapo.tapo');
 
   // Read credentials from secure storage (no DI in background isolate)
   final storage = SecureStorageService();
