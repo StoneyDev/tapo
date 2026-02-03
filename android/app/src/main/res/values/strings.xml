@@ -2,4 +2,6 @@
 <resources>
     <string name="app_name">Tapo</string>
     <string name="widget_description">Toggle a single Tapo smart plug</string>
+    <string name="config_title">Select a plug</string>
+    <string name="config_no_devices">No devices found. Open the app first to load devices.</string>
 </resources>

@@ -4,6 +4,7 @@
     android:minHeight="40dp"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/tapo_single_widget"
+    android:configure="com.tapo.tapo.TapoWidgetConfigActivity"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:description="@string/widget_description" />
