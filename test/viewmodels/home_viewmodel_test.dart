@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:mockito/mockito.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
+import 'package:tapo/services/widget_data_service.dart';
 import 'package:tapo/viewmodels/home_viewmodel.dart';
 
 import '../helpers/test_utils.dart';
@@ -11,6 +12,7 @@ import '../helpers/test_utils.mocks.dart';
 void main() {
   late MockSecureStorageService mockStorageService;
   late MockTapoService mockTapoService;
+  late MockWidgetDataService mockWidgetDataService;
   late HomeViewModel viewModel;
   final getIt = GetIt.instance;
 
@@ -20,10 +22,20 @@ void main() {
 
     mockStorageService = MockSecureStorageService();
     mockTapoService = MockTapoService();
+    mockWidgetDataService = MockWidgetDataService();
 
     // Register mocks BEFORE creating ViewModel
     getIt.registerSingleton<SecureStorageService>(mockStorageService);
     getIt.registerSingleton<TapoService>(mockTapoService);
+    getIt.registerSingleton<WidgetDataService>(mockWidgetDataService);
+
+    // Stub widget data service methods by default
+    when(mockWidgetDataService.saveAllDevices(any)).thenAnswer((_) async {});
+    when(mockWidgetDataService.saveDeviceState(
+      ip: anyNamed('ip'),
+      model: anyNamed('model'),
+      deviceOn: anyNamed('deviceOn'),
+    )).thenAnswer((_) async {});
 
     // Now create ViewModel - it will use the registered mocks
     viewModel = HomeViewModel();
@@ -100,6 +112,7 @@ void main() {
         // Create new ViewModel without TapoService registered
         await getIt.reset();
         getIt.registerSingleton<SecureStorageService>(mockStorageService);
+        getIt.registerSingleton<WidgetDataService>(mockWidgetDataService);
         // Intentionally not registering TapoService
         final vmWithoutTapo = HomeViewModel();
 
@@ -119,6 +132,25 @@ void main() {
         await viewModel.loadDevices();
 
         expect(viewModel.errorMessage, 'Failed to load devices');
+      });
+
+      test('syncs widget data after loading devices', () async {
+        when(mockStorageService.getDeviceIps())
+            .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(mockTapoService.getDeviceState(TestFixtures.testDeviceIp))
+            .thenAnswer((_) async => TestFixtures.onlineDevice());
+
+        await viewModel.loadDevices();
+
+        verify(mockWidgetDataService.saveAllDevices(any)).called(1);
+      });
+
+      test('does not sync widget data when no devices', () async {
+        when(mockStorageService.getDeviceIps()).thenAnswer((_) async => []);
+
+        await viewModel.loadDevices();
+
+        verifyNever(mockWidgetDataService.saveAllDevices(any));
       });
     });
 
@@ -196,11 +228,10 @@ void main() {
         // Create new ViewModel without TapoService registered
         await getIt.reset();
         getIt.registerSingleton<SecureStorageService>(mockStorageService);
-        // Intentionally not registering TapoService - but need to load devices first
-        // Actually, we need devices loaded to test toggle. Let's set up properly.
+        getIt.registerSingleton<WidgetDataService>(mockWidgetDataService);
+        // Need TapoService temporarily to load devices
         when(mockStorageService.getDeviceIps())
             .thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        // Re-register TapoService temporarily to load devices
         getIt.registerSingleton<TapoService>(mockTapoService);
         when(mockTapoService.getDeviceState(TestFixtures.testDeviceIp))
             .thenAnswer((_) async => TestFixtures.onlineDevice());
@@ -232,6 +263,19 @@ void main() {
         await viewModel.toggleDevice(TestFixtures.testDeviceIp);
 
         verify(mockTapoService.toggleDevice(TestFixtures.testDeviceIp)).called(1);
+      });
+
+      test('syncs widget data after toggle', () async {
+        when(mockTapoService.toggleDevice(TestFixtures.testDeviceIp))
+            .thenAnswer((_) async => TestFixtures.onlineDevice(deviceOn: false));
+
+        await viewModel.toggleDevice(TestFixtures.testDeviceIp);
+
+        verify(mockWidgetDataService.saveDeviceState(
+          ip: TestFixtures.testDeviceIp,
+          model: 'P110',
+          deviceOn: false,
+        )).called(1);
       });
 
       test('removes device from togglingDevices on exception', () async {

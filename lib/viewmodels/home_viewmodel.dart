@@ -3,9 +3,11 @@ import 'package:tapo/core/di.dart';
 import 'package:tapo/models/tapo_device.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
+import 'package:tapo/services/widget_data_service.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final SecureStorageService _storageService = getIt<SecureStorageService>();
+  final WidgetDataService _widgetDataService = getIt<WidgetDataService>();
 
   List<TapoDevice> _devices = [];
   bool _isLoading = false;
@@ -53,6 +55,9 @@ class HomeViewModel extends ChangeNotifier {
       // Fetch state for all devices in parallel
       _devices = await Future.wait(ips.map(tapoService.getDeviceState));
       _errorMessage = null;
+
+      // Sync widget data
+      await _widgetDataService.saveAllDevices(_devices);
     } on Exception {
       _errorMessage = 'Failed to load devices';
     } finally {
@@ -106,6 +111,13 @@ class HomeViewModel extends ChangeNotifier {
       final tapoService = getIt<TapoService>();
       final updatedDevice = await tapoService.toggleDevice(ip);
       _devices = List.from(_devices)..[index] = updatedDevice;
+
+      // Sync widget data for toggled device
+      await _widgetDataService.saveDeviceState(
+        ip: updatedDevice.ip,
+        model: updatedDevice.model,
+        deviceOn: updatedDevice.deviceOn,
+      );
     } finally {
       _togglingDevices.remove(ip);
       notifyListeners();
