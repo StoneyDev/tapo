@@ -27,9 +27,7 @@ class TapoClient {
     return response != null;
   }
 
-  Future<Map<String, dynamic>?> _request(
-    Map<String, dynamic> payload,
-  ) async {
+  Future<Map<String, dynamic>?> _request(Map<String, dynamic> payload) async {
     if (!session.isEstablished) return null;
 
     try {
@@ -61,7 +59,8 @@ class TapoClient {
 
       // Send via raw socket
       final socket = await Socket.connect(session.deviceIp, 80);
-      final request = 'POST /app/request?seq=$seqNum HTTP/1.1\r\n'
+      final request =
+          'POST /app/request?seq=$seqNum HTTP/1.1\r\n'
           'Host: ${session.deviceIp}\r\n'
           'Content-Type: application/octet-stream\r\n'
           'Content-Length: ${body.length}\r\n'

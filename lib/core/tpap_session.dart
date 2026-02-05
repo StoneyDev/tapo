@@ -22,15 +22,14 @@ class TpapSession {
 
   /// Probe device to understand what protocol it supports
   Future<void> probeDevice() async {
-    _httpClient = HttpClient()
-      ..connectionTimeout = const Duration(seconds: 5);
+    _httpClient = HttpClient()..connectionTimeout = const Duration(seconds: 5);
 
     final endpoints = ['/app', '/app/handshake', '/app/login', '/'];
     final methods = [
       {'method': 'get_device_info'},
       {'method': 'handshake'},
       {'method': 'login'},
-      {'method': 'securePassthrough', 'params': {}},
+      {'method': 'securePassthrough', 'params': <String, dynamic>{}},
     ];
 
     for (final endpoint in endpoints) {
@@ -38,8 +37,8 @@ class TpapSession {
         try {
           final uri = Uri.parse('http://$deviceIp$endpoint');
           final request = await _httpClient!.postUrl(uri)
-            ..headers.set('Content-Type', 'application/json');
-          request.add(utf8.encode(jsonEncode(method)));
+            ..headers.set('Content-Type', 'application/json')
+            ..add(utf8.encode(jsonEncode(method)));
           final response = await request.close();
           await response.drain<void>();
         } on Exception {
@@ -54,8 +53,7 @@ class TpapSession {
   /// Test TLS connection to device on port 4433 (for robot vacuums)
   Future<bool> testTlsConnection() async {
     try {
-      _httpClient = HttpClient()
-        ..badCertificateCallback = (_, __, ___) => true;
+      _httpClient = HttpClient()..badCertificateCallback = (_, __, ___) => true;
 
       final uri = Uri.parse('https://$deviceIp:4433/app');
       final request = await _httpClient!.getUrl(uri);
@@ -71,8 +69,7 @@ class TpapSession {
   /// Perform full TPAP handshake (SPAKE2+)
   Future<bool> handshake() async {
     try {
-      _httpClient = HttpClient()
-        ..badCertificateCallback = (_, __, ___) => true;
+      _httpClient = HttpClient()..badCertificateCallback = (_, __, ___) => true;
 
       // Step 1: Initial handshake to get parameters
       final initResult = await _initHandshake();
@@ -92,7 +89,10 @@ class TpapSession {
       );
 
       // Send client share, receive server share
-      final serverShare = await _sendClientShare(clientShare, initResult.transactionId);
+      final serverShare = await _sendClientShare(
+        clientShare,
+        initResult.transactionId,
+      );
       if (serverShare == null) return false;
 
       // Process server share and get confirmation
@@ -157,13 +157,11 @@ class TpapSession {
       final seq = _cipher!.seq;
 
       // Send request
-      final uri = Uri.parse(
-        'https://$deviceIp:4433/app/request?seq=$seq',
-      );
+      final uri = Uri.parse('https://$deviceIp:4433/app/request?seq=$seq');
       final request = await _httpClient!.postUrl(uri)
         ..headers.set('Content-Type', 'application/octet-stream')
-        ..headers.set('Cookie', 'TP_SESSIONID=$_sessionId');
-      request.add(encrypted);
+        ..headers.set('Cookie', 'TP_SESSIONID=$_sessionId')
+        ..add(encrypted);
 
       final response = await request.close();
       if (response.statusCode != 200) return null;
@@ -175,8 +173,7 @@ class TpapSession {
       );
 
       final decrypted = _cipher!.decrypt(Uint8List.fromList(responseBytes));
-      final result =
-          jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>;
+      final result = jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>;
 
       return result['error_code'] == 0 ? result : null;
     } on Exception {
@@ -195,9 +192,7 @@ class TpapSession {
       // Try a simple handshake request
       final initPayload = jsonEncode({
         'method': 'handshake',
-        'params': {
-          'username': credentials.email,
-        },
+        'params': {'username': credentials.email},
       });
       request80.add(utf8.encode(initPayload));
 

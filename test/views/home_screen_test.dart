@@ -11,8 +11,9 @@ import 'package:tapo/views/widgets/plug_card.dart';
 import '../helpers/test_utils.dart';
 
 /// Mock HomeViewModel for widget testing
-/// Note: This tests UI behavior in response to ViewModel state changes.
-/// The actual ViewModel logic is tested in home_viewmodel_test.dart.
+/// Note: This tests UI behavior in response to
+/// ViewModel state changes. The actual ViewModel logic
+/// is tested in home_viewmodel_test.dart.
 class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
   List<TapoDevice> _devices = [];
   bool _isLoading = false;
@@ -33,15 +34,18 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
     _devices = devices;
     notifyListeners();
   }
-  void setIsLoading(bool loading) {
+
+  void setIsLoading({required bool loading}) {
     _isLoading = loading;
     notifyListeners();
   }
+
   void setErrorMessage(String? message) {
     _errorMessage = message;
     notifyListeners();
   }
-  void setToggling(String ip, bool toggling) {
+
+  void setToggling(String ip, {required bool toggling}) {
     toggling ? _togglingDevices.add(ip) : _togglingDevices.remove(ip);
     notifyListeners();
   }
@@ -63,6 +67,7 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
     toggleDeviceCallCount++;
     lastToggledIp = ip;
   }
+
   @override
   Future<void> removeDevice(String ip) async {
     removeDeviceCallCount++;
@@ -116,9 +121,10 @@ void main() {
     mockStorageService = MockSecureStorageService();
     mockTapoService = MockTapoService();
 
-    getIt.registerSingleton<HomeViewModel>(mockViewModel);
-    getIt.registerSingleton<SecureStorageService>(mockStorageService);
-    getIt.registerSingleton<TapoService>(mockTapoService);
+    getIt
+      ..registerSingleton<HomeViewModel>(mockViewModel)
+      ..registerSingleton<SecureStorageService>(mockStorageService)
+      ..registerSingleton<TapoService>(mockTapoService);
   });
 
   tearDown(() async {
@@ -135,21 +141,22 @@ void main() {
         },
       );
     }
-    return const MaterialApp(
-      home: HomeScreen(),
-    );
+    return const MaterialApp(home: HomeScreen());
   }
 
   group('HomeScreen', () {
     group('loading state', () {
-      testWidgets('shows spinner when loading, hides otherwise', (tester) async {
-        mockViewModel.setIsLoading(true);
+      testWidgets('shows spinner when loading, hides otherwise', (
+        tester,
+      ) async {
+        mockViewModel.setIsLoading(loading: true);
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-        mockViewModel.setIsLoading(false);
-        mockViewModel.setDevices([]);
+        mockViewModel
+          ..setIsLoading(loading: false)
+          ..setDevices([]);
         await tester.pumpAndSettle();
         expect(find.byType(CircularProgressIndicator), findsNothing);
       });
@@ -169,7 +176,9 @@ void main() {
         expect(find.text('Device 2'), findsOneWidget);
       });
 
-      testWidgets('displays empty state message when no devices', (tester) async {
+      testWidgets('displays empty state message when no devices', (
+        tester,
+      ) async {
         mockViewModel.setDevices([]);
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
@@ -200,9 +209,7 @@ void main() {
 
     group('pull to refresh', () {
       testWidgets('pull down triggers refresh', (tester) async {
-        mockViewModel.setDevices([
-          TestFixtures.onlineDevice(ip: '10.0.0.1'),
-        ]);
+        mockViewModel.setDevices([TestFixtures.onlineDevice(ip: '10.0.0.1')]);
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
@@ -215,7 +222,7 @@ void main() {
     });
 
     group('logout', () {
-      testWidgets('clears credentials, disconnects, navigates to config', (tester) async {
+      testWidgets('clears credentials, disconnects, navigates', (tester) async {
         mockViewModel.setDevices([]);
         await tester.pumpWidget(buildTestWidget(withNavigation: true));
         await tester.pumpAndSettle();
@@ -249,17 +256,36 @@ void main() {
       });
 
       testWidgets('isToggling state passed to PlugCard', (tester) async {
-        mockViewModel.setDevices([
-          TestFixtures.onlineDevice(ip: '10.0.0.1'),
-        ]);
-        mockViewModel.setToggling('10.0.0.1', true);
+        mockViewModel
+          ..setDevices([TestFixtures.onlineDevice(ip: '10.0.0.1')])
+          ..setToggling('10.0.0.1', toggling: true);
         await tester.pumpWidget(buildTestWidget());
-        // Use pump() instead of pumpAndSettle() because CircularProgressIndicator animates indefinitely
+        // Use pump() instead of pumpAndSettle()
+        // because CircularProgressIndicator animates
         await tester.pump();
 
-        // When toggling, PlugCard shows spinner instead of switch
+        // When toggling, PlugCard shows spinner
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
         expect(find.byType(Switch), findsNothing);
+      });
+    });
+
+    group('app lifecycle', () {
+      testWidgets('app resume triggers refresh', (tester) async {
+        mockViewModel.setDevices([]);
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        // Reset count since loadDevices called in init
+        mockViewModel.refreshCallCount = 0;
+
+        // Simulate app resume
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pump();
+
+        expect(mockViewModel.refreshCallCount, 1);
       });
     });
 

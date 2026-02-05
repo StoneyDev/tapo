@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tapo/core/klap_crypto.dart';
 import 'package:tapo/core/klap_session.dart';
@@ -16,12 +14,12 @@ class MockKlapSessionForService extends KlapSession {
   bool _isEstablished = false;
   bool handshakeSuccess = true;
 
-  void setEstablished(bool value) {
-    _isEstablished = value;
-  }
-
   @override
   bool get isEstablished => _isEstablished;
+
+  set isEstablished(bool value) {
+    _isEstablished = value;
+  }
 
   @override
   Future<bool> handshake() async {
@@ -82,8 +80,7 @@ class TestableTapoService extends TapoService {
     final mockSession = MockKlapSessionForService(
       deviceIp: ip,
       authHash: TestFixtures.testAuthHash,
-    );
-    mockSession.handshakeSuccess = klapHandshakeSuccess;
+    )..handshakeSuccess = klapHandshakeSuccess;
 
     final success = await mockSession.handshake();
 
@@ -96,7 +93,7 @@ class TestableTapoService extends TapoService {
     // Simulate TPAP fallback (simplified for testing)
     if (tpapHandshakeSuccess) {
       // Mark as connected via TPAP
-      mockSession.setEstablished(true);
+      mockSession.isEstablished = true;
       mockSessions[ip] = mockSession;
       mockClients[ip] = MockTapoClientForService(session: mockSession);
       return true;
@@ -206,10 +203,8 @@ void main() {
       });
 
       test('generates correct authHash from credentials', () {
-        final expectedHash = generateAuthHash(
-          TestFixtures.testEmail,
-          TestFixtures.testPassword,
-        );
+        // Verify generateAuthHash doesn't throw
+        generateAuthHash(TestFixtures.testEmail, TestFixtures.testPassword);
 
         final service = TapoService.fromCredentials(
           TestFixtures.testEmail,
@@ -245,8 +240,9 @@ void main() {
       });
 
       test('returns false when KLAP and TPAP both fail', () async {
-        service.klapHandshakeSuccess = false;
-        service.tpapHandshakeSuccess = false;
+        service
+          ..klapHandshakeSuccess = false
+          ..tpapHandshakeSuccess = false;
 
         final result = await service.connectToDevice(TestFixtures.testDeviceIp);
 
@@ -254,8 +250,9 @@ void main() {
       });
 
       test('falls back to TPAP when KLAP fails', () async {
-        service.klapHandshakeSuccess = false;
-        service.tpapHandshakeSuccess = true;
+        service
+          ..klapHandshakeSuccess = false
+          ..tpapHandshakeSuccess = true;
 
         final result = await service.connectToDevice(TestFixtures.testDeviceIp);
 
@@ -304,8 +301,9 @@ void main() {
       });
 
       test('returns offline device when connection fails', () async {
-        service.klapHandshakeSuccess = false;
-        service.tpapHandshakeSuccess = false;
+        service
+          ..klapHandshakeSuccess = false
+          ..tpapHandshakeSuccess = false;
 
         final device = await service.getDeviceState(TestFixtures.testDeviceIp);
 
@@ -318,22 +316,27 @@ void main() {
       test('returns offline device when getDeviceInfo returns null', () async {
         service.klapHandshakeSuccess = true;
         await service.connectToDevice(TestFixtures.testDeviceIp);
-        service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse = null;
+        service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse =
+            null;
 
         final device = await service.getDeviceState(TestFixtures.testDeviceIp);
 
         expect(device.isOnline, isFalse);
       });
 
-      test('disconnects and returns offline when getDeviceInfo fails', () async {
-        service.klapHandshakeSuccess = true;
-        await service.connectToDevice(TestFixtures.testDeviceIp);
-        service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse = null;
+      test(
+        'disconnects and returns offline when getDeviceInfo fails',
+        () async {
+          service.klapHandshakeSuccess = true;
+          await service.connectToDevice(TestFixtures.testDeviceIp);
+          service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse =
+              null;
 
-        await service.getDeviceState(TestFixtures.testDeviceIp);
+          await service.getDeviceState(TestFixtures.testDeviceIp);
 
-        expect(service.hasSession(TestFixtures.testDeviceIp), isFalse);
-      });
+          expect(service.hasSession(TestFixtures.testDeviceIp), isFalse);
+        },
+      );
 
       test('auto-connects if not already connected', () async {
         service.klapHandshakeSuccess = true;
@@ -342,7 +345,7 @@ void main() {
         expect(service.hasSession(TestFixtures.testDeviceIp), isFalse);
 
         // Set up mock response for when it auto-connects
-        final device = await service.getDeviceState(TestFixtures.testDeviceIp);
+        await service.getDeviceState(TestFixtures.testDeviceIp);
 
         // Should have attempted connection
         expect(service.connectAttempts, 1);
@@ -380,7 +383,7 @@ void main() {
         service.klapHandshakeSuccess = true;
         await service.connectToDevice(TestFixtures.testDeviceIp);
         service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse =
-            TestFixtures.deviceInfoResponse(deviceOn: true);
+            TestFixtures.deviceInfoResponse();
 
         final result = await service.toggleDevice(TestFixtures.testDeviceIp);
 
@@ -401,8 +404,9 @@ void main() {
       });
 
       test('returns current offline state when device is offline', () async {
-        service.klapHandshakeSuccess = false;
-        service.tpapHandshakeSuccess = false;
+        service
+          ..klapHandshakeSuccess = false
+          ..tpapHandshakeSuccess = false;
 
         final result = await service.toggleDevice(TestFixtures.testDeviceIp);
 
@@ -412,9 +416,9 @@ void main() {
       test('returns offline state when setDeviceOn fails', () async {
         service.klapHandshakeSuccess = true;
         await service.connectToDevice(TestFixtures.testDeviceIp);
-        service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse =
-            TestFixtures.deviceInfoResponse(deviceOn: true);
-        service.mockClients[TestFixtures.testDeviceIp]!.setDeviceOnSuccess = false;
+        service.mockClients[TestFixtures.testDeviceIp]!
+          ..deviceInfoResponse = TestFixtures.deviceInfoResponse()
+          ..setDeviceOnSuccess = false;
 
         final result = await service.toggleDevice(TestFixtures.testDeviceIp);
 
@@ -424,9 +428,9 @@ void main() {
       test('disconnects when setDeviceOn fails', () async {
         service.klapHandshakeSuccess = true;
         await service.connectToDevice(TestFixtures.testDeviceIp);
-        service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse =
-            TestFixtures.deviceInfoResponse(deviceOn: true);
-        service.mockClients[TestFixtures.testDeviceIp]!.setDeviceOnSuccess = false;
+        service.mockClients[TestFixtures.testDeviceIp]!
+          ..deviceInfoResponse = TestFixtures.deviceInfoResponse()
+          ..setDeviceOnSuccess = false;
 
         await service.toggleDevice(TestFixtures.testDeviceIp);
 

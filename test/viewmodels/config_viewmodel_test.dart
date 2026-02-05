@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mockito/mockito.dart';
-import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
 import 'package:tapo/viewmodels/config_viewmodel.dart';
 
@@ -53,11 +52,14 @@ void main() {
     group('loadConfig', () {
       test('fetches credentials and device IPs from storage', () async {
         when(mockStorageService.getCredentials()).thenAnswer(
-          (_) async => (email: TestFixtures.testEmail, password: TestFixtures.testPassword),
+          (_) async => (
+            email: TestFixtures.testEmail,
+            password: TestFixtures.testPassword,
+          ),
         );
-        when(mockStorageService.getDeviceIps()).thenAnswer(
-          (_) async => [TestFixtures.testDeviceIp],
-        );
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
 
         final result = await viewModel.loadConfig();
 
@@ -69,12 +71,10 @@ void main() {
       });
 
       test('returns empty strings when credentials are null', () async {
-        when(mockStorageService.getCredentials()).thenAnswer(
-          (_) async => (email: null, password: null),
-        );
-        when(mockStorageService.getDeviceIps()).thenAnswer(
-          (_) async => [],
-        );
+        when(
+          mockStorageService.getCredentials(),
+        ).thenAnswer((_) async => (email: null, password: null));
+        when(mockStorageService.getDeviceIps()).thenAnswer((_) async => []);
 
         final result = await viewModel.loadConfig();
 
@@ -84,11 +84,12 @@ void main() {
 
       test('notifies listeners when loading starts and finishes', () async {
         when(mockStorageService.getCredentials()).thenAnswer(
-          (_) async => (email: TestFixtures.testEmail, password: TestFixtures.testPassword),
+          (_) async => (
+            email: TestFixtures.testEmail,
+            password: TestFixtures.testPassword,
+          ),
         );
-        when(mockStorageService.getDeviceIps()).thenAnswer(
-          (_) async => [],
-        );
+        when(mockStorageService.getDeviceIps()).thenAnswer((_) async => []);
 
         final notifications = <bool>[];
         viewModel.addListener(() {
@@ -102,10 +103,13 @@ void main() {
       });
 
       test('sets isLoading true during load', () async {
-        bool loadingDuringFetch = false;
+        var loadingDuringFetch = false;
         when(mockStorageService.getCredentials()).thenAnswer((_) async {
           loadingDuringFetch = viewModel.isLoading;
-          return (email: TestFixtures.testEmail, password: TestFixtures.testPassword);
+          return (
+            email: TestFixtures.testEmail,
+            password: TestFixtures.testPassword,
+          );
         });
         when(mockStorageService.getDeviceIps()).thenAnswer((_) async => []);
 
@@ -116,7 +120,9 @@ void main() {
       });
 
       test('sets errorMessage on exception', () async {
-        when(mockStorageService.getCredentials()).thenThrow(Exception('Storage error'));
+        when(
+          mockStorageService.getCredentials(),
+        ).thenThrow(Exception('Storage error'));
 
         final result = await viewModel.loadConfig();
 
@@ -133,7 +139,10 @@ void main() {
 
         // Then successful load
         when(mockStorageService.getCredentials()).thenAnswer(
-          (_) async => (email: TestFixtures.testEmail, password: TestFixtures.testPassword),
+          (_) async => (
+            email: TestFixtures.testEmail,
+            password: TestFixtures.testPassword,
+          ),
         );
         when(mockStorageService.getDeviceIps()).thenAnswer((_) async => []);
 
@@ -145,7 +154,10 @@ void main() {
 
     group('saveConfig', () {
       test('validates empty email', () async {
-        final result = await viewModel.saveConfig('', TestFixtures.testPassword);
+        final result = await viewModel.saveConfig(
+          '',
+          TestFixtures.testPassword,
+        );
 
         expect(result, isFalse);
         expect(viewModel.errorMessage, 'Email and password required');
@@ -160,21 +172,32 @@ void main() {
       });
 
       test('validates invalid email format', () async {
-        final result = await viewModel.saveConfig('invalid-email', TestFixtures.testPassword);
+        final result = await viewModel.saveConfig(
+          'invalid-email',
+          TestFixtures.testPassword,
+        );
 
         expect(result, isFalse);
         expect(viewModel.errorMessage, 'Invalid email format');
       });
 
       test('validates password minimum length', () async {
-        final result = await viewModel.saveConfig(TestFixtures.testEmail, 'short');
+        final result = await viewModel.saveConfig(
+          TestFixtures.testEmail,
+          'short',
+        );
 
         expect(result, isFalse);
-        expect(viewModel.errorMessage, 'Password must be at least 8 characters');
+        expect(
+          viewModel.errorMessage,
+          'Password must be at least 8 characters',
+        );
       });
 
       test('saves credentials and device IPs on valid input', () async {
-        when(mockStorageService.saveCredentials(any, any)).thenAnswer((_) async {});
+        when(
+          mockStorageService.saveCredentials(any, any),
+        ).thenAnswer((_) async {});
         when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
 
         final result = await viewModel.saveConfig(
@@ -183,25 +206,34 @@ void main() {
         );
 
         expect(result, isTrue);
-        verify(mockStorageService.saveCredentials(
-          TestFixtures.testEmail,
-          TestFixtures.testPassword,
-        )).called(1);
+        verify(
+          mockStorageService.saveCredentials(
+            TestFixtures.testEmail,
+            TestFixtures.testPassword,
+          ),
+        ).called(1);
         verify(mockStorageService.saveDeviceIps(any)).called(1);
       });
 
       test('registers TapoService after saving', () async {
-        when(mockStorageService.saveCredentials(any, any)).thenAnswer((_) async {});
+        when(
+          mockStorageService.saveCredentials(any, any),
+        ).thenAnswer((_) async {});
         when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
 
-        await viewModel.saveConfig(TestFixtures.testEmail, TestFixtures.testPassword);
+        await viewModel.saveConfig(
+          TestFixtures.testEmail,
+          TestFixtures.testPassword,
+        );
 
         // Verify TapoService was registered
         expect(GetIt.instance.isRegistered<TapoService>(), isTrue);
       });
 
       test('notifies listeners during save', () async {
-        when(mockStorageService.saveCredentials(any, any)).thenAnswer((_) async {});
+        when(
+          mockStorageService.saveCredentials(any, any),
+        ).thenAnswer((_) async {});
         when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
 
         final notifications = <bool>[];
@@ -209,14 +241,18 @@ void main() {
           notifications.add(viewModel.isLoading);
         });
 
-        await viewModel.saveConfig(TestFixtures.testEmail, TestFixtures.testPassword);
+        await viewModel.saveConfig(
+          TestFixtures.testEmail,
+          TestFixtures.testPassword,
+        );
 
         expect(notifications, [true, false]);
       });
 
       test('sets errorMessage on save exception', () async {
-        when(mockStorageService.saveCredentials(any, any))
-            .thenThrow(Exception('Save failed'));
+        when(
+          mockStorageService.saveCredentials(any, any),
+        ).thenThrow(Exception('Save failed'));
 
         final result = await viewModel.saveConfig(
           TestFixtures.testEmail,
@@ -228,7 +264,9 @@ void main() {
       });
 
       test('accepts valid email formats', () async {
-        when(mockStorageService.saveCredentials(any, any)).thenAnswer((_) async {});
+        when(
+          mockStorageService.saveCredentials(any, any),
+        ).thenAnswer((_) async {});
         when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
 
         final validEmails = [
@@ -238,7 +276,10 @@ void main() {
         ];
 
         for (final email in validEmails) {
-          final result = await viewModel.saveConfig(email, TestFixtures.testPassword);
+          final result = await viewModel.saveConfig(
+            email,
+            TestFixtures.testPassword,
+          );
           expect(result, isTrue, reason: 'Email $email should be valid');
         }
       });
@@ -258,10 +299,10 @@ void main() {
       });
 
       test('notifies listeners on add', () {
-        bool notified = false;
-        viewModel.addListener(() => notified = true);
-
-        viewModel.addDeviceIp(TestFixtures.testDeviceIp);
+        var notified = false;
+        viewModel
+          ..addListener(() => notified = true)
+          ..addDeviceIp(TestFixtures.testDeviceIp);
 
         expect(notified, isTrue);
       });
@@ -295,8 +336,9 @@ void main() {
       });
 
       test('sets error for duplicate IP', () {
-        viewModel.addDeviceIp(TestFixtures.testDeviceIp);
-        viewModel.addDeviceIp(TestFixtures.testDeviceIp);
+        viewModel
+          ..addDeviceIp(TestFixtures.testDeviceIp)
+          ..addDeviceIp(TestFixtures.testDeviceIp);
 
         expect(viewModel.deviceIps.length, 1);
         expect(viewModel.errorMessage, 'IP address already added');
@@ -313,19 +355,23 @@ void main() {
       });
 
       test('allows multiple different IPs', () {
-        viewModel.addDeviceIp(TestFixtures.testDeviceIp);
-        viewModel.addDeviceIp(TestFixtures.testDeviceIp2);
+        viewModel
+          ..addDeviceIp(TestFixtures.testDeviceIp)
+          ..addDeviceIp(TestFixtures.testDeviceIp2);
 
-        expect(viewModel.deviceIps, [TestFixtures.testDeviceIp, TestFixtures.testDeviceIp2]);
+        expect(viewModel.deviceIps, [
+          TestFixtures.testDeviceIp,
+          TestFixtures.testDeviceIp2,
+        ]);
       });
     });
 
     group('removeDeviceIp', () {
       test('removes IP from list', () {
-        viewModel.addDeviceIp(TestFixtures.testDeviceIp);
-        viewModel.addDeviceIp(TestFixtures.testDeviceIp2);
-
-        viewModel.removeDeviceIp(TestFixtures.testDeviceIp);
+        viewModel
+          ..addDeviceIp(TestFixtures.testDeviceIp)
+          ..addDeviceIp(TestFixtures.testDeviceIp2)
+          ..removeDeviceIp(TestFixtures.testDeviceIp);
 
         expect(viewModel.deviceIps, [TestFixtures.testDeviceIp2]);
       });
@@ -333,26 +379,26 @@ void main() {
       test('notifies listeners on remove', () {
         viewModel.addDeviceIp(TestFixtures.testDeviceIp);
 
-        bool notified = false;
-        viewModel.addListener(() => notified = true);
-
-        viewModel.removeDeviceIp(TestFixtures.testDeviceIp);
+        var notified = false;
+        viewModel
+          ..addListener(() => notified = true)
+          ..removeDeviceIp(TestFixtures.testDeviceIp);
 
         expect(notified, isTrue);
       });
 
       test('handles removing non-existent IP gracefully', () {
-        viewModel.addDeviceIp(TestFixtures.testDeviceIp);
-
-        viewModel.removeDeviceIp('10.0.0.1');
+        viewModel
+          ..addDeviceIp(TestFixtures.testDeviceIp)
+          ..removeDeviceIp('10.0.0.1');
 
         expect(viewModel.deviceIps, [TestFixtures.testDeviceIp]);
       });
 
       test('results in empty list when last IP removed', () {
-        viewModel.addDeviceIp(TestFixtures.testDeviceIp);
-
-        viewModel.removeDeviceIp(TestFixtures.testDeviceIp);
+        viewModel
+          ..addDeviceIp(TestFixtures.testDeviceIp)
+          ..removeDeviceIp(TestFixtures.testDeviceIp);
 
         expect(viewModel.deviceIps, isEmpty);
       });
@@ -364,11 +410,14 @@ void main() {
       });
 
       test('isLoading becomes true during loadConfig', () async {
-        bool wasLoadingDuringCall = false;
+        var wasLoadingDuringCall = false;
 
         when(mockStorageService.getCredentials()).thenAnswer((_) async {
           wasLoadingDuringCall = viewModel.isLoading;
-          return (email: TestFixtures.testEmail, password: TestFixtures.testPassword);
+          return (
+            email: TestFixtures.testEmail,
+            password: TestFixtures.testPassword,
+          );
         });
         when(mockStorageService.getDeviceIps()).thenAnswer((_) async => []);
 
@@ -379,7 +428,10 @@ void main() {
 
       test('isLoading becomes false after loadConfig completes', () async {
         when(mockStorageService.getCredentials()).thenAnswer(
-          (_) async => (email: TestFixtures.testEmail, password: TestFixtures.testPassword),
+          (_) async => (
+            email: TestFixtures.testEmail,
+            password: TestFixtures.testPassword,
+          ),
         );
         when(mockStorageService.getDeviceIps()).thenAnswer((_) async => []);
 
@@ -397,32 +449,46 @@ void main() {
       });
 
       test('isLoading becomes true during saveConfig', () async {
-        bool wasLoadingDuringCall = false;
+        var wasLoadingDuringCall = false;
 
-        when(mockStorageService.saveCredentials(any, any)).thenAnswer((_) async {
+        when(mockStorageService.saveCredentials(any, any)).thenAnswer((
+          _,
+        ) async {
           wasLoadingDuringCall = viewModel.isLoading;
         });
         when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
 
-        await viewModel.saveConfig(TestFixtures.testEmail, TestFixtures.testPassword);
+        await viewModel.saveConfig(
+          TestFixtures.testEmail,
+          TestFixtures.testPassword,
+        );
 
         expect(wasLoadingDuringCall, isTrue);
       });
 
       test('isLoading becomes false after saveConfig completes', () async {
-        when(mockStorageService.saveCredentials(any, any)).thenAnswer((_) async {});
+        when(
+          mockStorageService.saveCredentials(any, any),
+        ).thenAnswer((_) async {});
         when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
 
-        await viewModel.saveConfig(TestFixtures.testEmail, TestFixtures.testPassword);
+        await viewModel.saveConfig(
+          TestFixtures.testEmail,
+          TestFixtures.testPassword,
+        );
 
         expect(viewModel.isLoading, isFalse);
       });
 
       test('isLoading becomes false after saveConfig error', () async {
-        when(mockStorageService.saveCredentials(any, any))
-            .thenThrow(Exception('Error'));
+        when(
+          mockStorageService.saveCredentials(any, any),
+        ).thenThrow(Exception('Error'));
 
-        await viewModel.saveConfig(TestFixtures.testEmail, TestFixtures.testPassword);
+        await viewModel.saveConfig(
+          TestFixtures.testEmail,
+          TestFixtures.testPassword,
+        );
 
         expect(viewModel.isLoading, isFalse);
       });
@@ -448,10 +514,14 @@ void main() {
       });
 
       test('errorMessage set on saveConfig storage failure', () async {
-        when(mockStorageService.saveCredentials(any, any))
-            .thenThrow(Exception('Error'));
+        when(
+          mockStorageService.saveCredentials(any, any),
+        ).thenThrow(Exception('Error'));
 
-        await viewModel.saveConfig(TestFixtures.testEmail, TestFixtures.testPassword);
+        await viewModel.saveConfig(
+          TestFixtures.testEmail,
+          TestFixtures.testPassword,
+        );
 
         expect(viewModel.errorMessage, 'Failed to save configuration');
       });
@@ -474,11 +544,11 @@ void main() {
 
       test('notifies listeners when error is set', () {
         final errorMessages = <String?>[];
-        viewModel.addListener(() {
-          errorMessages.add(viewModel.errorMessage);
-        });
-
-        viewModel.addDeviceIp('invalid');
+        viewModel
+          ..addListener(() {
+            errorMessages.add(viewModel.errorMessage);
+          })
+          ..addDeviceIp('invalid');
 
         expect(errorMessages, ['Invalid IP address format']);
       });

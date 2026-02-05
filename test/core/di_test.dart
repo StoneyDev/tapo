@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:tapo/core/di.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
+import 'package:tapo/services/widget_data_service.dart';
 import 'package:tapo/viewmodels/config_viewmodel.dart';
 import 'package:tapo/viewmodels/home_viewmodel.dart';
 
@@ -26,14 +27,34 @@ void main() {
 
       // All registered
       expect(testGetIt.isRegistered<SecureStorageService>(), isTrue);
+      expect(testGetIt.isRegistered<WidgetDataService>(), isTrue);
       expect(testGetIt.isRegistered<ConfigViewModel>(), isTrue);
       expect(testGetIt.isRegistered<HomeViewModel>(), isTrue);
       expect(testGetIt.isRegistered<TapoService>(), isFalse);
 
       // Verify singleton behavior
-      expect(identical(testGetIt<SecureStorageService>(), testGetIt<SecureStorageService>()), isTrue);
-      expect(identical(testGetIt<ConfigViewModel>(), testGetIt<ConfigViewModel>()), isTrue);
-      expect(identical(testGetIt<HomeViewModel>(), testGetIt<HomeViewModel>()), isTrue);
+      expect(
+        identical(
+          testGetIt<SecureStorageService>(),
+          testGetIt<SecureStorageService>(),
+        ),
+        isTrue,
+      );
+      expect(
+        identical(
+          testGetIt<WidgetDataService>(),
+          testGetIt<WidgetDataService>(),
+        ),
+        isTrue,
+      );
+      expect(
+        identical(testGetIt<ConfigViewModel>(), testGetIt<ConfigViewModel>()),
+        isTrue,
+      );
+      expect(
+        identical(testGetIt<HomeViewModel>(), testGetIt<HomeViewModel>()),
+        isTrue,
+      );
     });
   });
 
@@ -42,7 +63,10 @@ void main() {
       registerTapoService('test@example.com', 'password123');
 
       expect(testGetIt.isRegistered<TapoService>(), isTrue);
-      expect(identical(testGetIt<TapoService>(), testGetIt<TapoService>()), isTrue);
+      expect(
+        identical(testGetIt<TapoService>(), testGetIt<TapoService>()),
+        isTrue,
+      );
     });
 
     test('re-registration replaces existing service with new instance', () {

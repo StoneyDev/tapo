@@ -7,8 +7,9 @@ import 'package:tapo/views/config_screen.dart';
 import '../helpers/test_utils.dart';
 
 /// Mock ConfigViewModel for widget testing
-/// Note: This tests UI behavior in response to ViewModel state changes.
-/// The actual ViewModel logic is tested in config_viewmodel_test.dart.
+/// Note: This tests UI behavior in response to ViewModel state
+/// changes. The actual ViewModel logic is tested in
+/// config_viewmodel_test.dart.
 class MockConfigViewModel extends ChangeNotifier implements ConfigViewModel {
   List<String> _deviceIps = [];
   bool _isLoading = false;
@@ -26,10 +27,12 @@ class MockConfigViewModel extends ChangeNotifier implements ConfigViewModel {
     _deviceIps = ips;
     notifyListeners();
   }
-  void setIsLoading(bool loading) {
+
+  void setIsLoading({required bool loading}) {
     _isLoading = loading;
     notifyListeners();
   }
+
   void setErrorMessage(String? message) {
     _errorMessage = message;
     notifyListeners();
@@ -106,15 +109,18 @@ void main() {
         },
       );
     }
-    return const MaterialApp(
-      home: ConfigScreen(),
-    );
+    return const MaterialApp(home: ConfigScreen());
   }
 
   group('ConfigScreen', () {
     group('form fields render', () {
-      testWidgets('renders all form fields and populates email', (tester) async {
-        mockViewModel.loadConfigReturn = (email: TestFixtures.testEmail, password: '');
+      testWidgets('renders all form fields and populates email', (
+        tester,
+      ) async {
+        mockViewModel.loadConfigReturn = (
+          email: TestFixtures.testEmail,
+          password: '',
+        );
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
@@ -136,7 +142,7 @@ void main() {
         expect(find.byIcon(Icons.add), findsOneWidget);
       });
 
-      testWidgets('tapping add button calls addDeviceIp with entered IP', (tester) async {
+      testWidgets('tapping add button calls addDeviceIp', (tester) async {
         mockViewModel.loadConfigReturn = (email: '', password: '');
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
@@ -161,7 +167,6 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
-        // Find the IP TextField controller
         final ipFieldFinder = find.widgetWithText(TextField, 'IP Address');
         await tester.enterText(ipFieldFinder, TestFixtures.testDeviceIp);
         await tester.pump();
@@ -170,12 +175,14 @@ void main() {
         await tester.tap(find.byIcon(Icons.add));
         await tester.pumpAndSettle();
 
-        // The field should be cleared (no text with IP should remain in TextField)
+        // Field should be cleared
         final textField = tester.widget<TextField>(ipFieldFinder);
         expect(textField.controller?.text, '');
       });
 
-      testWidgets('does not call addDeviceIp when IP field is empty', (tester) async {
+      testWidgets('does not call addDeviceIp when IP field empty', (
+        tester,
+      ) async {
         mockViewModel.loadConfigReturn = (email: '', password: '');
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
@@ -209,23 +216,25 @@ void main() {
     });
 
     group('delete button removes IP', () {
-      // Use IPs different from the hint text '192.168.1.100'
+      // Use IPs different from hint text '192.168.1.100'
       const testIp1 = '10.0.0.1';
       const testIp2 = '10.0.0.2';
 
       testWidgets('delete button is shown for each IP', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.setDeviceIps([testIp1, testIp2]);
+        mockViewModel
+          ..loadConfigReturn = (email: '', password: '')
+          ..setDeviceIps([testIp1, testIp2]);
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
-        // Should have 2 delete buttons (one for each IP)
+        // Should have 2 delete buttons
         expect(find.byIcon(Icons.delete), findsNWidgets(2));
       });
 
-      testWidgets('tapping delete calls removeDeviceIp with correct IP', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.setDeviceIps([testIp1]);
+      testWidgets('tapping delete calls removeDeviceIp', (tester) async {
+        mockViewModel
+          ..loadConfigReturn = (email: '', password: '')
+          ..setDeviceIps([testIp1]);
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
@@ -240,8 +249,9 @@ void main() {
       });
 
       testWidgets('removed IP no longer appears in list', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.setDeviceIps([testIp1]);
+        mockViewModel
+          ..loadConfigReturn = (email: '', password: '')
+          ..setDeviceIps([testIp1]);
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
@@ -258,9 +268,10 @@ void main() {
     });
 
     group('save validates and navigates on success', () {
-      testWidgets('save calls saveConfig with entered credentials', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.saveConfigReturn = true;
+      testWidgets('save calls saveConfig with credentials', (tester) async {
+        mockViewModel
+          ..loadConfigReturn = (email: '', password: '')
+          ..saveConfigReturn = true;
         await tester.pumpWidget(buildTestWidget(withNavigation: true));
         await tester.pumpAndSettle();
 
@@ -285,8 +296,9 @@ void main() {
       });
 
       testWidgets('navigates to /home on successful save', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.saveConfigReturn = true;
+        mockViewModel
+          ..loadConfigReturn = (email: '', password: '')
+          ..saveConfigReturn = true;
         await tester.pumpWidget(buildTestWidget(withNavigation: true));
         await tester.pumpAndSettle();
 
@@ -310,8 +322,9 @@ void main() {
       });
 
       testWidgets('does not navigate when save returns false', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.saveConfigReturn = false;
+        mockViewModel
+          ..loadConfigReturn = (email: '', password: '')
+          ..saveConfigReturn = false;
         await tester.pumpWidget(buildTestWidget(withNavigation: true));
         await tester.pumpAndSettle();
 
@@ -337,9 +350,12 @@ void main() {
     });
 
     group('error message displays', () {
-      testWidgets('displays error message with styling when set', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.setErrorMessage('Test error');
+      testWidgets('displays error message with styling when set', (
+        tester,
+      ) async {
+        mockViewModel
+          ..loadConfigReturn = (email: '', password: '')
+          ..setErrorMessage('Test error');
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
@@ -349,8 +365,9 @@ void main() {
       });
 
       testWidgets('hides error message when null', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.setErrorMessage(null);
+        mockViewModel
+          ..loadConfigReturn = (email: '', password: '')
+          ..setErrorMessage(null);
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
@@ -360,8 +377,9 @@ void main() {
 
     group('loading state', () {
       testWidgets('shows spinner and hides form when loading', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.setIsLoading(true);
+        mockViewModel
+          ..loadConfigReturn = (email: '', password: '')
+          ..setIsLoading(loading: true);
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
@@ -371,8 +389,9 @@ void main() {
       });
 
       testWidgets('shows form when not loading', (tester) async {
-        mockViewModel.loadConfigReturn = (email: '', password: '');
-        mockViewModel.setIsLoading(false);
+        mockViewModel
+          ..loadConfigReturn = (email: '', password: '')
+          ..setIsLoading(loading: false);
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 

@@ -44,7 +44,8 @@ class KlapSession {
     _localSeed = _generateRandomBytes(16);
 
     final socket = await Socket.connect(deviceIp, 80);
-    final request = 'POST /app/handshake1 HTTP/1.1\r\n'
+    final request =
+        'POST /app/handshake1 HTTP/1.1\r\n'
         'Host: $deviceIp\r\n'
         'Content-Type: application/octet-stream\r\n'
         'Content-Length: 16\r\n'
@@ -91,7 +92,8 @@ class KlapSession {
     ]);
 
     final socket = await Socket.connect(deviceIp, 80);
-    final request = 'POST /app/handshake2 HTTP/1.1\r\n'
+    final request =
+        'POST /app/handshake2 HTTP/1.1\r\n'
         'Host: $deviceIp\r\n'
         'Content-Type: application/octet-stream\r\n'
         'Content-Length: 32\r\n'
