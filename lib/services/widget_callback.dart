@@ -19,15 +19,12 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
   WidgetsFlutterBinding.ensureInitialized();
   await HomeWidget.setAppGroupId('group.stoneydev.tapo');
 
-  // Show loading state immediately
-  await HomeWidget.saveWidgetData('loading_$ip', true);
-  await _refreshAllWidgets();
-
+  final widgetData = WidgetDataService();
   final storage = SecureStorageService();
   final creds = await storage.getCredentials();
   if (creds.email == null || creds.password == null) {
     await HomeWidget.saveWidgetData('loading_$ip', null);
-    await _refreshAllWidgets();
+    await widgetData.refreshWidgets();
     return;
   }
 
@@ -35,7 +32,6 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
     creds.email!,
     creds.password!,
   );
-  final widgetData = WidgetDataService();
 
   final currentDevice = await _findDeviceByIp(ip);
 
@@ -58,26 +54,18 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
     );
   }
 
-  // Clear loading state
   await HomeWidget.saveWidgetData('loading_$ip', null);
-  await _refreshAllWidgets();
+  await widgetData.refreshWidgets();
 }
 
 Future<Map<String, dynamic>?> _findDeviceByIp(String ip) async {
   final json = await HomeWidget.getWidgetData<String>('devices');
   if (json == null) return null;
-  final devices = (jsonDecode(json) as List<dynamic>)
-      .cast<Map<String, dynamic>>();
-  return devices.where((d) => d['ip'] == ip).firstOrNull;
+  try {
+    final devices =
+        (jsonDecode(json) as List<dynamic>).cast<Map<String, dynamic>>();
+    return devices.where((d) => d['ip'] == ip).firstOrNull;
+  } on FormatException {
+    return null;
+  }
 }
-
-Future<void> _refreshAllWidgets() => Future.wait([
-      HomeWidget.updateWidget(
-        androidName: 'TapoSingleWidgetProvider',
-        iOSName: 'TapoWidget',
-      ),
-      HomeWidget.updateWidget(
-        androidName: 'TapoListWidgetProvider',
-        iOSName: 'TapoListWidget',
-      ),
-    ]);

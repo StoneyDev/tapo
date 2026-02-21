@@ -1,18 +1,13 @@
 package app.stoneydev.tapo
 
+import android.content.Context
+import androidx.core.content.ContextCompat
+
 object WidgetColors {
-    const val COLOR_ON = 0xFF673AB7.toInt()
-    const val COLOR_OFF = 0xFF757575.toInt()
-    const val COLOR_OFFLINE = 0xFFD32F2F.toInt()
-
-    fun statusColor(isOnline: Boolean, deviceOn: Boolean): Int {
-        if (!isOnline) return COLOR_OFFLINE
-        return if (deviceOn) COLOR_ON else COLOR_OFF
-    }
-
-    fun iconTint(isOnline: Boolean, deviceOn: Boolean): Int {
-        if (!isOnline) return COLOR_OFFLINE
-        return if (deviceOn) COLOR_ON else COLOR_OFF
+    fun iconTint(context: Context, isOnline: Boolean, deviceOn: Boolean): Int {
+        if (!isOnline) return ContextCompat.getColor(context, R.color.widget_offline_icon_tint)
+        return if (deviceOn) ContextCompat.getColor(context, R.color.widget_on_icon_tint)
+        else ContextCompat.getColor(context, R.color.widget_off_icon_tint)
     }
 
     fun iconBgDrawable(isOnline: Boolean, deviceOn: Boolean): Int {

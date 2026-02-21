@@ -3,33 +3,85 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="#FFFFFF">
+    android:background="@color/config_background">
 
-    <TextView
+    <!-- Header -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/config_title"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
-        android:paddingBottom="16dp" />
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="48dp"
+        android:paddingBottom="24dp">
 
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginBottom="16dp"
+            android:src="@drawable/ic_plug"
+            android:background="@drawable/widget_icon_bg_on"
+            android:padding="12dp"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/config_title"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/config_text_primary" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/config_subtitle"
+            android:textSize="14sp"
+            android:textColor="@color/config_text_secondary"
+            android:paddingTop="4dp" />
+    </LinearLayout>
+
+    <!-- Device list -->
     <ListView
         android:id="@+id/config_device_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:clipToPadding="false"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:listSelector="@android:color/transparent"
+        android:scrollbarStyle="outsideOverlay" />
 
-    <TextView
-        android:id="@+id/config_empty_text"
+    <!-- Empty state -->
+    <LinearLayout
+        android:id="@+id/config_empty_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:orientation="vertical"
         android:gravity="center"
-        android:text="@string/config_no_devices"
-        android:textSize="16sp"
-        android:textColor="#999999"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:padding="32dp">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_plug"
+            android:alpha="0.3"
+            android:layout_marginBottom="16dp"
+            android:importantForAccessibility="no" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/config_no_devices"
+            android:textSize="15sp"
+            android:textColor="@color/config_text_secondary"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp" />
+    </LinearLayout>
 
 </LinearLayout>

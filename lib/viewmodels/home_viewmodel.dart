@@ -60,7 +60,14 @@ class HomeViewModel extends ChangeNotifier {
       final tapoService = getIt<TapoService>();
       _devices = await Future.wait(ips.map(tapoService.getDeviceState));
       _lastLoadTime = DateTime.now();
-      await _widgetDataService.saveAllDevices(_devices);
+
+      // Widget sync is best-effort; don't mask a successful load
+      try {
+        await _widgetDataService.saveAllDevices(_devices);
+        await _widgetDataService.refreshWidgets();
+      } on Exception {
+        // Non-critical: devices loaded but widget state may be stale
+      }
     } on Exception {
       _errorMessage = 'Failed to load devices';
     } finally {
@@ -78,6 +85,7 @@ class HomeViewModel extends ChangeNotifier {
     ips.remove(ip);
     await _storageService.saveDeviceIps(ips);
     await _widgetDataService.saveAllDevices(_devices);
+    await _widgetDataService.refreshWidgets();
 
     if (getIt.isRegistered<TapoService>()) {
       getIt<TapoService>().disconnect(ip);
@@ -110,12 +118,19 @@ class HomeViewModel extends ChangeNotifier {
       _devices = List.from(_devices)..[index] = updatedDevice;
       _errorMessage = null;
 
-      await _widgetDataService.saveDeviceState(
-        ip: updatedDevice.ip,
-        model: updatedDevice.model,
-        deviceOn: updatedDevice.deviceOn,
-        isOnline: updatedDevice.isOnline,
-      );
+      // Widget sync is best-effort; don't mask a successful toggle
+      try {
+        await _widgetDataService.saveDeviceState(
+          ip: updatedDevice.ip,
+          model: updatedDevice.model,
+          nickname: updatedDevice.nickname,
+          deviceOn: updatedDevice.deviceOn,
+          isOnline: updatedDevice.isOnline,
+        );
+        await _widgetDataService.refreshWidgets();
+      } on Exception {
+        // Non-critical: device was toggled but widget state may be stale
+      }
     } on Exception {
       _errorMessage = 'Failed to toggle device';
     } finally {

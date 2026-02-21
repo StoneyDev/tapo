@@ -28,8 +28,12 @@ struct ToggleDeviceIntent: AppIntent {
             appGroup: "group.stoneydev.tapo"
         )
 
-        setDeviceLoading(ip: ip, loading: false)
-        WidgetCenter.shared.reloadAllTimelines()
+        // The Dart callback already clears loading and refreshes widgets.
+        // Only reload here as a fallback if Dart failed to clear loading.
+        if isDeviceLoading(ip: ip) {
+            setDeviceLoading(ip: ip, loading: false)
+            WidgetCenter.shared.reloadAllTimelines()
+        }
 
         return .result()
     }

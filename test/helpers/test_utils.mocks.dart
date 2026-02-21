@@ -66,8 +66,8 @@ class _FakeWebOptions_6 extends _i1.SmartFake implements _i2.WebOptions {
     : super(parent, parentInvocation);
 }
 
-class _FakeMacOsOptions_7 extends _i1.SmartFake implements _i2.MacOsOptions {
-  _FakeMacOsOptions_7(Object parent, Invocation parentInvocation)
+class _FakeAppleOptions_7 extends _i1.SmartFake implements _i2.AppleOptions {
+  _FakeAppleOptions_7(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
@@ -266,15 +266,23 @@ class MockFlutterSecureStorage extends _i1.Mock
           as _i2.WebOptions);
 
   @override
-  _i2.MacOsOptions get mOptions =>
+  _i2.AppleOptions get mOptions =>
       (super.noSuchMethod(
             Invocation.getter(#mOptions),
-            returnValue: _FakeMacOsOptions_7(
+            returnValue: _FakeAppleOptions_7(
               this,
               Invocation.getter(#mOptions),
             ),
           )
-          as _i2.MacOsOptions);
+          as _i2.AppleOptions);
+
+  @override
+  Map<String, List<_i7.ValueChanged<String?>>> get getListeners =>
+      (super.noSuchMethod(
+            Invocation.getter(#getListeners),
+            returnValue: <String, List<_i7.ValueChanged<String?>>>{},
+          )
+          as Map<String, List<_i7.ValueChanged<String?>>>);
 
   @override
   void registerListener({
@@ -314,11 +322,11 @@ class MockFlutterSecureStorage extends _i1.Mock
   _i5.Future<void> write({
     required String? key,
     required String? value,
-    _i2.IOSOptions? iOptions,
+    _i2.AppleOptions? iOptions,
     _i2.AndroidOptions? aOptions,
     _i2.LinuxOptions? lOptions,
     _i2.WebOptions? webOptions,
-    _i2.MacOsOptions? mOptions,
+    _i2.AppleOptions? mOptions,
     _i2.WindowsOptions? wOptions,
   }) =>
       (super.noSuchMethod(
@@ -340,11 +348,11 @@ class MockFlutterSecureStorage extends _i1.Mock
   @override
   _i5.Future<String?> read({
     required String? key,
-    _i2.IOSOptions? iOptions,
+    _i2.AppleOptions? iOptions,
     _i2.AndroidOptions? aOptions,
     _i2.LinuxOptions? lOptions,
     _i2.WebOptions? webOptions,
-    _i2.MacOsOptions? mOptions,
+    _i2.AppleOptions? mOptions,
     _i2.WindowsOptions? wOptions,
   }) =>
       (super.noSuchMethod(
@@ -364,11 +372,11 @@ class MockFlutterSecureStorage extends _i1.Mock
   @override
   _i5.Future<bool> containsKey({
     required String? key,
-    _i2.IOSOptions? iOptions,
+    _i2.AppleOptions? iOptions,
     _i2.AndroidOptions? aOptions,
     _i2.LinuxOptions? lOptions,
     _i2.WebOptions? webOptions,
-    _i2.MacOsOptions? mOptions,
+    _i2.AppleOptions? mOptions,
     _i2.WindowsOptions? wOptions,
   }) =>
       (super.noSuchMethod(
@@ -388,11 +396,11 @@ class MockFlutterSecureStorage extends _i1.Mock
   @override
   _i5.Future<void> delete({
     required String? key,
-    _i2.IOSOptions? iOptions,
+    _i2.AppleOptions? iOptions,
     _i2.AndroidOptions? aOptions,
     _i2.LinuxOptions? lOptions,
     _i2.WebOptions? webOptions,
-    _i2.MacOsOptions? mOptions,
+    _i2.AppleOptions? mOptions,
     _i2.WindowsOptions? wOptions,
   }) =>
       (super.noSuchMethod(
@@ -412,11 +420,11 @@ class MockFlutterSecureStorage extends _i1.Mock
 
   @override
   _i5.Future<Map<String, String>> readAll({
-    _i2.IOSOptions? iOptions,
+    _i2.AppleOptions? iOptions,
     _i2.AndroidOptions? aOptions,
     _i2.LinuxOptions? lOptions,
     _i2.WebOptions? webOptions,
-    _i2.MacOsOptions? mOptions,
+    _i2.AppleOptions? mOptions,
     _i2.WindowsOptions? wOptions,
   }) =>
       (super.noSuchMethod(
@@ -436,11 +444,11 @@ class MockFlutterSecureStorage extends _i1.Mock
 
   @override
   _i5.Future<void> deleteAll({
-    _i2.IOSOptions? iOptions,
+    _i2.AppleOptions? iOptions,
     _i2.AndroidOptions? aOptions,
     _i2.LinuxOptions? lOptions,
     _i2.WebOptions? webOptions,
-    _i2.MacOsOptions? mOptions,
+    _i2.AppleOptions? mOptions,
     _i2.WindowsOptions? wOptions,
   }) =>
       (super.noSuchMethod(
@@ -480,6 +488,7 @@ class MockWidgetDataService extends _i1.Mock implements _i8.WidgetDataService {
     required String? model,
     required bool? deviceOn,
     bool? isOnline = true,
+    String? nickname,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#saveDeviceState, [], {
@@ -487,6 +496,7 @@ class MockWidgetDataService extends _i1.Mock implements _i8.WidgetDataService {
               #model: model,
               #deviceOn: deviceOn,
               #isOnline: isOnline,
+              #nickname: nickname,
             }),
             returnValue: _i5.Future<void>.value(),
             returnValueForMissingStub: _i5.Future<void>.value(),
@@ -506,6 +516,15 @@ class MockWidgetDataService extends _i1.Mock implements _i8.WidgetDataService {
   _i5.Future<void> clearWidgetData() =>
       (super.noSuchMethod(
             Invocation.method(#clearWidgetData, []),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
+
+  @override
+  _i5.Future<void> refreshWidgets() =>
+      (super.noSuchMethod(
+            Invocation.method(#refreshWidgets, []),
             returnValue: _i5.Future<void>.value(),
             returnValueForMissingStub: _i5.Future<void>.value(),
           )

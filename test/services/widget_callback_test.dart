@@ -123,17 +123,17 @@ void main() {
         expect(methods, contains('setAppGroupId'));
       });
 
-      test('returns when no credentials stored', () async {
+      test('clears loading and refreshes widgets when no credentials', () async {
         await widgetBackgroundCallback(
           Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
         );
 
         final methods = homeWidgetCalls.map((c) => c.method).toList();
-        expect(methods, isNot(contains('updateWidget')));
-        expect(methods, isNot(contains('saveWidgetData')));
+        expect(methods, contains('saveWidgetData'));
+        expect(methods, contains('updateWidget'));
       });
 
-      test('returns when only email is stored', () async {
+      test('clears loading and refreshes when only email is stored', () async {
         secureStore['tapo_email'] = 'test@example.com';
 
         await widgetBackgroundCallback(
@@ -141,10 +141,11 @@ void main() {
         );
 
         final methods = homeWidgetCalls.map((c) => c.method).toList();
-        expect(methods, isNot(contains('updateWidget')));
+        expect(methods, contains('updateWidget'));
       });
 
-      test('returns when only password is stored', () async {
+      test('clears loading and refreshes when only password is stored',
+          () async {
         secureStore['tapo_password'] = 'password123';
 
         await widgetBackgroundCallback(
@@ -152,7 +153,7 @@ void main() {
         );
 
         final methods = homeWidgetCalls.map((c) => c.method).toList();
-        expect(methods, isNot(contains('updateWidget')));
+        expect(methods, contains('updateWidget'));
       });
     });
   });

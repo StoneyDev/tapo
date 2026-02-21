@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
+import 'package:tapo/services/widget_data_service.dart';
 import 'package:tapo/viewmodels/home_viewmodel.dart';
 import 'package:tapo/views/widgets/plug_card.dart';
 import 'package:watch_it/watch_it.dart';
@@ -67,6 +68,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final storage = di<SecureStorageService>();
     await storage.clearCredentials();
     await storage.clearDeviceIps();
+
+    final widgetData = di<WidgetDataService>();
+    await widgetData.clearWidgetData();
+    await widgetData.refreshWidgets();
 
     if (context.mounted) {
       await Navigator.pushReplacementNamed(context, '/config');

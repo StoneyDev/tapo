@@ -2,6 +2,7 @@ package app.stoneydev.tapo
 
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
 import android.view.View
@@ -57,19 +58,14 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
 
             val isLoading = deviceIp != null && widgetData.getBoolean("loading_$deviceIp", false)
 
-            // Text
             views.setTextViewText(R.id.widget_nickname_text, nickname)
             views.setTextViewText(R.id.widget_model_text, model)
 
-            // Visibility
             views.setViewVisibility(R.id.widget_content, if (isLoading) View.GONE else View.VISIBLE)
             views.setViewVisibility(R.id.widget_loading, if (isLoading) View.VISIBLE else View.GONE)
 
-            // Icon
             views.setImageViewResource(R.id.widget_icon, WidgetColors.iconDrawable(isOnline))
-            views.setInt(R.id.widget_icon, "setColorFilter", WidgetColors.iconTint(isOnline, deviceOn))
-
-            // Icon background
+            views.setInt(R.id.widget_icon, "setColorFilter", WidgetColors.iconTint(context, isOnline, deviceOn))
             views.setInt(R.id.widget_icon_container, "setBackgroundResource", WidgetColors.iconBgDrawable(isOnline, deviceOn))
 
             if (deviceIp != null) {
@@ -81,6 +77,16 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
             }
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+
+        fun updateAllWidgets(context: Context) {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val widgetIds = appWidgetManager.getAppWidgetIds(
+                ComponentName(context, TapoSingleWidgetProvider::class.java)
+            )
+            for (id in widgetIds) {
+                updateWidget(context, appWidgetManager, id)
+            }
         }
     }
 }

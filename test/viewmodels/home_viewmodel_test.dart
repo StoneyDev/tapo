@@ -36,6 +36,7 @@ void main() {
       mockWidgetDataService.saveDeviceState(
         ip: anyNamed('ip'),
         model: anyNamed('model'),
+        nickname: anyNamed('nickname'),
         deviceOn: anyNamed('deviceOn'),
         isOnline: anyNamed('isOnline'),
       ),
@@ -314,7 +315,9 @@ void main() {
           mockWidgetDataService.saveDeviceState(
             ip: TestFixtures.testDeviceIp,
             model: 'P110',
+            nickname: 'Test Plug',
             deviceOn: false,
+            isOnline: true,
           ),
         ).called(1);
       });

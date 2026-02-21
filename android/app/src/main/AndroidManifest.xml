@@ -61,12 +61,6 @@
                 android:resource="@xml/widget_info_list" />
         </receiver>
 
-        <!-- List widget RemoteViews service -->
-        <service
-            android:name=".TapoListWidgetService"
-            android:permission="android.permission.BIND_REMOTEVIEWS"
-            android:exported="false" />
-
         <!-- Custom click receiver for instant loading feedback -->
         <receiver
             android:name=".TapoWidgetClickReceiver"

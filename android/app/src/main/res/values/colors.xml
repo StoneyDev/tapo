@@ -16,4 +16,13 @@
     <!-- Text colors -->
     <color name="widget_text_primary">#DE000000</color>
     <color name="widget_text_secondary">#99000000</color>
+
+    <!-- Config activity colors -->
+    <color name="config_background">#FFF5F5F5</color>
+    <color name="config_surface">#FFFFFFFF</color>
+    <color name="config_text_primary">#FF1C1B1F</color>
+    <color name="config_text_secondary">#FF49454F</color>
+    <color name="config_text_tertiary">#FF79747E</color>
+    <color name="config_divider">#1F000000</color>
+    <color name="config_accent">#FF673AB7</color>
 </resources>

@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:tapo/models/tapo_device.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
+import 'package:tapo/services/widget_data_service.dart';
 import 'package:tapo/viewmodels/home_viewmodel.dart';
 import 'package:tapo/views/home_screen.dart';
 import 'package:tapo/views/widgets/plug_card.dart';
@@ -109,10 +110,24 @@ class MockTapoService implements TapoService {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// Mock WidgetDataService for logout testing
+class MockWidgetDataService implements WidgetDataService {
+  int clearWidgetDataCallCount = 0;
+  int refreshWidgetsCallCount = 0;
+
+  @override
+  Future<void> clearWidgetData() async => clearWidgetDataCallCount++;
+  @override
+  Future<void> refreshWidgets() async => refreshWidgetsCallCount++;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
   late MockHomeViewModel mockViewModel;
   late MockSecureStorageService mockStorageService;
   late MockTapoService mockTapoService;
+  late MockWidgetDataService mockWidgetDataService;
   final getIt = GetIt.instance;
 
   setUp(() async {
@@ -120,11 +135,13 @@ void main() {
     mockViewModel = MockHomeViewModel();
     mockStorageService = MockSecureStorageService();
     mockTapoService = MockTapoService();
+    mockWidgetDataService = MockWidgetDataService();
 
     getIt
       ..registerSingleton<HomeViewModel>(mockViewModel)
       ..registerSingleton<SecureStorageService>(mockStorageService)
-      ..registerSingleton<TapoService>(mockTapoService);
+      ..registerSingleton<TapoService>(mockTapoService)
+      ..registerSingleton<WidgetDataService>(mockWidgetDataService);
   });
 
   tearDown(() async {
@@ -235,6 +252,8 @@ void main() {
         expect(mockStorageService.clearCredentialsCallCount, 1);
         expect(mockStorageService.clearDeviceIpsCallCount, 1);
         expect(mockTapoService.disconnectAllCallCount, 1);
+        expect(mockWidgetDataService.clearWidgetDataCallCount, 1);
+        expect(mockWidgetDataService.refreshWidgetsCallCount, 1);
         expect(find.text('Config Screen'), findsOneWidget);
       });
     });

@@ -16,9 +16,20 @@
         android:textStyle="bold"
         android:paddingBottom="6dp" />
 
-    <ListView
-        android:id="@+id/list_widget_listview"
+    <LinearLayout
+        android:id="@+id/list_widget_items"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <TextView
+        android:id="@+id/list_widget_empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="@string/list_widget_empty"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="13sp"
+        android:visibility="gone" />
 
 </LinearLayout>

@@ -48,17 +48,18 @@
         android:paddingEnd="8dp"
         android:maxLines="1" />
 
-    <!-- Status dot -->
-    <View
+    <!-- Status indicator (ImageView instead of View for RemoteViews compat) -->
+    <ImageView
         android:id="@+id/list_item_indicator"
         android:layout_width="8dp"
         android:layout_height="8dp"
-        android:background="@drawable/widget_icon_bg_on" />
+        android:importantForAccessibility="no" />
 
     <ProgressBar
         android:id="@+id/list_item_loading"
-        android:layout_width="8dp"
-        android:layout_height="8dp"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
         android:visibility="gone"
         android:indeterminateTint="@color/widget_text_secondary" />
 

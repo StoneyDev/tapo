@@ -3,13 +3,14 @@ import WidgetKit
 
 struct DeviceItem: AppEntity {
     let id: String
+    let nickname: String
     let model: String
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Device"
     static var defaultQuery = DeviceQuery()
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(model) (\(id))")
+        DisplayRepresentation(title: "\(nickname)", subtitle: "\(model)")
     }
 }
 
@@ -31,7 +32,8 @@ struct DeviceQuery: EntityQuery {
         loadDevicesFromStorage().compactMap { device in
             guard let ip = device["ip"] as? String,
                   let model = device["model"] as? String else { return nil }
-            return DeviceItem(id: ip, model: model)
+            let nickname = device["nickname"] as? String ?? model
+            return DeviceItem(id: ip, nickname: nickname, model: model)
         }
     }
 }

@@ -53,7 +53,7 @@ class TpapSession {
   /// Test TLS connection to device on port 4433 (for robot vacuums)
   Future<bool> testTlsConnection() async {
     try {
-      _httpClient = HttpClient()..badCertificateCallback = (_, __, ___) => true;
+      _httpClient = HttpClient()..badCertificateCallback = (_, _, _) => true;
 
       final uri = Uri.parse('https://$deviceIp:4433/app');
       final request = await _httpClient!.getUrl(uri);

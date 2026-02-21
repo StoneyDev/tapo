@@ -24,18 +24,30 @@ func isDeviceLoading(ip: String) -> Bool {
 
 // MARK: - Colors
 
-private let colorOnTint = Color(red: 103.0/255.0, green: 58.0/255.0, blue: 183.0/255.0)
-private let colorOffTint = Color(red: 117.0/255.0, green: 117.0/255.0, blue: 117.0/255.0)
-private let colorOfflineTint = Color(red: 211.0/255.0, green: 47.0/255.0, blue: 47.0/255.0)
+private let colorOnTintLight = Color(red: 103.0/255.0, green: 58.0/255.0, blue: 183.0/255.0)
+private let colorOffTintLight = Color(red: 117.0/255.0, green: 117.0/255.0, blue: 117.0/255.0)
+private let colorOfflineTintLight = Color(red: 211.0/255.0, green: 47.0/255.0, blue: 47.0/255.0)
 
-private func iconTintColor(isOnline: Bool, deviceOn: Bool) -> Color {
-    if !isOnline { return colorOfflineTint }
-    return deviceOn ? colorOnTint : colorOffTint
+private let colorOnTintDark = Color(red: 187.0/255.0, green: 134.0/255.0, blue: 252.0/255.0)
+private let colorOffTintDark = Color(red: 189.0/255.0, green: 189.0/255.0, blue: 189.0/255.0)
+private let colorOfflineTintDark = Color(red: 239.0/255.0, green: 83.0/255.0, blue: 80.0/255.0)
+
+private func iconTintColor(isOnline: Bool, deviceOn: Bool, colorScheme: ColorScheme) -> Color {
+    let isDark = colorScheme == .dark
+    if !isOnline { return isDark ? colorOfflineTintDark : colorOfflineTintLight }
+    return deviceOn
+        ? (isDark ? colorOnTintDark : colorOnTintLight)
+        : (isDark ? colorOffTintDark : colorOffTintLight)
 }
 
-private func iconBackgroundColor(isOnline: Bool, deviceOn: Bool) -> Color {
-    if !isOnline { return colorOfflineTint.opacity(0.12) }
-    return deviceOn ? colorOnTint.opacity(0.15) : colorOffTint.opacity(0.12)
+private func iconBackgroundColor(isOnline: Bool, deviceOn: Bool, colorScheme: ColorScheme) -> Color {
+    let isDark = colorScheme == .dark
+    if !isOnline {
+        return isDark ? colorOfflineTintDark.opacity(0.20) : colorOfflineTintLight.opacity(0.12)
+    }
+    return deviceOn
+        ? (isDark ? colorOnTintDark.opacity(0.25) : colorOnTintLight.opacity(0.15))
+        : (isDark ? colorOffTintDark.opacity(0.20) : colorOffTintLight.opacity(0.12))
 }
 
 private func iconName(isOnline: Bool, deviceOn: Bool) -> String {
@@ -94,10 +106,8 @@ struct TapoWidgetProvider: AppIntentTimelineProvider {
         let device: [String: Any]
         if let ip = selectedIp, let found = devices.first(where: { ($0["ip"] as? String) == ip }) {
             device = found
-        } else if let first = devices.first {
-            device = first
         } else {
-            return DeviceEntry(date: Date(), nickname: "No device", model: "", ip: "", deviceOn: false, isOnline: true, hasDevice: false, isLoading: false)
+            device = devices[0]
         }
 
         let ip = device["ip"] as? String ?? ""
@@ -118,15 +128,15 @@ struct TapoWidgetProvider: AppIntentTimelineProvider {
 
 struct TapoWidgetEntryView: View {
     var entry: DeviceEntry
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         if entry.hasDevice && !entry.ip.isEmpty {
             Button(intent: ToggleDeviceIntent(ip: entry.ip)) {
                 HStack(spacing: 10) {
-                    // Icon in rounded square
                     ZStack {
                         RoundedRectangle(cornerRadius: 10)
-                            .fill(iconBackgroundColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn))
+                            .fill(iconBackgroundColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn, colorScheme: colorScheme))
                             .frame(width: 40, height: 40)
 
                         if entry.isLoading {
@@ -135,11 +145,10 @@ struct TapoWidgetEntryView: View {
                         } else {
                             Image(systemName: iconName(isOnline: entry.isOnline, deviceOn: entry.deviceOn))
                                 .font(.system(size: 18))
-                                .foregroundColor(iconTintColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn))
+                                .foregroundColor(iconTintColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn, colorScheme: colorScheme))
                         }
                     }
 
-                    // Text
                     VStack(alignment: .leading, spacing: 2) {
                         Text(entry.nickname)
                             .font(.system(size: 15, weight: .bold))
@@ -235,6 +244,7 @@ struct TapoListWidgetProvider: TimelineProvider {
 
 struct TapoListWidgetEntryView: View {
     var entry: DeviceListEntry
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         if entry.devices.isEmpty {
@@ -259,10 +269,9 @@ struct TapoListWidgetEntryView: View {
                 ForEach(entry.devices, id: \.ip) { device in
                     Button(intent: ToggleDeviceIntent(ip: device.ip)) {
                         HStack(spacing: 8) {
-                            // Icon in rounded square
                             ZStack {
                                 RoundedRectangle(cornerRadius: 6)
-                                    .fill(iconBackgroundColor(isOnline: device.isOnline, deviceOn: device.deviceOn))
+                                    .fill(iconBackgroundColor(isOnline: device.isOnline, deviceOn: device.deviceOn, colorScheme: colorScheme))
                                     .frame(width: 28, height: 28)
 
                                 if device.isLoading {
@@ -271,17 +280,15 @@ struct TapoListWidgetEntryView: View {
                                 } else {
                                     Image(systemName: iconName(isOnline: device.isOnline, deviceOn: device.deviceOn))
                                         .font(.system(size: 13))
-                                        .foregroundColor(iconTintColor(isOnline: device.isOnline, deviceOn: device.deviceOn))
+                                        .foregroundColor(iconTintColor(isOnline: device.isOnline, deviceOn: device.deviceOn, colorScheme: colorScheme))
                                 }
                             }
 
-                            // Nickname
                             Text(device.nickname)
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(.primary)
                                 .lineLimit(1)
 
-                            // Model
                             Text(device.model)
                                 .font(.system(size: 11))
                                 .foregroundColor(.secondary)
@@ -289,9 +296,8 @@ struct TapoListWidgetEntryView: View {
 
                             Spacer()
 
-                            // Status dot
                             Circle()
-                                .fill(iconTintColor(isOnline: device.isOnline, deviceOn: device.deviceOn))
+                                .fill(iconTintColor(isOnline: device.isOnline, deviceOn: device.deviceOn, colorScheme: colorScheme))
                                 .frame(width: 8, height: 8)
                         }
                         .padding(.vertical, 2)
