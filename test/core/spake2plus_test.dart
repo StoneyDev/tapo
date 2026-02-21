@@ -92,16 +92,17 @@ void main() {
           password: 'testpass',
         );
 
+        // ignore: cascade_invocations, separate call for clarity
         spake.generatePublicShare(Uint8List(16), 1000);
 
-        // Invalid point encoding - may throw or return null depending on error type
+        // Invalid point encoding - may throw or return null
         final invalidShare = Uint8List.fromList([0xFF, ...List.filled(32, 0)]);
         try {
           final result = spake.processServerShare(invalidShare);
           expect(result, isNull);
-        } catch (e) {
+          // ignore: avoid_catching_errors, pointycastle throws ArgumentError
+        } on ArgumentError {
           // ArgumentError from pointycastle is acceptable
-          expect(e, isA<ArgumentError>());
         }
       });
     });

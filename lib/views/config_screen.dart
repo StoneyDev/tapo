@@ -112,10 +112,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton.filled(
-                onPressed: _addIp,
-                icon: const Icon(Icons.add),
-              ),
+              IconButton.filled(onPressed: _addIp, icon: const Icon(Icons.add)),
             ],
           ),
           const SizedBox(height: 8),
@@ -135,10 +132,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
             ),
           ],
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _save,
-            child: const Text('Save'),
-          ),
+          FilledButton(onPressed: _save, child: const Text('Save')),
         ],
       ),
     );

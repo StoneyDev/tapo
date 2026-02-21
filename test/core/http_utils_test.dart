@@ -19,20 +19,14 @@ void main() {
     });
 
     test('cookie can be null', () {
-      final response = HttpResponse(
-        statusCode: 404,
-        body: Uint8List(0),
-      );
+      final response = HttpResponse(statusCode: 404, body: Uint8List(0));
 
       expect(response.statusCode, 404);
       expect(response.cookie, isNull);
     });
 
     test('body can be empty', () {
-      final response = HttpResponse(
-        statusCode: 204,
-        body: Uint8List(0),
-      );
+      final response = HttpResponse(statusCode: 204, body: Uint8List(0));
 
       expect(response.body.length, 0);
     });

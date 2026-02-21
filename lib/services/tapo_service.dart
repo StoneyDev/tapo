@@ -15,9 +15,9 @@ class TapoService {
     required Uint8List authHash,
     required String email,
     required String password,
-  })  : _authHash = authHash,
-        _email = email,
-        _password = password;
+  }) : _authHash = authHash,
+       _email = email,
+       _password = password;
 
   /// Factory constructor from email/password
   factory TapoService.fromCredentials(String email, String password) {
@@ -44,12 +44,12 @@ class TapoService {
   final Set<String> _tpapDevices = {};
 
   TapoDevice _offlineDevice(String ip) => TapoDevice(
-        ip: ip,
-        nickname: 'Unknown',
-        model: 'Unknown',
-        deviceOn: false,
-        isOnline: false,
-      );
+    ip: ip,
+    nickname: 'Unknown',
+    model: 'Unknown',
+    deviceOn: false,
+    isOnline: false,
+  );
 
   /// Connect to device, returns true on successful handshake
   /// Tries KLAP first, falls back to TPAP if device requires it

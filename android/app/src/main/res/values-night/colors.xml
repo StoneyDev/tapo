@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget surface (dark mode) -->
+    <color name="widget_surface">#FF1E1E1E</color>
+
+    <!-- Icon background tints (higher opacity for dark backgrounds) -->
+    <color name="widget_on_icon_bg">#40BB86FC</color>
+    <color name="widget_off_icon_bg">#33BDBDBD</color>
+    <color name="widget_offline_icon_bg">#33EF5350</color>
+
+    <!-- Icon tint colors (lighter for dark mode) -->
+    <color name="widget_on_icon_tint">#FFBB86FC</color>
+    <color name="widget_off_icon_tint">#FFBDBDBD</color>
+    <color name="widget_offline_icon_tint">#FFEF5350</color>
+
+    <!-- Text colors (dark mode) -->
+    <color name="widget_text_primary">#DEFFFFFF</color>
+    <color name="widget_text_secondary">#99FFFFFF</color>
+
+    <!-- Config activity colors (dark mode) -->
+    <color name="config_background">#FF121212</color>
+    <color name="config_surface">#FF1E1E1E</color>
+    <color name="config_text_primary">#FFE6E1E5</color>
+    <color name="config_text_secondary">#FFCAC4D0</color>
+    <color name="config_text_tertiary">#FF938F99</color>
+    <color name="config_divider">#1FFFFFFF</color>
+    <color name="config_accent">#FFBB86FC</color>
+</resources>

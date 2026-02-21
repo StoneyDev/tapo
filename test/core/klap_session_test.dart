@@ -80,7 +80,8 @@ class TestableKlapSession extends KlapSession {
   Uint8List? get sig => _testSig;
 
   @override
-  bool get isEstablished => _testKey != null && _testIv != null && _testSig != null;
+  bool get isEstablished =>
+      _testKey != null && _testIv != null && _testSig != null;
 
   @override
   Uint8List generateIv() {
@@ -173,9 +174,10 @@ void main() {
       });
 
       test('returns true when all three are set', () {
-        session.setKey(Uint8List(16));
-        session.setIv(Uint8List(12));
-        session.setSig(Uint8List(28));
+        session
+          ..setKey(Uint8List(16))
+          ..setIv(Uint8List(12))
+          ..setSig(Uint8List(28));
         expect(session.isEstablished, isTrue);
       });
     });
@@ -217,7 +219,9 @@ void main() {
           deviceIp: TestFixtures.testDeviceIp,
           authHash: TestFixtures.testAuthHash,
         );
-        final differentLocal = Uint8List.fromList(List.generate(16, (i) => 255 - i));
+        final differentLocal = Uint8List.fromList(
+          List.generate(16, (i) => 255 - i),
+        );
 
         session.simulateHandshake(localSeed, remoteSeed);
         session2.simulateHandshake(differentLocal, remoteSeed);
@@ -230,7 +234,9 @@ void main() {
           deviceIp: TestFixtures.testDeviceIp,
           authHash: TestFixtures.testAuthHash,
         );
-        final differentRemote = Uint8List.fromList(List.generate(16, (i) => 255 - i));
+        final differentRemote = Uint8List.fromList(
+          List.generate(16, (i) => 255 - i),
+        );
 
         session.simulateHandshake(localSeed, remoteSeed);
         session2.simulateHandshake(localSeed, differentRemote);
@@ -239,7 +245,9 @@ void main() {
       });
 
       test('produces different keys with different authHash', () {
-        final differentAuth = Uint8List.fromList(List.generate(32, (i) => 255 - i));
+        final differentAuth = Uint8List.fromList(
+          List.generate(32, (i) => 255 - i),
+        );
         final session2 = TestableKlapSession(
           deviceIp: TestFixtures.testDeviceIp,
           authHash: differentAuth,
@@ -263,21 +271,25 @@ void main() {
       });
 
       test('first 12 bytes are base IV', () {
-        session.setIv(Uint8List.fromList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]));
+        session.setIv(
+          Uint8List.fromList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        );
         final iv = session.generateIv();
         expect(iv.sublist(0, 12), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
       });
 
       test('last 4 bytes are seq as big-endian int32', () {
-        session.setIv(Uint8List(12));
-        session.seq = 0x01020304;
+        session
+          ..setIv(Uint8List(12))
+          ..seq = 0x01020304;
         final iv = session.generateIv();
         expect(iv.sublist(12, 16), [1, 2, 3, 4]);
       });
 
       test('handles negative seq (signed int32)', () {
-        session.setIv(Uint8List(12));
-        session.seq = -1; // 0xFFFFFFFF
+        session
+          ..setIv(Uint8List(12))
+          ..seq = -1; // 0xFFFFFFFF
         final iv = session.generateIv();
         expect(iv.sublist(12, 16), [255, 255, 255, 255]);
       });
@@ -293,8 +305,9 @@ void main() {
       });
 
       test('seq 0 produces zeroed last 4 bytes', () {
-        session.setIv(Uint8List(12));
-        session.seq = 0;
+        session
+          ..setIv(Uint8List(12))
+          ..seq = 0;
         final iv = session.generateIv();
         expect(iv.sublist(12, 16), [0, 0, 0, 0]);
       });
@@ -309,9 +322,9 @@ void main() {
         );
 
         final result = await realSession.handshake().timeout(
-              const Duration(seconds: 2),
-              onTimeout: () => false,
-            );
+          const Duration(seconds: 2),
+          onTimeout: () => false,
+        );
 
         expect(result, isFalse);
         expect(realSession.isEstablished, isFalse);

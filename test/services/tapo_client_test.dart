@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/core/klap_crypto.dart';
 import 'package:tapo/core/klap_session.dart';
 import 'package:tapo/services/tapo_client.dart';
 
@@ -59,7 +57,10 @@ class TestableTapoClient extends TapoClient {
 
 /// Testable KlapSession for setting up established session state
 class TestableKlapSessionForClient extends KlapSession {
-  TestableKlapSessionForClient({required super.deviceIp, required super.authHash});
+  TestableKlapSessionForClient({
+    required super.deviceIp,
+    required super.authHash,
+  });
 
   Uint8List? _key;
   Uint8List? _iv;
@@ -111,11 +112,11 @@ void main() {
 
     group('session not established', () {
       test('getDeviceInfo returns null when session not established', () async {
-        final client = TestableTapoClient(session: session);
-        client.mockResponse = {
-          'error_code': 0,
-          'result': TestFixtures.deviceInfoResponse(),
-        };
+        final client = TestableTapoClient(session: session)
+          ..mockResponse = {
+            'error_code': 0,
+            'result': TestFixtures.deviceInfoResponse(),
+          };
 
         final result = await client.getDeviceInfo();
 
@@ -124,8 +125,8 @@ void main() {
       });
 
       test('setDeviceOn returns false when session not established', () async {
-        final client = TestableTapoClient(session: session);
-        client.mockResponse = {'error_code': 0};
+        final client = TestableTapoClient(session: session)
+          ..mockResponse = {'error_code': 0};
 
         final result = await client.setDeviceOn(on: true);
 
@@ -143,8 +144,7 @@ void main() {
       session = TestableKlapSessionForClient(
         deviceIp: TestFixtures.testDeviceIp,
         authHash: TestFixtures.testAuthHash,
-      );
-      session.setEstablished();
+      )..setEstablished();
       client = TestableTapoClient(session: session);
     });
 
@@ -168,10 +168,7 @@ void main() {
       });
 
       test('returns null on error_code != 0', () async {
-        client.mockResponse = {
-          'error_code': -1,
-          'result': null,
-        };
+        client.mockResponse = {'error_code': -1, 'result': null};
 
         final result = await client.getDeviceInfo();
 
@@ -187,10 +184,7 @@ void main() {
       });
 
       test('returns null when result is null', () async {
-        client.mockResponse = {
-          'error_code': 0,
-          'result': null,
-        };
+        client.mockResponse = {'error_code': 0, 'result': null};
 
         final result = await client.getDeviceInfo();
 
@@ -303,8 +297,7 @@ void main() {
       session = TestableKlapSessionForClient(
         deviceIp: TestFixtures.testDeviceIp,
         authHash: TestFixtures.testAuthHash,
-      );
-      session.setEstablished();
+      )..setEstablished();
     });
 
     test('generateIv produces correct format', () {

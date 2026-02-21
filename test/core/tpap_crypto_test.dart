@@ -25,7 +25,10 @@ void main() {
         final salt = Uint8List.fromList(utf8.encode('salt'));
         final ikm1 = Uint8List.fromList(utf8.encode('ikm1'));
         final ikm2 = Uint8List.fromList(utf8.encode('ikm2'));
-        expect(TpapHkdf.extract(salt, ikm1), isNot(equals(TpapHkdf.extract(salt, ikm2))));
+        expect(
+          TpapHkdf.extract(salt, ikm1),
+          isNot(equals(TpapHkdf.extract(salt, ikm2))),
+        );
       });
     });
 
@@ -49,7 +52,10 @@ void main() {
         final prk = Uint8List(32)..fillRange(0, 32, 0x22);
         final info1 = Uint8List.fromList(utf8.encode('info1'));
         final info2 = Uint8List.fromList(utf8.encode('info2'));
-        expect(TpapHkdf.expand(prk, info1, 32), isNot(equals(TpapHkdf.expand(prk, info2, 32))));
+        expect(
+          TpapHkdf.expand(prk, info1, 32),
+          isNot(equals(TpapHkdf.expand(prk, info2, 32))),
+        );
       });
     });
 

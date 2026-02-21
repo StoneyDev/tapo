@@ -1,16 +1,32 @@
-# tapo
+# Tapo
 
-A new Flutter project.
+Flutter app for controlling TP-Link Tapo smart plugs over local network.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- Local control of Tapo smart plugs (no cloud dependency)
+- Dual protocol support: KLAP (port 80) and TPAP/TLS (port 4433)
+- Auto protocol detection with KLAP-first fallback
+- Home screen widgets via `home_widget`
 
-A few resources to get you started if this is your first Flutter project:
+## Architecture
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```
+lib/
+├── core/           # Protocol implementations (KLAP, TPAP, SPAKE2+)
+├── services/       # Device communication & business logic
+├── viewmodels/     # State management (ChangeNotifier)
+├── views/          # UI screens & widgets
+└── models/         # Data models (freezed)
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+DI via `get_it`. Reactive UI via `watch_it`.
+
+## Development
+
+```bash
+flutter test                          # run tests
+flutter test --coverage               # run with coverage
+dart run build_runner build           # regenerate freezed models
+flutter analyze                       # lint
+```

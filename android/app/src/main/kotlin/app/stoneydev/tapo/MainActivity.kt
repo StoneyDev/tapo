@@ -1,4 +1,4 @@
-package com.tapo.tapo
+package app.stoneydev.tapo
 
 import io.flutter.embedding.android.FlutterActivity
 
