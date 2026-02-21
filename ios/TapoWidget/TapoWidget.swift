@@ -87,7 +87,7 @@ struct TapoWidgetEntryView: View {
 
     var body: some View {
         if entry.hasDevice && !entry.ip.isEmpty {
-            Link(destination: URL(string: "tapotoggle://toggle?ip=\(entry.ip)")!) {
+            Button(intent: ToggleDeviceIntent(ip: entry.ip)) {
                 HStack {
                     Circle()
                         .fill(statusColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn))
@@ -99,6 +99,7 @@ struct TapoWidgetEntryView: View {
                 }
                 .padding()
             }
+            .buttonStyle(.plain)
             .containerBackground(for: .widget) {
                 Color(.systemBackground)
             }
@@ -186,7 +187,7 @@ struct TapoListWidgetEntryView: View {
                     .foregroundColor(.secondary)
                     .padding(.bottom, 2)
                 ForEach(entry.devices, id: \.ip) { device in
-                    Link(destination: URL(string: "tapotoggle://toggle?ip=\(device.ip)")!) {
+                    Button(intent: ToggleDeviceIntent(ip: device.ip)) {
                         HStack {
                             Circle()
                                 .fill(statusColor(isOnline: device.isOnline, deviceOn: device.deviceOn))
@@ -198,6 +199,7 @@ struct TapoListWidgetEntryView: View {
                         }
                         .padding(.vertical, 2)
                     }
+                    .buttonStyle(.plain)
                 }
                 Spacer(minLength: 0)
             }

@@ -20,6 +20,7 @@
 		AA0001031AAAA00100000001 /* TapoWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001041AAAA00100000001 /* TapoWidgetBundle.swift */; };
 		AA0001051AAAA00100000001 /* SelectDeviceIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001061AAAA00100000001 /* SelectDeviceIntent.swift */; };
 		AA0001071AAAA00100000001 /* TapoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA0001081AAAA00100000001 /* TapoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA0001151AAAA00100000001 /* ToggleDeviceIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001161AAAA00100000001 /* ToggleDeviceIntent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -94,6 +95,7 @@
 		AA00010C1AAAA00100000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA00010D1AAAA00100000001 /* TapoWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TapoWidget.entitlements; sourceTree = "<group>"; };
 		AA00010E1AAAA00100000001 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Runner.entitlements; path = Runner/Runner.entitlements; sourceTree = "<group>"; };
+		AA0001161AAAA00100000001 /* ToggleDeviceIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleDeviceIntent.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -196,6 +198,7 @@
 				AA0001021AAAA00100000001 /* TapoWidget.swift */,
 				AA0001041AAAA00100000001 /* TapoWidgetBundle.swift */,
 				AA0001061AAAA00100000001 /* SelectDeviceIntent.swift */,
+				AA0001161AAAA00100000001 /* ToggleDeviceIntent.swift */,
 				AA00010C1AAAA00100000001 /* Info.plist */,
 				AA00010D1AAAA00100000001 /* TapoWidget.entitlements */,
 			);
@@ -470,6 +473,7 @@
 				AA0001011AAAA00100000001 /* TapoWidget.swift in Sources */,
 				AA0001031AAAA00100000001 /* TapoWidgetBundle.swift in Sources */,
 				AA0001051AAAA00100000001 /* SelectDeviceIntent.swift in Sources */,
+				AA0001151AAAA00100000001 /* ToggleDeviceIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
