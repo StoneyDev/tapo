@@ -6,14 +6,41 @@ import AppIntents
 
 private let appGroupId = "group.stoneydev.tapo"
 private let devicesKey = "devices"
+private let loadingKeyPrefix = "loading_"
 
-private let colorOn = Color(red: 103.0/255.0, green: 58.0/255.0, blue: 183.0/255.0)
-private let colorOff = Color(red: 158.0/255.0, green: 158.0/255.0, blue: 158.0/255.0)
-private let colorOffline = Color(red: 211.0/255.0, green: 47.0/255.0, blue: 47.0/255.0)
+func setDeviceLoading(ip: String, loading: Bool) {
+    let userDefaults = UserDefaults(suiteName: appGroupId)
+    if loading {
+        userDefaults?.set(true, forKey: "\(loadingKeyPrefix)\(ip)")
+    } else {
+        userDefaults?.removeObject(forKey: "\(loadingKeyPrefix)\(ip)")
+    }
+}
 
-private func statusColor(isOnline: Bool, deviceOn: Bool) -> Color {
-    if !isOnline { return colorOffline }
-    return deviceOn ? colorOn : colorOff
+func isDeviceLoading(ip: String) -> Bool {
+    let userDefaults = UserDefaults(suiteName: appGroupId)
+    return userDefaults?.bool(forKey: "\(loadingKeyPrefix)\(ip)") ?? false
+}
+
+// MARK: - Colors
+
+private let colorOnTint = Color(red: 103.0/255.0, green: 58.0/255.0, blue: 183.0/255.0)
+private let colorOffTint = Color(red: 117.0/255.0, green: 117.0/255.0, blue: 117.0/255.0)
+private let colorOfflineTint = Color(red: 211.0/255.0, green: 47.0/255.0, blue: 47.0/255.0)
+
+private func iconTintColor(isOnline: Bool, deviceOn: Bool) -> Color {
+    if !isOnline { return colorOfflineTint }
+    return deviceOn ? colorOnTint : colorOffTint
+}
+
+private func iconBackgroundColor(isOnline: Bool, deviceOn: Bool) -> Color {
+    if !isOnline { return colorOfflineTint.opacity(0.12) }
+    return deviceOn ? colorOnTint.opacity(0.15) : colorOffTint.opacity(0.12)
+}
+
+private func iconName(isOnline: Bool, deviceOn: Bool) -> String {
+    if !isOnline { return "exclamationmark.triangle.fill" }
+    return deviceOn ? "powerplug.fill" : "powerplug"
 }
 
 /// Load raw device dictionaries from shared UserDefaults.
@@ -31,11 +58,13 @@ func loadDevicesFromStorage() -> [[String: Any]] {
 
 struct DeviceEntry: TimelineEntry {
     let date: Date
+    let nickname: String
     let model: String
     let ip: String
     let deviceOn: Bool
     let isOnline: Bool
     let hasDevice: Bool
+    let isLoading: Bool
 }
 
 struct TapoWidgetProvider: AppIntentTimelineProvider {
@@ -43,7 +72,7 @@ struct TapoWidgetProvider: AppIntentTimelineProvider {
     typealias Intent = SelectDeviceIntent
 
     func placeholder(in context: Context) -> DeviceEntry {
-        DeviceEntry(date: Date(), model: "P110", ip: "", deviceOn: false, isOnline: true, hasDevice: true)
+        DeviceEntry(date: Date(), nickname: "Lampe Salon", model: "P110", ip: "", deviceOn: false, isOnline: true, hasDevice: true, isLoading: false)
     }
 
     func snapshot(for configuration: SelectDeviceIntent, in context: Context) async -> DeviceEntry {
@@ -58,7 +87,7 @@ struct TapoWidgetProvider: AppIntentTimelineProvider {
     private func getEntry(for configuration: SelectDeviceIntent) -> DeviceEntry {
         let devices = loadDevicesFromStorage()
         guard !devices.isEmpty else {
-            return DeviceEntry(date: Date(), model: "No device", ip: "", deviceOn: false, isOnline: true, hasDevice: false)
+            return DeviceEntry(date: Date(), nickname: "No device", model: "", ip: "", deviceOn: false, isOnline: true, hasDevice: false, isLoading: false)
         }
 
         let selectedIp = configuration.device?.id
@@ -68,16 +97,21 @@ struct TapoWidgetProvider: AppIntentTimelineProvider {
         } else if let first = devices.first {
             device = first
         } else {
-            return DeviceEntry(date: Date(), model: "No device", ip: "", deviceOn: false, isOnline: true, hasDevice: false)
+            return DeviceEntry(date: Date(), nickname: "No device", model: "", ip: "", deviceOn: false, isOnline: true, hasDevice: false, isLoading: false)
         }
 
+        let ip = device["ip"] as? String ?? ""
+        let model = device["model"] as? String ?? "Unknown"
+        let nickname = device["nickname"] as? String ?? model
         return DeviceEntry(
             date: Date(),
-            model: device["model"] as? String ?? "Unknown",
-            ip: device["ip"] as? String ?? "",
+            nickname: nickname,
+            model: model,
+            ip: ip,
             deviceOn: device["deviceOn"] as? Bool ?? false,
             isOnline: device["isOnline"] as? Bool ?? true,
-            hasDevice: true
+            hasDevice: true,
+            isLoading: isDeviceLoading(ip: ip)
         )
     }
 }
@@ -88,28 +122,57 @@ struct TapoWidgetEntryView: View {
     var body: some View {
         if entry.hasDevice && !entry.ip.isEmpty {
             Button(intent: ToggleDeviceIntent(ip: entry.ip)) {
-                HStack {
-                    Circle()
-                        .fill(statusColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn))
-                        .frame(width: 12, height: 12)
-                    Text(entry.model)
-                        .font(.headline)
-                        .foregroundColor(.primary)
+                HStack(spacing: 10) {
+                    // Icon in rounded square
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(iconBackgroundColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn))
+                            .frame(width: 40, height: 40)
+
+                        if entry.isLoading {
+                            ProgressView()
+                                .frame(width: 20, height: 20)
+                        } else {
+                            Image(systemName: iconName(isOnline: entry.isOnline, deviceOn: entry.deviceOn))
+                                .font(.system(size: 18))
+                                .foregroundColor(iconTintColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn))
+                        }
+                    }
+
+                    // Text
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(entry.nickname)
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+
+                        Text(entry.model)
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+
                     Spacer()
                 }
-                .padding()
+                .padding(.horizontal, 4)
             }
             .buttonStyle(.plain)
+            .disabled(entry.isLoading)
             .containerBackground(for: .widget) {
                 Color(.systemBackground)
             }
         } else {
-            Text("Add a plug")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .containerBackground(for: .widget) {
-                    Color(.systemBackground)
-                }
+            VStack(spacing: 4) {
+                Image(systemName: "powerplug")
+                    .font(.system(size: 24))
+                    .foregroundColor(.secondary)
+                Text("Add a plug")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .containerBackground(for: .widget) {
+                Color(.systemBackground)
+            }
         }
     }
 }
@@ -131,14 +194,14 @@ struct TapoWidget: Widget {
 
 struct DeviceListEntry: TimelineEntry {
     let date: Date
-    let devices: [(model: String, ip: String, deviceOn: Bool, isOnline: Bool)]
+    let devices: [(nickname: String, model: String, ip: String, deviceOn: Bool, isOnline: Bool, isLoading: Bool)]
 }
 
 struct TapoListWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> DeviceListEntry {
         DeviceListEntry(date: Date(), devices: [
-            (model: "P110", ip: "192.168.1.1", deviceOn: true, isOnline: true),
-            (model: "P100", ip: "192.168.1.2", deviceOn: false, isOnline: true),
+            (nickname: "Lampe Salon", model: "P110", ip: "192.168.1.1", deviceOn: true, isOnline: true, isLoading: false),
+            (nickname: "Bureau", model: "P100", ip: "192.168.1.2", deviceOn: false, isOnline: true, isLoading: false),
         ])
     }
 
@@ -157,12 +220,13 @@ struct TapoListWidgetProvider: TimelineProvider {
             return DeviceListEntry(date: Date(), devices: [])
         }
 
-        let parsed = devices.compactMap { device -> (model: String, ip: String, deviceOn: Bool, isOnline: Bool)? in
+        let parsed = devices.compactMap { device -> (nickname: String, model: String, ip: String, deviceOn: Bool, isOnline: Bool, isLoading: Bool)? in
             guard let ip = device["ip"] as? String,
                   let model = device["model"] as? String else { return nil }
+            let nickname = device["nickname"] as? String ?? model
             let deviceOn = device["deviceOn"] as? Bool ?? false
             let isOnline = device["isOnline"] as? Bool ?? true
-            return (model: model, ip: ip, deviceOn: deviceOn, isOnline: isOnline)
+            return (nickname: nickname, model: model, ip: ip, deviceOn: deviceOn, isOnline: isOnline, isLoading: isDeviceLoading(ip: ip))
         }
 
         return DeviceListEntry(date: Date(), devices: parsed)
@@ -174,32 +238,66 @@ struct TapoListWidgetEntryView: View {
 
     var body: some View {
         if entry.devices.isEmpty {
-            Text("No plugs available")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .containerBackground(for: .widget) {
-                    Color(.systemBackground)
-                }
+            VStack(spacing: 4) {
+                Image(systemName: "powerplug")
+                    .font(.system(size: 24))
+                    .foregroundColor(.secondary)
+                Text("No plugs available")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .containerBackground(for: .widget) {
+                Color(.systemBackground)
+            }
         } else {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Tapo Plugs")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.primary)
                     .padding(.bottom, 2)
+
                 ForEach(entry.devices, id: \.ip) { device in
                     Button(intent: ToggleDeviceIntent(ip: device.ip)) {
-                        HStack {
-                            Circle()
-                                .fill(statusColor(isOnline: device.isOnline, deviceOn: device.deviceOn))
-                                .frame(width: 10, height: 10)
-                            Text(device.model)
-                                .font(.subheadline)
+                        HStack(spacing: 8) {
+                            // Icon in rounded square
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(iconBackgroundColor(isOnline: device.isOnline, deviceOn: device.deviceOn))
+                                    .frame(width: 28, height: 28)
+
+                                if device.isLoading {
+                                    ProgressView()
+                                        .frame(width: 14, height: 14)
+                                } else {
+                                    Image(systemName: iconName(isOnline: device.isOnline, deviceOn: device.deviceOn))
+                                        .font(.system(size: 13))
+                                        .foregroundColor(iconTintColor(isOnline: device.isOnline, deviceOn: device.deviceOn))
+                                }
+                            }
+
+                            // Nickname
+                            Text(device.nickname)
+                                .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(.primary)
+                                .lineLimit(1)
+
+                            // Model
+                            Text(device.model)
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+
                             Spacer()
+
+                            // Status dot
+                            Circle()
+                                .fill(iconTintColor(isOnline: device.isOnline, deviceOn: device.deviceOn))
+                                .frame(width: 8, height: 8)
                         }
                         .padding(.vertical, 2)
                     }
                     .buttonStyle(.plain)
+                    .disabled(device.isLoading)
                 }
                 Spacer(minLength: 0)
             }

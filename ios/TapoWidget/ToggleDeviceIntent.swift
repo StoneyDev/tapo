@@ -1,5 +1,6 @@
 import AppIntents
 import Foundation
+import WidgetKit
 import home_widget
 
 @available(iOS 17, *)
@@ -19,10 +20,17 @@ struct ToggleDeviceIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult {
+        setDeviceLoading(ip: ip, loading: true)
+        WidgetCenter.shared.reloadAllTimelines()
+
         await HomeWidgetBackgroundWorker.run(
             url: URL(string: "tapotoggle://toggle?ip=\(ip)"),
             appGroup: "group.stoneydev.tapo"
         )
+
+        setDeviceLoading(ip: ip, loading: false)
+        WidgetCenter.shared.reloadAllTimelines()
+
         return .result()
     }
 }

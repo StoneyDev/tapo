@@ -19,9 +19,17 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
   WidgetsFlutterBinding.ensureInitialized();
   await HomeWidget.setAppGroupId('group.stoneydev.tapo');
 
+  // Show loading state immediately
+  await HomeWidget.saveWidgetData('loading_$ip', true);
+  await _refreshAllWidgets();
+
   final storage = SecureStorageService();
   final creds = await storage.getCredentials();
-  if (creds.email == null || creds.password == null) return;
+  if (creds.email == null || creds.password == null) {
+    await HomeWidget.saveWidgetData('loading_$ip', null);
+    await _refreshAllWidgets();
+    return;
+  }
 
   final tapoService = TapoService.fromCredentials(
     creds.email!,
@@ -36,6 +44,7 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
     await widgetData.saveDeviceState(
       ip: device.ip,
       model: device.model,
+      nickname: device.nickname,
       deviceOn: device.deviceOn,
       isOnline: device.isOnline,
     );
@@ -43,11 +52,14 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
     await widgetData.saveDeviceState(
       ip: ip,
       model: currentDevice?['model'] as String? ?? 'Unknown',
+      nickname: currentDevice?['nickname'] as String?,
       deviceOn: currentDevice?['deviceOn'] as bool? ?? false,
       isOnline: false,
     );
   }
 
+  // Clear loading state
+  await HomeWidget.saveWidgetData('loading_$ip', null);
   await _refreshAllWidgets();
 }
 

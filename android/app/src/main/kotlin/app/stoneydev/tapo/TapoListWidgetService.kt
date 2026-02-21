@@ -3,6 +3,7 @@ package app.stoneydev.tapo
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.view.View
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import es.antonborri.home_widget.HomeWidgetPlugin
@@ -41,15 +42,31 @@ class TapoListRemoteViewsFactory(
         if (position < devices.size) {
             val device = devices[position]
             val model = device.getString("model")
+            val nickname = device.optString("nickname", model)
             val deviceOn = device.getBoolean("deviceOn")
             val isOnline = device.optBoolean("isOnline", true)
             val ip = device.getString("ip")
 
+            val widgetData = HomeWidgetPlugin.getData(context)
+            val isLoading = widgetData.getBoolean("loading_$ip", false)
+
+            // Text
+            views.setTextViewText(R.id.list_item_nickname, nickname)
             views.setTextViewText(R.id.list_item_model, model)
 
-            val color = WidgetColors.statusColor(isOnline, deviceOn)
-            views.setInt(R.id.list_item_indicator, "setBackgroundColor", color)
-            views.setInt(R.id.list_item_container, "setBackgroundColor", color)
+            // Icon
+            views.setImageViewResource(R.id.list_item_icon, WidgetColors.iconDrawable(isOnline))
+            views.setInt(R.id.list_item_icon, "setColorFilter", WidgetColors.iconTint(isOnline, deviceOn))
+
+            // Icon background
+            views.setInt(R.id.list_item_icon_container, "setBackgroundResource", WidgetColors.iconBgDrawable(isOnline, deviceOn))
+
+            // Status dot color
+            views.setInt(R.id.list_item_indicator, "setBackgroundColor", WidgetColors.statusColor(isOnline, deviceOn))
+
+            // Loading state
+            views.setViewVisibility(R.id.list_item_indicator, if (isLoading) View.GONE else View.VISIBLE)
+            views.setViewVisibility(R.id.list_item_loading, if (isLoading) View.VISIBLE else View.GONE)
 
             // FillInIntent with device IP for tap handling
             val fillInIntent = Intent().apply {

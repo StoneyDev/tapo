@@ -67,6 +67,11 @@
             android:permission="android.permission.BIND_REMOTEVIEWS"
             android:exported="false" />
 
+        <!-- Custom click receiver for instant loading feedback -->
+        <receiver
+            android:name=".TapoWidgetClickReceiver"
+            android:exported="false" />
+
         <!-- home_widget background receiver for Dart callbacks -->
         <receiver
             android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver"

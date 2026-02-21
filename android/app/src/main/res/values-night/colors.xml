@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget surface (dark mode) -->
+    <color name="widget_surface">#FF1E1E1E</color>
+
+    <!-- Text colors (dark mode) -->
+    <color name="widget_text_primary">#DEFFFFFF</color>
+    <color name="widget_text_secondary">#99FFFFFF</color>
+</resources>

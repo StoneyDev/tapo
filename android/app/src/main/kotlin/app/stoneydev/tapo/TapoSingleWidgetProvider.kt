@@ -4,8 +4,8 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.net.Uri
+import android.view.View
 import android.widget.RemoteViews
-import es.antonborri.home_widget.HomeWidgetBackgroundIntent
 import es.antonborri.home_widget.HomeWidgetPlugin
 import org.json.JSONArray
 
@@ -32,7 +32,8 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
 
             val deviceIp = widgetData.getString("widget_${appWidgetId}_ip", null)
             val devicesJson = widgetData.getString("devices", null)
-            var modelText = "No device"
+            var nickname = "No device"
+            var model = ""
             var deviceOn = false
             var isOnline = true
 
@@ -42,24 +43,37 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
                     for (i in 0 until devices.length()) {
                         val device = devices.getJSONObject(i)
                         if (device.getString("ip") == deviceIp) {
-                            modelText = device.getString("model")
+                            model = device.getString("model")
+                            nickname = device.optString("nickname", model)
                             deviceOn = device.getBoolean("deviceOn")
                             isOnline = device.optBoolean("isOnline", true)
                             break
                         }
                     }
                 } catch (_: Exception) {
-                    modelText = "Error"
+                    nickname = "Error"
                 }
             }
 
-            views.setTextViewText(R.id.widget_model_text, modelText)
+            val isLoading = deviceIp != null && widgetData.getBoolean("loading_$deviceIp", false)
 
-            val bgColor = WidgetColors.statusColor(isOnline, deviceOn)
-            views.setInt(R.id.widget_container, "setBackgroundColor", bgColor)
+            // Text
+            views.setTextViewText(R.id.widget_nickname_text, nickname)
+            views.setTextViewText(R.id.widget_model_text, model)
+
+            // Visibility
+            views.setViewVisibility(R.id.widget_content, if (isLoading) View.GONE else View.VISIBLE)
+            views.setViewVisibility(R.id.widget_loading, if (isLoading) View.VISIBLE else View.GONE)
+
+            // Icon
+            views.setImageViewResource(R.id.widget_icon, WidgetColors.iconDrawable(isOnline))
+            views.setInt(R.id.widget_icon, "setColorFilter", WidgetColors.iconTint(isOnline, deviceOn))
+
+            // Icon background
+            views.setInt(R.id.widget_icon_container, "setBackgroundResource", WidgetColors.iconBgDrawable(isOnline, deviceOn))
 
             if (deviceIp != null) {
-                val intent = HomeWidgetBackgroundIntent.getBroadcast(
+                val intent = TapoWidgetClickReceiver.getBroadcast(
                     context,
                     Uri.parse("tapotoggle://toggle?ip=$deviceIp")
                 )

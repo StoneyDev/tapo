@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.RemoteViews
-import es.antonborri.home_widget.HomeWidgetBackgroundIntent
 
 class TapoListWidgetProvider : AppWidgetProvider() {
 
@@ -37,7 +36,7 @@ class TapoListWidgetProvider : AppWidgetProvider() {
             views.setRemoteAdapter(R.id.list_widget_listview, serviceIntent)
 
             // Set up PendingIntent template for list item clicks
-            val templateIntent = HomeWidgetBackgroundIntent.getBroadcast(
+            val templateIntent = TapoWidgetClickReceiver.getBroadcast(
                 context,
                 Uri.parse("tapotoggle://toggle?ip=template")
             )

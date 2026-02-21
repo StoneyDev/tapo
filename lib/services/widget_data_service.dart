@@ -14,12 +14,14 @@ class WidgetDataService {
     required String model,
     required bool deviceOn,
     bool isOnline = true,
+    String? nickname,
   }) async {
     final devices = await _readDevices();
     final index = devices.indexWhere((d) => d['ip'] == ip);
     final entry = {
       'ip': ip,
       'model': model,
+      'nickname': nickname ?? model,
       'deviceOn': deviceOn,
       'isOnline': isOnline,
     };
@@ -40,6 +42,7 @@ class WidgetDataService {
           (d) => {
             'ip': d.ip,
             'model': d.model,
+            'nickname': d.nickname,
             'deviceOn': d.deviceOn,
             'isOnline': d.isOnline,
           },
