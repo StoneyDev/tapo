@@ -76,6 +76,27 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
+  /// Update a device's IP address
+  Future<void> updateDeviceIp(String oldIp, String newIp) async {
+    final ips = await _storageService.getDeviceIps();
+    final index = ips.indexOf(oldIp);
+    if (index == -1) return;
+    if (ips.contains(newIp)) {
+      _errorMessage = 'IP address already exists';
+      notifyListeners();
+      return;
+    }
+
+    ips[index] = newIp;
+    await _storageService.saveDeviceIps(ips);
+
+    if (getIt.isRegistered<TapoService>()) {
+      getIt<TapoService>().disconnect(oldIp);
+    }
+
+    await loadDevices();
+  }
+
   /// Remove device from configuration
   Future<void> removeDevice(String ip) async {
     _devices = _devices.where((d) => d.ip != ip).toList();

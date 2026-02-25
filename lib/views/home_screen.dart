@@ -114,6 +114,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             device: device,
             onToggle: () => vm.toggleDevice(device.ip),
             onRemove: () => vm.removeDevice(device.ip),
+            onEditIp: (newIp) => vm.updateDeviceIp(device.ip, newIp),
             isToggling: vm.isToggling(device.ip),
           );
         },

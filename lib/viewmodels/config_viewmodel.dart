@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:tapo/core/di.dart';
+import 'package:tapo/core/validators.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 
 class ConfigViewModel extends ChangeNotifier {
@@ -42,17 +43,6 @@ class ConfigViewModel extends ChangeNotifier {
     return emailRegex.hasMatch(email);
   }
 
-  /// Validate IPv4 address format
-  bool _isValidIpv4(String ip) {
-    final parts = ip.split('.');
-    if (parts.length != 4) return false;
-    for (final part in parts) {
-      final num = int.tryParse(part);
-      if (num == null || num < 0 || num > 255) return false;
-    }
-    return true;
-  }
-
   Future<bool> saveConfig(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
       _setError('Email and password required');
@@ -90,7 +80,7 @@ class ConfigViewModel extends ChangeNotifier {
 
     if (trimmedIp.isEmpty) {
       _setError('IP address cannot be empty');
-    } else if (!_isValidIpv4(trimmedIp)) {
+    } else if (!isValidIpv4(trimmedIp)) {
       _setError('Invalid IP address format');
     } else if (_deviceIps.contains(trimmedIp)) {
       _setError('IP address already added');

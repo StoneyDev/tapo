@@ -44,6 +44,8 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
   Future<void> toggleDevice(String ip) async {}
   @override
   Future<void> removeDevice(String ip) async {}
+  @override
+  Future<void> updateDeviceIp(String oldIp, String newIp) async {}
 }
 
 class MockConfigViewModel extends ChangeNotifier implements ConfigViewModel {

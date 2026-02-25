@@ -398,6 +398,73 @@ void main() {
       });
     });
 
+    group('updateDeviceIp', () {
+      setUp(() async {
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer(
+          (_) async => [TestFixtures.testDeviceIp, TestFixtures.testDeviceIp2],
+        );
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp2),
+        ).thenAnswer(
+          (_) async =>
+              TestFixtures.onlineDevice(ip: TestFixtures.testDeviceIp2),
+        );
+        when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
+        when(
+          mockTapoService.disconnect(any),
+        ).thenReturn(null);
+        await viewModel.loadDevices();
+      });
+
+      test('replaces IP in storage and reloads devices', () async {
+        const newIp = '192.168.1.200';
+        when(
+          mockTapoService.getDeviceState(newIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice(ip: newIp));
+
+        await viewModel.updateDeviceIp(TestFixtures.testDeviceIp, newIp);
+
+        verify(
+          mockStorageService.saveDeviceIps([newIp, TestFixtures.testDeviceIp2]),
+        ).called(1);
+        verify(mockStorageService.getDeviceIps()).called(greaterThan(1));
+      });
+
+      test('disconnects old IP session', () async {
+        const newIp = '192.168.1.200';
+        when(
+          mockTapoService.getDeviceState(newIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice(ip: newIp));
+
+        await viewModel.updateDeviceIp(TestFixtures.testDeviceIp, newIp);
+
+        verify(mockTapoService.disconnect(TestFixtures.testDeviceIp)).called(1);
+      });
+
+      test('does nothing when oldIp not found', () async {
+        await viewModel.updateDeviceIp('10.0.0.99', '10.0.0.100');
+
+        verifyNever(mockStorageService.saveDeviceIps(any));
+        verifyNever(mockTapoService.disconnect(any));
+      });
+
+      test('sets error and does not save when newIp already exists', () async {
+        await viewModel.updateDeviceIp(
+          TestFixtures.testDeviceIp,
+          TestFixtures.testDeviceIp2,
+        );
+
+        expect(viewModel.errorMessage, 'IP address already exists');
+        verifyNever(mockStorageService.saveDeviceIps(any));
+        verifyNever(mockTapoService.disconnect(any));
+      });
+    });
+
     group('refresh', () {
       test('delegates to loadDevices', () async {
         when(

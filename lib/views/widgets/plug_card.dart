@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tapo/core/validators.dart';
 import 'package:tapo/models/tapo_device.dart';
 
 class PlugCard extends StatelessWidget {
@@ -6,6 +7,7 @@ class PlugCard extends StatelessWidget {
     required this.device,
     required this.onToggle,
     required this.onRemove,
+    required this.onEditIp,
     super.key,
     this.isToggling = false,
   });
@@ -13,6 +15,7 @@ class PlugCard extends StatelessWidget {
   final TapoDevice device;
   final VoidCallback onToggle;
   final VoidCallback onRemove;
+  final ValueChanged<String> onEditIp;
   final bool isToggling;
 
   @override
@@ -30,20 +33,69 @@ class PlugCard extends StatelessWidget {
       ),
       confirmDismiss: (_) => _confirmDelete(context),
       onDismissed: (_) => onRemove(),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              _buildStateIcon(colorScheme),
-              const SizedBox(width: 16),
-              Expanded(child: _buildDeviceInfo()),
-              _buildToggle(),
-            ],
+      child: GestureDetector(
+        onLongPress: () => _showEditIpDialog(context),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                _buildStateIcon(colorScheme),
+                const SizedBox(width: 16),
+                Expanded(child: _buildDeviceInfo()),
+                _buildToggle(),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _showEditIpDialog(BuildContext context) async {
+    final controller = TextEditingController(text: device.ip);
+    final formKey = GlobalKey<FormState>();
+    final newIp = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Modifier l'adresse IP"),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Adresse IP',
+              hintText: '192.168.1.100',
+            ),
+            validator: (value) {
+              final ip = value?.trim() ?? '';
+              if (ip.isEmpty) return 'Adresse IP requise';
+              if (!isValidIpv4(ip)) return 'Format IP invalide';
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(ctx, controller.text.trim());
+              }
+            },
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+    if (newIp != null && newIp != device.ip) {
+      onEditIp(newIp);
+    }
   }
 
   Future<bool> _confirmDelete(BuildContext context) async {
