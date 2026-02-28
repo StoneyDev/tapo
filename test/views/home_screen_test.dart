@@ -58,6 +58,9 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
   String? lastToggledIp;
   int removeDeviceCallCount = 0;
   String? lastRemovedIp;
+  int updateDeviceIpCallCount = 0;
+  String? lastOldIp;
+  String? lastNewIp;
 
   @override
   Future<void> loadDevices() async => loadDevicesCallCount++;
@@ -73,6 +76,13 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
   Future<void> removeDevice(String ip) async {
     removeDeviceCallCount++;
     lastRemovedIp = ip;
+  }
+
+  @override
+  Future<void> updateDeviceIp(String oldIp, String newIp) async {
+    updateDeviceIpCallCount++;
+    lastOldIp = oldIp;
+    lastNewIp = newIp;
   }
 }
 
@@ -105,7 +115,7 @@ class MockTapoService implements TapoService {
   int disconnectAllCallCount = 0;
 
   @override
-  void disconnectAll() => disconnectAllCallCount++;
+  Future<void> disconnectAll() async => disconnectAllCallCount++;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

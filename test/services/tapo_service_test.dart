@@ -160,13 +160,13 @@ class TestableTapoService extends TapoService {
   }
 
   @override
-  void disconnect(String ip) {
+  Future<void> disconnect(String ip) async {
     mockSessions.remove(ip);
     mockClients.remove(ip);
   }
 
   @override
-  void disconnectAll() {
+  Future<void> disconnectAll() async {
     mockSessions.clear();
     mockClients.clear();
   }

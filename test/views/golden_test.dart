@@ -31,6 +31,7 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
     notifyListeners();
   }
 
+  // ignore: unreachable_from_main
   void setIsLoading({required bool loading}) {
     // _isLoading is final; not used in golden tests
     notifyListeners();
@@ -44,6 +45,8 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
   Future<void> toggleDevice(String ip) async {}
   @override
   Future<void> removeDevice(String ip) async {}
+  @override
+  Future<void> updateDeviceIp(String oldIp, String newIp) async {}
 }
 
 class MockConfigViewModel extends ChangeNotifier implements ConfigViewModel {

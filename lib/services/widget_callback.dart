@@ -62,8 +62,8 @@ Future<Map<String, dynamic>?> _findDeviceByIp(String ip) async {
   final json = await HomeWidget.getWidgetData<String>('devices');
   if (json == null) return null;
   try {
-    final devices =
-        (jsonDecode(json) as List<dynamic>).cast<Map<String, dynamic>>();
+    final devices = (jsonDecode(json) as List<dynamic>)
+        .cast<Map<String, dynamic>>();
     return devices.where((d) => d['ip'] == ip).firstOrNull;
   } on FormatException {
     return null;

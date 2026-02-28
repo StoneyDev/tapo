@@ -2,23 +2,28 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Flutter Version
+
+This project uses **puro** for Flutter version management. The required version is defined in `.puro.json`.
+Always use `puro flutter` and `puro dart` instead of `flutter` and `dart` directly.
+
 ## Commands
 
 ```bash
 # Run all tests
-flutter test
+puro flutter test
 
 # Run single test file
-flutter test test/path/to/file_test.dart
+puro flutter test test/path/to/file_test.dart
 
 # Run with coverage
-flutter test --coverage
+puro flutter test --coverage
 
 # Build generated code (freezed models)
-dart run build_runner build
+puro dart run build_runner build --delete-conflicting-outputs
 
 # Analyze code
-flutter analyze
+puro flutter analyze
 ```
 
 ## Architecture

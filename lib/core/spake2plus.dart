@@ -99,7 +99,6 @@ class Spake2Plus {
 
     try {
       // Decode server's share Y
-      // ignore: non_constant_identifier_names
       final Y = _curve.curve.decodePoint(serverShareBytes);
       if (Y == null) return null;
 

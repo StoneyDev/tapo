@@ -9,10 +9,12 @@ void main() {
   group('PlugCard', () {
     late bool toggleCalled;
     late bool removeCalled;
+    late String? editedIp;
 
     setUp(() {
       toggleCalled = false;
       removeCalled = false;
+      editedIp = null;
     });
 
     Widget buildTestWidget(TapoDevice device, {bool isToggling = false}) {
@@ -22,6 +24,7 @@ void main() {
             device: device,
             onToggle: () => toggleCalled = true,
             onRemove: () => removeCalled = true,
+            onEditIp: (newIp) => editedIp = newIp,
             isToggling: isToggling,
           ),
         ),
@@ -219,6 +222,99 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(removeCalled, isTrue);
+      });
+    });
+
+    group('long press edit IP dialog', () {
+      testWidgets('long press opens dialog with current IP', (tester) async {
+        final device = TestFixtures.onlineDevice();
+        await tester.pumpWidget(buildTestWidget(device));
+
+        await tester.longPress(find.byType(Card));
+        await tester.pumpAndSettle();
+
+        expect(find.text("Modifier l'adresse IP"), findsOneWidget);
+        final textField = tester.widget<TextFormField>(
+          find.byType(TextFormField),
+        );
+        expect(textField.controller?.text, TestFixtures.testDeviceIp);
+      });
+
+      testWidgets('save with valid changed IP calls onEditIp', (tester) async {
+        final device = TestFixtures.onlineDevice();
+        await tester.pumpWidget(buildTestWidget(device));
+
+        await tester.longPress(find.byType(Card));
+        await tester.pumpAndSettle();
+
+        // Clear and enter new IP
+        await tester.enterText(find.byType(TextFormField), '10.0.0.1');
+        await tester.tap(find.text('Enregistrer'));
+        await tester.pumpAndSettle();
+
+        expect(editedIp, '10.0.0.1');
+      });
+
+      testWidgets('cancel does not call onEditIp', (tester) async {
+        final device = TestFixtures.onlineDevice();
+        await tester.pumpWidget(buildTestWidget(device));
+
+        await tester.longPress(find.byType(Card));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(TextFormField), '10.0.0.1');
+        await tester.tap(find.text('Annuler'));
+        await tester.pumpAndSettle();
+
+        expect(editedIp, isNull);
+      });
+
+      testWidgets('save with same IP does not call onEditIp', (tester) async {
+        final device = TestFixtures.onlineDevice();
+        await tester.pumpWidget(buildTestWidget(device));
+
+        await tester.longPress(find.byType(Card));
+        await tester.pumpAndSettle();
+
+        // Don't change the IP, just tap save
+        await tester.tap(find.text('Enregistrer'));
+        await tester.pumpAndSettle();
+
+        expect(editedIp, isNull);
+      });
+
+      testWidgets('save with invalid IP shows validation error', (
+        tester,
+      ) async {
+        final device = TestFixtures.onlineDevice();
+        await tester.pumpWidget(buildTestWidget(device));
+
+        await tester.longPress(find.byType(Card));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(TextFormField), 'not-an-ip');
+        await tester.tap(find.text('Enregistrer'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Format IP invalide'), findsOneWidget);
+        expect(editedIp, isNull);
+      });
+
+      testWidgets('save with empty IP shows validation error', (
+        tester,
+      ) async {
+        final device = TestFixtures.onlineDevice();
+        await tester.pumpWidget(buildTestWidget(device));
+
+        await tester.longPress(find.byType(Card));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(TextFormField), '');
+        await tester.tap(find.text('Enregistrer'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Adresse IP requise'), findsOneWidget);
+        expect(editedIp, isNull);
       });
     });
 

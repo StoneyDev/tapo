@@ -15,7 +15,7 @@ void main() {
     // Mock home_widget MethodChannel
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('home_widget'), (
-          MethodCall call,
+          call,
         ) async {
           homeWidgetCalls.add(call);
           switch (call.method) {
@@ -46,7 +46,7 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
-          (MethodCall call) async {
+          (call) async {
             switch (call.method) {
               case 'read':
                 final args = call.arguments as Map;
@@ -123,15 +123,18 @@ void main() {
         expect(methods, contains('setAppGroupId'));
       });
 
-      test('clears loading and refreshes widgets when no credentials', () async {
-        await widgetBackgroundCallback(
-          Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
-        );
+      test(
+        'clears loading and refreshes widgets when no credentials',
+        () async {
+          await widgetBackgroundCallback(
+            Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
+          );
 
-        final methods = homeWidgetCalls.map((c) => c.method).toList();
-        expect(methods, contains('saveWidgetData'));
-        expect(methods, contains('updateWidget'));
-      });
+          final methods = homeWidgetCalls.map((c) => c.method).toList();
+          expect(methods, contains('saveWidgetData'));
+          expect(methods, contains('updateWidget'));
+        },
+      );
 
       test('clears loading and refreshes when only email is stored', () async {
         secureStore['tapo_email'] = 'test@example.com';
@@ -144,17 +147,19 @@ void main() {
         expect(methods, contains('updateWidget'));
       });
 
-      test('clears loading and refreshes when only password is stored',
-          () async {
-        secureStore['tapo_password'] = 'password123';
+      test(
+        'clears loading and refreshes when only password is stored',
+        () async {
+          secureStore['tapo_password'] = 'password123';
 
-        await widgetBackgroundCallback(
-          Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
-        );
+          await widgetBackgroundCallback(
+            Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
+          );
 
-        final methods = homeWidgetCalls.map((c) => c.method).toList();
-        expect(methods, contains('updateWidget'));
-      });
+          final methods = homeWidgetCalls.map((c) => c.method).toList();
+          expect(methods, contains('updateWidget'));
+        },
+      );
     });
   });
 }
