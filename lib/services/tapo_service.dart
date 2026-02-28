@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:tapo/core/klap_crypto.dart';
@@ -129,7 +130,7 @@ class TapoService {
     final info = await client?.getInfo();
 
     if (info == null) {
-      disconnect(ip);
+      await disconnect(ip);
       return _offlineDevice(ip);
     }
 
@@ -154,7 +155,7 @@ class TapoService {
     final success = await client.setOn(on: newState);
 
     if (!success) {
-      disconnect(ip);
+      await disconnect(ip);
       return currentState.copyWith(isOnline: false);
     }
 
@@ -162,26 +163,26 @@ class TapoService {
   }
 
   /// Disconnect from device (clear session)
-  void disconnect(String ip) {
+  Future<void> disconnect(String ip) async {
     // Clean up KLAP
     _sessions.remove(ip);
     _clients.remove(ip);
 
     // Clean up TPAP
-    _tpapSessions[ip]?.close();
+    await _tpapSessions[ip]?.close();
     _tpapSessions.remove(ip);
     _tpapClients.remove(ip);
   }
 
   /// Disconnect from all devices
-  void disconnectAll() {
+  Future<void> disconnectAll() async {
     // Clean up KLAP
     _sessions.clear();
     _clients.clear();
 
     // Clean up TPAP
     for (final session in _tpapSessions.values) {
-      session.close();
+      await session.close();
     }
     _tpapSessions.clear();
     _tpapClients.clear();

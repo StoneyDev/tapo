@@ -22,7 +22,7 @@ class TpapSession {
 
   /// Probe device to understand what protocol it supports
   Future<void> probeDevice() async {
-    _httpClient = HttpClient()..connectionTimeout = const Duration(seconds: 5);
+    _httpClient = HttpClient()..connectionTimeout = const Duration(seconds: 10);
 
     final endpoints = ['/app', '/app/handshake', '/app/login', '/'];
     final methods = [
@@ -45,7 +45,7 @@ class TpapSession {
           // Ignore probe errors
         }
         _httpClient = HttpClient()
-          ..connectionTimeout = const Duration(seconds: 5);
+          ..connectionTimeout = const Duration(seconds: 10);
       }
     }
   }
@@ -69,7 +69,7 @@ class TpapSession {
   /// Perform full TPAP handshake (SPAKE2+)
   Future<bool> handshake() async {
     try {
-      _httpClient = HttpClient()..badCertificateCallback = (_, __, ___) => true;
+      _httpClient = HttpClient()..badCertificateCallback = (_, _, _) => true;
 
       // Step 1: Initial handshake to get parameters
       final initResult = await _initHandshake();
@@ -212,7 +212,7 @@ class TpapSession {
       }
 
       // If port 80 fails, try port 4433 (robot vacuums)
-      _httpClient!.badCertificateCallback = (_, __, ___) => true;
+      _httpClient!.badCertificateCallback = (_, _, _) => true;
 
       final uri4433 = Uri.parse('https://$deviceIp:4433/app/handshake1');
       final request4433 = await _httpClient!.postUrl(uri4433)

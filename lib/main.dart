@@ -11,8 +11,8 @@ import 'package:tapo/views/home_screen.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   setupLocator();
-  HomeWidget.setAppGroupId('group.stoneydev.tapo');
-  HomeWidget.registerInteractivityCallback(widgetBackgroundCallback);
+  unawaited(HomeWidget.setAppGroupId('group.stoneydev.tapo'));
+  unawaited(HomeWidget.registerInteractivityCallback(widgetBackgroundCallback));
   runApp(const MyApp());
 }
 
@@ -46,7 +46,7 @@ class _StartupScreenState extends State<_StartupScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuth();
+    unawaited(_checkAuth());
   }
 
   Future<void> _checkAuth() async {
@@ -57,8 +57,8 @@ class _StartupScreenState extends State<_StartupScreen> {
 
     if (hasCreds) {
       final creds = await storage.getCredentials();
+      await registerTapoService(creds.email!, creds.password!);
       if (!mounted) return;
-      registerTapoService(creds.email!, creds.password!);
       unawaited(Navigator.pushReplacementNamed(context, '/home'));
     } else {
       unawaited(Navigator.pushReplacementNamed(context, '/config'));

@@ -192,16 +192,22 @@ class MockTapoService extends _i1.Mock implements _i6.TapoService {
           as _i5.Future<_i3.TapoDevice>);
 
   @override
-  void disconnect(String? ip) => super.noSuchMethod(
-    Invocation.method(#disconnect, [ip]),
-    returnValueForMissingStub: null,
-  );
+  _i5.Future<void> disconnect(String? ip) =>
+      (super.noSuchMethod(
+            Invocation.method(#disconnect, [ip]),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
 
   @override
-  void disconnectAll() => super.noSuchMethod(
-    Invocation.method(#disconnectAll, []),
-    returnValueForMissingStub: null,
-  );
+  _i5.Future<void> disconnectAll() =>
+      (super.noSuchMethod(
+            Invocation.method(#disconnectAll, []),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
 }
 
 /// A class which mocks [FlutterSecureStorage].

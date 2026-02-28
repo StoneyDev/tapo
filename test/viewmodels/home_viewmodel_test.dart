@@ -317,7 +317,6 @@ void main() {
             model: 'P110',
             nickname: 'Test Plug',
             deviceOn: false,
-            isOnline: true,
           ),
         ).called(1);
       });
@@ -372,7 +371,7 @@ void main() {
         when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
         when(
           mockTapoService.disconnect(TestFixtures.testDeviceIp),
-        ).thenReturn(null);
+        ).thenAnswer((_) async {});
         await viewModel.loadDevices();
       });
 
@@ -417,7 +416,7 @@ void main() {
         when(mockStorageService.saveDeviceIps(any)).thenAnswer((_) async {});
         when(
           mockTapoService.disconnect(any),
-        ).thenReturn(null);
+        ).thenAnswer((_) async {});
         await viewModel.loadDevices();
       });
 

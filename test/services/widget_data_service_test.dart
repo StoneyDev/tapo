@@ -26,7 +26,7 @@ void main() {
     // Mock the home_widget MethodChannel
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('home_widget'), (
-          MethodCall call,
+          call,
         ) async {
           switch (call.method) {
             case 'saveWidgetData':

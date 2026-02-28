@@ -18,6 +18,7 @@ void main() {
     // Reset GetIt for each test to avoid TapoService registration conflicts
     final getIt = GetIt.instance;
     if (getIt.isRegistered<TapoService>()) {
+      // ignore: discarded_futures
       getIt.unregister<TapoService>();
     }
   });
@@ -25,6 +26,7 @@ void main() {
   tearDown(() {
     final getIt = GetIt.instance;
     if (getIt.isRegistered<TapoService>()) {
+      // ignore: discarded_futures
       getIt.unregister<TapoService>();
     }
   });

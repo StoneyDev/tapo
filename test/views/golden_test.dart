@@ -31,6 +31,7 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
     notifyListeners();
   }
 
+  // ignore: unreachable_from_main
   void setIsLoading({required bool loading}) {
     // _isLoading is final; not used in golden tests
     notifyListeners();

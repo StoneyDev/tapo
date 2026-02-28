@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
@@ -21,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _viewModel = di<HomeViewModel>();
-    _viewModel.loadDevices();
+    unawaited(_viewModel.loadDevices());
   }
 
   @override
@@ -33,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _viewModel.refresh();
+      unawaited(_viewModel.refresh());
     }
   }
 
@@ -61,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _logout(BuildContext context) async {
     final locator = GetIt.instance;
     if (locator.isRegistered<TapoService>()) {
-      locator<TapoService>().disconnectAll();
+      await locator<TapoService>().disconnectAll();
       locator.unregister<TapoService>();
     }
 

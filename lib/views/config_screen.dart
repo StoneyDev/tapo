@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tapo/viewmodels/config_viewmodel.dart';
 import 'package:watch_it/watch_it.dart';
@@ -19,7 +21,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
   void initState() {
     super.initState();
     _viewModel = di<ConfigViewModel>();
-    _loadConfig();
+    unawaited(_loadConfig());
   }
 
   Future<void> _loadConfig() async {

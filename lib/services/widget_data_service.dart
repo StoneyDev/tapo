@@ -65,15 +65,15 @@ class WidgetDataService {
 
   /// Notify all home screen widgets to refresh their data.
   Future<void> refreshWidgets() => Future.wait([
-        HomeWidget.updateWidget(
-          androidName: 'TapoSingleWidgetProvider',
-          iOSName: 'TapoWidget',
-        ),
-        HomeWidget.updateWidget(
-          androidName: 'TapoListWidgetProvider',
-          iOSName: 'TapoListWidget',
-        ),
-      ]);
+    HomeWidget.updateWidget(
+      androidName: 'TapoSingleWidgetProvider',
+      iOSName: 'TapoWidget',
+    ),
+    HomeWidget.updateWidget(
+      androidName: 'TapoListWidgetProvider',
+      iOSName: 'TapoListWidget',
+    ),
+  ]);
 
   Future<void> _writeDevices(List<Map<String, dynamic>> devices) async {
     await HomeWidget.saveWidgetData<String>(_devicesKey, jsonEncode(devices));

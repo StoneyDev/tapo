@@ -16,9 +16,9 @@ void setupLocator() {
 }
 
 /// Register TapoService with credentials (call after user authenticates)
-void registerTapoService(String email, String password) {
+Future<void> registerTapoService(String email, String password) async {
   if (getIt.isRegistered<TapoService>()) {
-    getIt.unregister<TapoService>();
+    await getIt.unregister<TapoService>();
   }
   getIt.registerLazySingleton<TapoService>(
     () => TapoService.fromCredentials(email, password),

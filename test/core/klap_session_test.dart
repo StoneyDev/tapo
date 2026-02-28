@@ -322,7 +322,7 @@ void main() {
         );
 
         final result = await realSession.handshake().timeout(
-          const Duration(seconds: 2),
+          const Duration(seconds: 10),
           onTimeout: () => false,
         );
 

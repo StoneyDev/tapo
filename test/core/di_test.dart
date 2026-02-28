@@ -59,8 +59,8 @@ void main() {
   });
 
   group('registerTapoService', () {
-    test('registers TapoService as lazy singleton', () {
-      registerTapoService('test@example.com', 'password123');
+    test('registers TapoService as lazy singleton', () async {
+      await registerTapoService('test@example.com', 'password123');
 
       expect(testGetIt.isRegistered<TapoService>(), isTrue);
       expect(
@@ -69,19 +69,19 @@ void main() {
       );
     });
 
-    test('re-registration replaces existing service with new instance', () {
-      registerTapoService('user1@example.com', 'password1');
+    test('re-registration replaces existing service with new instance', () async {
+      await registerTapoService('user1@example.com', 'password1');
       final service1 = testGetIt<TapoService>();
 
-      registerTapoService('user2@example.com', 'password2');
+      await registerTapoService('user2@example.com', 'password2');
       final service2 = testGetIt<TapoService>();
 
       expect(identical(service1, service2), isFalse);
     });
 
-    test('works after setupLocator', () {
+    test('works after setupLocator', () async {
       setupLocator();
-      registerTapoService('test@example.com', 'password123');
+      await registerTapoService('test@example.com', 'password123');
 
       expect(testGetIt.isRegistered<TapoService>(), isTrue);
     });

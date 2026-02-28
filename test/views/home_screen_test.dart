@@ -115,7 +115,7 @@ class MockTapoService implements TapoService {
   int disconnectAllCallCount = 0;
 
   @override
-  void disconnectAll() => disconnectAllCallCount++;
+  Future<void> disconnectAll() async => disconnectAllCallCount++;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
