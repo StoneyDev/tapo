@@ -15,12 +15,13 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
-		F083F0D5DCE8AA725CE0D6CE /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B4A8E491F4CE2CA3027E0BA /* Pods_RunnerTests.framework */; };
 		AA0001011AAAA00100000001 /* TapoWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001021AAAA00100000001 /* TapoWidget.swift */; };
 		AA0001031AAAA00100000001 /* TapoWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001041AAAA00100000001 /* TapoWidgetBundle.swift */; };
 		AA0001051AAAA00100000001 /* SelectDeviceIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001061AAAA00100000001 /* SelectDeviceIntent.swift */; };
 		AA0001071AAAA00100000001 /* TapoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA0001081AAAA00100000001 /* TapoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		AA0001151AAAA00100000001 /* ToggleDeviceIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001161AAAA00100000001 /* ToggleDeviceIntent.swift */; };
+		AA0001181AAAA00100000001 /* ToggleDeviceIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001191AAAA00100000001 /* ToggleDeviceIntent.swift */; };
+		BE75608FB7FEF4272B99D29C /* Pods_TapoWidgetExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FC3DD3D99A404683D09943AC /* Pods_TapoWidgetExtension.framework */; };
+		F083F0D5DCE8AA725CE0D6CE /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6B4A8E491F4CE2CA3027E0BA /* Pods_RunnerTests.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,12 +66,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		01BC1C9CC4A296D3D870803E /* Pods-TapoWidgetExtension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TapoWidgetExtension.debug.xcconfig"; path = "Target Support Files/Pods-TapoWidgetExtension/Pods-TapoWidgetExtension.debug.xcconfig"; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		31300FFD617BE611366E2CCA /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		5E1B7B028E9493759975AA54 /* Pods-TapoWidgetExtension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TapoWidgetExtension.release.xcconfig"; path = "Target Support Files/Pods-TapoWidgetExtension/Pods-TapoWidgetExtension.release.xcconfig"; sourceTree = "<group>"; };
 		6B4A8E491F4CE2CA3027E0BA /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C4E482A63DC3EDB850E2A58 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -83,11 +86,8 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		97D32E40A0D02A1C3B5587C4 /* Pods-TapoWidgetExtension.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TapoWidgetExtension.profile.xcconfig"; path = "Target Support Files/Pods-TapoWidgetExtension/Pods-TapoWidgetExtension.profile.xcconfig"; sourceTree = "<group>"; };
 		A0B953E5EBACCEDE02FD0507 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
-		AA1DCC73645A9BE428BC6DCB /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
-		CB6EEDF95F0CB0EEE2D3148B /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
-		CFBEFD6A183F2FED24AB791A /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
-		FE560248924E771673719920 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		AA0001021AAAA00100000001 /* TapoWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapoWidget.swift; sourceTree = "<group>"; };
 		AA0001041AAAA00100000001 /* TapoWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapoWidgetBundle.swift; sourceTree = "<group>"; };
 		AA0001061AAAA00100000001 /* SelectDeviceIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectDeviceIntent.swift; sourceTree = "<group>"; };
@@ -95,7 +95,12 @@
 		AA00010C1AAAA00100000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AA00010D1AAAA00100000001 /* TapoWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TapoWidget.entitlements; sourceTree = "<group>"; };
 		AA00010E1AAAA00100000001 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Runner.entitlements; path = Runner/Runner.entitlements; sourceTree = "<group>"; };
-		AA0001161AAAA00100000001 /* ToggleDeviceIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleDeviceIntent.swift; sourceTree = "<group>"; };
+		AA0001191AAAA00100000001 /* ToggleDeviceIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleDeviceIntent.swift; sourceTree = "<group>"; };
+		AA1DCC73645A9BE428BC6DCB /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		CB6EEDF95F0CB0EEE2D3148B /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
+		CFBEFD6A183F2FED24AB791A /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
+		FC3DD3D99A404683D09943AC /* Pods_TapoWidgetExtension.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TapoWidgetExtension.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE560248924E771673719920 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +124,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE75608FB7FEF4272B99D29C /* Pods_TapoWidgetExtension.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,6 +136,7 @@
 			children = (
 				6C4E482A63DC3EDB850E2A58 /* Pods_Runner.framework */,
 				6B4A8E491F4CE2CA3027E0BA /* Pods_RunnerTests.framework */,
+				FC3DD3D99A404683D09943AC /* Pods_TapoWidgetExtension.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -198,7 +205,7 @@
 				AA0001021AAAA00100000001 /* TapoWidget.swift */,
 				AA0001041AAAA00100000001 /* TapoWidgetBundle.swift */,
 				AA0001061AAAA00100000001 /* SelectDeviceIntent.swift */,
-				AA0001161AAAA00100000001 /* ToggleDeviceIntent.swift */,
+				AA0001191AAAA00100000001 /* ToggleDeviceIntent.swift */,
 				AA00010C1AAAA00100000001 /* Info.plist */,
 				AA00010D1AAAA00100000001 /* TapoWidget.entitlements */,
 			);
@@ -214,6 +221,9 @@
 				31300FFD617BE611366E2CCA /* Pods-RunnerTests.debug.xcconfig */,
 				CFBEFD6A183F2FED24AB791A /* Pods-RunnerTests.release.xcconfig */,
 				A0B953E5EBACCEDE02FD0507 /* Pods-RunnerTests.profile.xcconfig */,
+				01BC1C9CC4A296D3D870803E /* Pods-TapoWidgetExtension.debug.xcconfig */,
+				5E1B7B028E9493759975AA54 /* Pods-TapoWidgetExtension.release.xcconfig */,
+				97D32E40A0D02A1C3B5587C4 /* Pods-TapoWidgetExtension.profile.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
@@ -269,6 +279,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = AA0001121AAAA00100000001 /* Build configuration list for PBXNativeTarget "TapoWidgetExtension" */;
 			buildPhases = (
+				5807C9B102A1C01BA5FE1D11 /* [CP] Check Pods Manifest.lock */,
 				AA0001131AAAA00100000001 /* Sources */,
 				AA00010F1AAAA00100000001 /* Frameworks */,
 				AA0001141AAAA00100000001 /* Resources */,
@@ -387,6 +398,28 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		5807C9B102A1C01BA5FE1D11 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-TapoWidgetExtension-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		5C288E4E555DE8F416F92930 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -473,7 +506,7 @@
 				AA0001011AAAA00100000001 /* TapoWidget.swift in Sources */,
 				AA0001031AAAA00100000001 /* TapoWidgetBundle.swift in Sources */,
 				AA0001051AAAA00100000001 /* SelectDeviceIntent.swift in Sources */,
-				AA0001151AAAA00100000001 /* ToggleDeviceIntent.swift in Sources */,
+				AA0001181AAAA00100000001 /* ToggleDeviceIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -555,7 +588,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
@@ -686,7 +719,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -737,7 +770,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
@@ -797,6 +830,7 @@
 		};
 		AA0001151AAAA00100000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 01BC1C9CC4A296D3D870803E /* Pods-TapoWidgetExtension.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
@@ -828,6 +862,7 @@
 		};
 		AA0001161AAAA00100000001 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5E1B7B028E9493759975AA54 /* Pods-TapoWidgetExtension.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
@@ -857,6 +892,7 @@
 		};
 		AA0001171AAAA00100000001 /* Profile */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 97D32E40A0D02A1C3B5587C4 /* Pods-TapoWidgetExtension.profile.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;

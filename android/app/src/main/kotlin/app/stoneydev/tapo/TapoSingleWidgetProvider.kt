@@ -61,11 +61,13 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
             views.setTextViewText(R.id.widget_nickname_text, nickname)
             views.setTextViewText(R.id.widget_model_text, model)
 
-            views.setViewVisibility(R.id.widget_content, if (isLoading) View.GONE else View.VISIBLE)
+            val iconColor = WidgetColors.iconTint(context, isOnline, deviceOn)
+
+            views.setViewVisibility(R.id.widget_icon, if (isLoading) View.GONE else View.VISIBLE)
             views.setViewVisibility(R.id.widget_loading, if (isLoading) View.VISIBLE else View.GONE)
 
             views.setImageViewResource(R.id.widget_icon, WidgetColors.iconDrawable(isOnline))
-            views.setInt(R.id.widget_icon, "setColorFilter", WidgetColors.iconTint(context, isOnline, deviceOn))
+            views.setInt(R.id.widget_icon, "setColorFilter", iconColor)
             views.setInt(R.id.widget_icon_container, "setBackgroundResource", WidgetColors.iconBgDrawable(isOnline, deviceOn))
 
             if (deviceIp != null) {

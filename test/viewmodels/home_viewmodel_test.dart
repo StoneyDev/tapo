@@ -47,6 +47,7 @@ void main() {
   });
 
   tearDown(() async {
+    viewModel.dispose();
     await getIt.reset();
   });
 
@@ -357,6 +358,73 @@ void main() {
         await viewModel.toggleDevice(TestFixtures.testDeviceIp);
 
         expect(viewModel.errorMessage, isNull);
+      });
+    });
+
+    group('power-off countdown', () {
+      setUp(() async {
+        viewModel.dispose();
+        viewModel = HomeViewModel(
+          powerOffDelay: const Duration(milliseconds: 30),
+          countdownTick: const Duration(milliseconds: 5),
+        );
+        when(
+          mockStorageService.getDeviceIps(),
+        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice());
+        await viewModel.loadDevices();
+      });
+
+      test('turns the device off when countdown ends', () async {
+        when(
+          mockTapoService.setDevicePower(
+            TestFixtures.testDeviceIp,
+            on: false,
+          ),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice(deviceOn: false));
+
+        viewModel.schedulePowerOff(TestFixtures.testDeviceIp);
+        expect(
+          viewModel.powerOffRemaining(TestFixtures.testDeviceIp),
+          isNotNull,
+        );
+
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+
+        verify(
+          mockTapoService.setDevicePower(
+            TestFixtures.testDeviceIp,
+            on: false,
+          ),
+        ).called(1);
+        expect(viewModel.devices.first.deviceOn, isFalse);
+        expect(viewModel.powerOffRemaining(TestFixtures.testDeviceIp), isNull);
+      });
+
+      test('cancels a scheduled countdown', () async {
+        viewModel
+          ..schedulePowerOff(TestFixtures.testDeviceIp)
+          ..cancelPowerOff(TestFixtures.testDeviceIp);
+
+        await Future<void>.delayed(const Duration(milliseconds: 60));
+
+        verifyNever(mockTapoService.setDevicePower(any, on: anyNamed('on')));
+        expect(viewModel.powerOffRemaining(TestFixtures.testDeviceIp), isNull);
+      });
+
+      test('does not schedule for a device that is already off', () async {
+        when(
+          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+        ).thenAnswer(
+          (_) async => TestFixtures.onlineDevice(deviceOn: false),
+        );
+        await viewModel.loadDevices();
+
+        viewModel.schedulePowerOff(TestFixtures.testDeviceIp);
+
+        expect(viewModel.powerOffRemaining(TestFixtures.testDeviceIp), isNull);
       });
     });
 

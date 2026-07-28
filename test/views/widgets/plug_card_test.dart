@@ -119,54 +119,43 @@ void main() {
     });
 
     group('isToggling state', () {
-      testWidgets('shows spinner when toggling, switch otherwise', (
+      testWidgets('shows spinner while toggling', (
         tester,
       ) async {
         final device = TestFixtures.onlineDevice();
 
-        // When toggling
         await tester.pumpWidget(buildTestWidget(device, isToggling: true));
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
-        expect(find.byType(Switch), findsNothing);
-
-        // When not toggling
-        await tester.pumpWidget(buildTestWidget(device));
-        expect(find.byType(Switch), findsOneWidget);
-        expect(find.byType(CircularProgressIndicator), findsNothing);
       });
     });
 
-    group('switch interaction', () {
-      testWidgets('switch tap calls onToggle for online device', (
+    group('power interaction', () {
+      testWidgets('power tap calls onToggle for online device', (
         tester,
       ) async {
         final device = TestFixtures.onlineDevice(deviceOn: false);
         await tester.pumpWidget(buildTestWidget(device));
 
-        await tester.tap(find.byType(Switch));
+        await tester.tap(
+          find.byKey(const ValueKey('power-${TestFixtures.testDeviceIp}')),
+        );
         await tester.pump();
 
         expect(toggleCalled, isTrue);
       });
 
-      testWidgets('switch is disabled for offline device', (tester) async {
+      testWidgets('power button is disabled for offline device', (
+        tester,
+      ) async {
         final device = TestFixtures.offlineDevice();
         await tester.pumpWidget(buildTestWidget(device));
 
-        final switchWidget = tester.widget<Switch>(find.byType(Switch));
-        expect(switchWidget.onChanged, isNull);
-      });
-
-      testWidgets('switch reflects device on/off state', (tester) async {
-        // Device on
-        await tester.pumpWidget(buildTestWidget(TestFixtures.onlineDevice()));
-        expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
-
-        // Device off
-        await tester.pumpWidget(
-          buildTestWidget(TestFixtures.onlineDevice(deviceOn: false)),
+        await tester.tap(
+          find.byKey(const ValueKey('power-${TestFixtures.testDeviceIp}')),
         );
-        expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
+        await tester.pump();
+
+        expect(toggleCalled, isFalse);
       });
     });
 

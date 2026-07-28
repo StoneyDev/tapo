@@ -1,8 +1,8 @@
 name: tapo
-description: "A new Flutter project."
+description: "Local control and home screen widgets for TP-Link Tapo smart plugs."
 publish_to: "none"
 
-version: 1.0.0+1
+version: 1.1.2+2
 
 environment:
   sdk: ">=3.11.0"

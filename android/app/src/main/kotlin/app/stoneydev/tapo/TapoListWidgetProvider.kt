@@ -43,11 +43,23 @@ class TapoListWidgetProvider : AppWidgetProvider() {
 
             if (devices.length() == 0) {
                 views.setViewVisibility(R.id.list_widget_empty, View.VISIBLE)
+                views.setTextViewText(
+                    R.id.list_widget_count,
+                    context.resources.getQuantityString(R.plurals.list_widget_count, 0, 0)
+                )
                 appWidgetManager.updateAppWidget(appWidgetId, views)
                 return
             }
 
             views.setViewVisibility(R.id.list_widget_empty, View.GONE)
+            views.setTextViewText(
+                R.id.list_widget_count,
+                context.resources.getQuantityString(
+                    R.plurals.list_widget_count,
+                    devices.length(),
+                    devices.length()
+                )
+            )
 
             try {
                 for (i in 0 until devices.length()) {
@@ -58,6 +70,7 @@ class TapoListWidgetProvider : AppWidgetProvider() {
                     val deviceOn = device.optBoolean("deviceOn", false)
                     val isOnline = device.optBoolean("isOnline", true)
                     val isLoading = widgetData.getBoolean("loading_$ip", false)
+                    val iconColor = WidgetColors.iconTint(context, isOnline, deviceOn)
 
                     val itemView = RemoteViews(context.packageName, R.layout.tapo_list_widget_item)
 
@@ -65,13 +78,9 @@ class TapoListWidgetProvider : AppWidgetProvider() {
                     itemView.setTextViewText(R.id.list_item_model, model)
 
                     itemView.setImageViewResource(R.id.list_item_icon, WidgetColors.iconDrawable(isOnline))
-                    itemView.setInt(R.id.list_item_icon, "setColorFilter", WidgetColors.iconTint(context, isOnline, deviceOn))
+                    itemView.setInt(R.id.list_item_icon, "setColorFilter", iconColor)
                     itemView.setInt(R.id.list_item_icon_container, "setBackgroundResource", WidgetColors.iconBgDrawable(isOnline, deviceOn))
 
-                    itemView.setInt(R.id.list_item_indicator, "setColorFilter", WidgetColors.iconTint(context, isOnline, deviceOn))
-                    itemView.setImageViewResource(R.id.list_item_indicator, R.drawable.widget_icon_bg_on)
-
-                    itemView.setViewVisibility(R.id.list_item_indicator, if (isLoading) View.GONE else View.VISIBLE)
                     itemView.setViewVisibility(R.id.list_item_loading, if (isLoading) View.VISIBLE else View.GONE)
 
                     if (ip.isNotEmpty()) {

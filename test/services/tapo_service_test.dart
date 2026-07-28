@@ -121,7 +121,7 @@ class TestableTapoService extends TapoService {
     final info = await client?.getDeviceInfo();
 
     if (info == null) {
-      disconnect(ip);
+      await disconnect(ip);
       return TapoDevice(
         ip: ip,
         nickname: 'Unknown',
@@ -143,20 +143,34 @@ class TestableTapoService extends TapoService {
   @override
   Future<TapoDevice> toggleDevice(String ip) async {
     final currentState = await getDeviceState(ip);
+    return _setDevicePower(ip, currentState, on: !currentState.deviceOn);
+  }
+
+  @override
+  Future<TapoDevice> setDevicePower(String ip, {required bool on}) async {
+    final currentState = await getDeviceState(ip);
+    return _setDevicePower(ip, currentState, on: on);
+  }
+
+  Future<TapoDevice> _setDevicePower(
+    String ip,
+    TapoDevice currentState, {
+    required bool on,
+  }) async {
     if (!currentState.isOnline) return currentState;
+    if (currentState.deviceOn == on) return currentState;
 
     final client = mockClients[ip];
     if (client == null) return currentState;
 
-    final newState = !currentState.deviceOn;
-    final success = await client.setDeviceOn(on: newState);
+    final success = await client.setDeviceOn(on: on);
 
     if (!success) {
-      disconnect(ip);
+      await disconnect(ip);
       return currentState.copyWith(isOnline: false);
     }
 
-    return currentState.copyWith(deviceOn: newState);
+    return currentState.copyWith(deviceOn: on);
   }
 
   @override
@@ -438,6 +452,36 @@ void main() {
       });
     });
 
+    group('setDevicePower', () {
+      test('turns an on device off', () async {
+        service.klapHandshakeSuccess = true;
+        await service.connectToDevice(TestFixtures.testDeviceIp);
+        service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse =
+            TestFixtures.deviceInfoResponse();
+
+        final result = await service.setDevicePower(
+          TestFixtures.testDeviceIp,
+          on: false,
+        );
+
+        expect(result.deviceOn, isFalse);
+      });
+
+      test('keeps an already off device off', () async {
+        service.klapHandshakeSuccess = true;
+        await service.connectToDevice(TestFixtures.testDeviceIp);
+        service.mockClients[TestFixtures.testDeviceIp]!.deviceInfoResponse =
+            TestFixtures.deviceInfoResponse(deviceOn: false);
+
+        final result = await service.setDevicePower(
+          TestFixtures.testDeviceIp,
+          on: false,
+        );
+
+        expect(result.deviceOn, isFalse);
+      });
+    });
+
     group('disconnect', () {
       test('removes session and client for IP', () async {
         service.klapHandshakeSuccess = true;
@@ -446,7 +490,7 @@ void main() {
         expect(service.hasSession(TestFixtures.testDeviceIp), isTrue);
         expect(service.hasClient(TestFixtures.testDeviceIp), isTrue);
 
-        service.disconnect(TestFixtures.testDeviceIp);
+        await service.disconnect(TestFixtures.testDeviceIp);
 
         expect(service.hasSession(TestFixtures.testDeviceIp), isFalse);
         expect(service.hasClient(TestFixtures.testDeviceIp), isFalse);
@@ -457,15 +501,15 @@ void main() {
         await service.connectToDevice(TestFixtures.testDeviceIp);
         await service.connectToDevice(TestFixtures.testDeviceIp2);
 
-        service.disconnect(TestFixtures.testDeviceIp);
+        await service.disconnect(TestFixtures.testDeviceIp);
 
         expect(service.hasSession(TestFixtures.testDeviceIp), isFalse);
         expect(service.hasSession(TestFixtures.testDeviceIp2), isTrue);
       });
 
-      test('is safe to call on non-existent session', () {
+      test('is safe to call on non-existent session', () async {
         // Should not throw
-        service.disconnect(TestFixtures.testDeviceIp);
+        await service.disconnect(TestFixtures.testDeviceIp);
         expect(service.hasSession(TestFixtures.testDeviceIp), isFalse);
       });
     });
@@ -479,15 +523,15 @@ void main() {
         expect(service.mockSessions.length, 2);
         expect(service.mockClients.length, 2);
 
-        service.disconnectAll();
+        await service.disconnectAll();
 
         expect(service.mockSessions.isEmpty, isTrue);
         expect(service.mockClients.isEmpty, isTrue);
       });
 
-      test('is safe to call when no sessions exist', () {
+      test('is safe to call when no sessions exist', () async {
         // Should not throw
-        service.disconnectAll();
+        await service.disconnectAll();
         expect(service.mockSessions.isEmpty, isTrue);
       });
     });

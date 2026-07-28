@@ -146,20 +146,38 @@ class TapoService {
   /// Toggle device on/off, returns updated state
   Future<TapoDevice> toggleDevice(String ip) async {
     final currentState = await getDeviceState(ip);
+    return _setDevicePower(
+      ip,
+      currentState: currentState,
+      on: !currentState.deviceOn,
+    );
+  }
+
+  /// Set an explicit power state, returns the updated device state.
+  Future<TapoDevice> setDevicePower(String ip, {required bool on}) async {
+    final currentState = await getDeviceState(ip);
+    return _setDevicePower(ip, currentState: currentState, on: on);
+  }
+
+  Future<TapoDevice> _setDevicePower(
+    String ip, {
+    required TapoDevice currentState,
+    required bool on,
+  }) async {
     if (!currentState.isOnline) return currentState;
+    if (currentState.deviceOn == on) return currentState;
 
     final client = _getClient(ip);
     if (client == null) return currentState;
 
-    final newState = !currentState.deviceOn;
-    final success = await client.setOn(on: newState);
+    final success = await client.setOn(on: on);
 
     if (!success) {
       await disconnect(ip);
       return currentState.copyWith(isOnline: false);
     }
 
-    return currentState.copyWith(deviceOn: newState);
+    return currentState.copyWith(deviceOn: on);
   }
 
   /// Disconnect from device (clear session)

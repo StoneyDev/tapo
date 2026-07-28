@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:tapo/core/di.dart';
 import 'package:tapo/models/tapo_device.dart';
@@ -6,14 +8,24 @@ import 'package:tapo/services/tapo_service.dart';
 import 'package:tapo/services/widget_data_service.dart';
 
 class HomeViewModel extends ChangeNotifier {
+  HomeViewModel({
+    Duration powerOffDelay = const Duration(minutes: 1),
+    Duration countdownTick = const Duration(seconds: 1),
+  }) : _powerOffDelay = powerOffDelay,
+       _countdownTick = countdownTick;
+
   final SecureStorageService _storageService = getIt<SecureStorageService>();
   final WidgetDataService _widgetDataService = getIt<WidgetDataService>();
+  final Duration _powerOffDelay;
+  final Duration _countdownTick;
 
   List<TapoDevice> _devices = [];
   bool _isLoading = false;
   String? _errorMessage;
   final Set<String> _togglingDevices = {};
   final Map<String, DateTime> _lastToggleTime = {};
+  final Map<String, DateTime> _powerOffDeadlines = {};
+  final Map<String, Timer> _powerOffTimers = {};
   static const _toggleCooldown = Duration(milliseconds: 500);
   DateTime? _lastLoadTime;
   static const _loadCooldown = Duration(seconds: 2);
@@ -24,6 +36,53 @@ class HomeViewModel extends ChangeNotifier {
 
   /// Check if a specific device is currently being toggled
   bool isToggling(String ip) => _togglingDevices.contains(ip);
+
+  Duration? powerOffRemaining(String ip) {
+    final deadline = _powerOffDeadlines[ip];
+    if (deadline == null) return null;
+    final remaining = deadline.difference(DateTime.now());
+    return remaining.isNegative ? Duration.zero : remaining;
+  }
+
+  void schedulePowerOff(String ip) {
+    final device = _devices.where((device) => device.ip == ip).firstOrNull;
+    if (device == null ||
+        !device.isOnline ||
+        !device.deviceOn ||
+        isToggling(ip)) {
+      return;
+    }
+
+    cancelPowerOff(ip, notify: false);
+    _powerOffDeadlines[ip] = DateTime.now().add(_powerOffDelay);
+    _powerOffTimers[ip] = Timer.periodic(_countdownTick, (_) {
+      if (powerOffRemaining(ip) != Duration.zero) {
+        notifyListeners();
+        return;
+      }
+
+      cancelPowerOff(ip);
+      unawaited(_turnOffDevice(ip));
+    });
+    notifyListeners();
+  }
+
+  void cancelPowerOff(String ip, {bool notify = true}) {
+    final hadDeadline = _powerOffDeadlines.remove(ip) != null;
+    final timer = _powerOffTimers.remove(ip);
+    timer?.cancel();
+    if ((hadDeadline || timer != null) && notify) notifyListeners();
+  }
+
+  void cancelAllPowerOffs() {
+    if (_powerOffDeadlines.isEmpty) return;
+    for (final timer in _powerOffTimers.values) {
+      timer.cancel();
+    }
+    _powerOffDeadlines.clear();
+    _powerOffTimers.clear();
+    notifyListeners();
+  }
 
   /// Refresh devices with cooldown to avoid redundant network calls
   Future<void> refresh() {
@@ -44,6 +103,7 @@ class HomeViewModel extends ChangeNotifier {
     try {
       final ips = await _storageService.getDeviceIps();
       if (ips.isEmpty) {
+        cancelAllPowerOffs();
         _devices = [];
         _isLoading = false;
         notifyListeners();
@@ -88,10 +148,11 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     ips[index] = newIp;
+    cancelPowerOff(oldIp);
     await _storageService.saveDeviceIps(ips);
 
     if (getIt.isRegistered<TapoService>()) {
-      getIt<TapoService>().disconnect(oldIp);
+      await getIt<TapoService>().disconnect(oldIp);
     }
 
     await loadDevices();
@@ -99,6 +160,7 @@ class HomeViewModel extends ChangeNotifier {
 
   /// Remove device from configuration
   Future<void> removeDevice(String ip) async {
+    cancelPowerOff(ip);
     _devices = _devices.where((d) => d.ip != ip).toList();
     notifyListeners();
 
@@ -109,7 +171,7 @@ class HomeViewModel extends ChangeNotifier {
     await _widgetDataService.refreshWidgets();
 
     if (getIt.isRegistered<TapoService>()) {
-      getIt<TapoService>().disconnect(ip);
+      await getIt<TapoService>().disconnect(ip);
     }
   }
 
@@ -131,11 +193,43 @@ class HomeViewModel extends ChangeNotifier {
     final index = _devices.indexWhere((d) => d.ip == ip);
     if (index == -1) return;
 
+    cancelPowerOff(ip);
+    await _updateDevice(
+      ip,
+      (service) => service.toggleDevice(ip),
+      failureMessage: 'Failed to toggle device',
+    );
+  }
+
+  Future<void> _turnOffDevice(String ip) async {
+    final device = _devices.where((device) => device.ip == ip).firstOrNull;
+    if (device == null || !device.isOnline || !device.deviceOn) return;
+    if (!getIt.isRegistered<TapoService>()) {
+      _errorMessage = 'Not authenticated';
+      notifyListeners();
+      return;
+    }
+
+    await _updateDevice(
+      ip,
+      (service) => service.setDevicePower(ip, on: false),
+      failureMessage: 'Failed to turn off device',
+    );
+  }
+
+  Future<void> _updateDevice(
+    String ip,
+    Future<TapoDevice> Function(TapoService service) action, {
+    required String failureMessage,
+  }) async {
+    final index = _devices.indexWhere((device) => device.ip == ip);
+    if (index == -1 || _togglingDevices.contains(ip)) return;
+
     _togglingDevices.add(ip);
     notifyListeners();
 
     try {
-      final updatedDevice = await getIt<TapoService>().toggleDevice(ip);
+      final updatedDevice = await action(getIt<TapoService>());
       _devices = List.from(_devices)..[index] = updatedDevice;
       _errorMessage = null;
 
@@ -153,10 +247,18 @@ class HomeViewModel extends ChangeNotifier {
         // Non-critical: device was toggled but widget state may be stale
       }
     } on Exception {
-      _errorMessage = 'Failed to toggle device';
+      _errorMessage = failureMessage;
     } finally {
       _togglingDevices.remove(ip);
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    for (final timer in _powerOffTimers.values) {
+      timer.cancel();
+    }
+    super.dispose();
   }
 }

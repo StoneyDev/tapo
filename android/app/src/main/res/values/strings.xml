@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Tapo</string>
+    <string name="widget_brand">Tapo Home</string>
     <string name="widget_description">Toggle a single Tapo smart plug</string>
     <string name="config_title">Select a plug</string>
     <string name="config_subtitle">Choose which device to display on your home screen.</string>
     <string name="config_no_devices">No devices found.\nOpen the app first to load your devices.</string>
     <string name="list_widget_description">Toggle all Tapo smart plugs</string>
-    <string name="list_widget_title">Tapo Plugs</string>
+    <string name="list_widget_title">Prises</string>
     <string name="list_widget_empty">No devices.\nOpen the app to load your plugs.</string>
+    <plurals name="list_widget_count">
+        <item quantity="one">%d plug</item>
+        <item quantity="other">%d plugs</item>
+    </plurals>
 </resources>

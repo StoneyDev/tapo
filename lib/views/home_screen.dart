@@ -42,29 +42,160 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     watchIt<HomeViewModel>();
-    final vm = _viewModel;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tapo Devices'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: () => _logout(context),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(context),
+            Expanded(child: _buildBody()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final online = _viewModel.devices.where((device) => device.isOnline).length;
+    final powered = _viewModel.devices
+        .where((device) => device.isOnline && device.deviceOn)
+        .length;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.secondary,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.power_settings_new_rounded,
+                  color: colors.onSecondary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'TAPO HOME',
+                style: TextStyle(
+                  color: colors.onSurfaceVariant,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const Spacer(),
+              Semantics(
+                button: true,
+                label: 'Se déconnecter',
+                child: IconButton(
+                  icon: const Icon(Icons.logout, size: 20),
+                  tooltip: 'Logout',
+                  style: IconButton.styleFrom(
+                    backgroundColor: colors.surface,
+                    foregroundColor: colors.onSurface,
+                    side: BorderSide(color: colors.outlineVariant),
+                  ),
+                  onPressed: () => _logout(context),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              const Expanded(
+                child: Text(
+                  'Prises',
+                  style: TextStyle(
+                    fontSize: 38,
+                    height: 0.95,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1.8,
+                  ),
+                ),
+              ),
+              if (_viewModel.devices.isNotEmpty)
+                Text(
+                  '$powered allumée${powered > 1 ? 's' : ''}\n'
+                  '$online en ligne',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: colors.onSurfaceVariant,
+                    fontSize: 12,
+                    height: 1.45,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+            ],
           ),
         ],
       ),
-      body: _buildBody(vm),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_viewModel.isLoading) {
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+    }
+
+    if (_viewModel.errorMessage != null) {
+      return _MessageState(
+        icon: Icons.cloud_off_rounded,
+        title: 'Connexion impossible',
+        message: _viewModel.errorMessage!,
+        actionLabel: 'Retry',
+        onAction: _viewModel.refresh,
+      );
+    }
+
+    if (_viewModel.devices.isEmpty) {
+      return const _MessageState(
+        icon: Icons.power_outlined,
+        title: 'No devices configured',
+        message: 'Ajoutez une adresse IP depuis la configuration.',
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _viewModel.refresh,
+      child: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(20, 2, 20, 28),
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: _viewModel.devices.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 14),
+        itemBuilder: (context, index) {
+          final device = _viewModel.devices[index];
+          return PlugCard(
+            device: device,
+            onToggle: () => _viewModel.toggleDevice(device.ip),
+            onRemove: () => _viewModel.removeDevice(device.ip),
+            onEditIp: (newIp) => _viewModel.updateDeviceIp(device.ip, newIp),
+            isToggling: _viewModel.isToggling(device.ip),
+            powerOffRemaining: _viewModel.powerOffRemaining(device.ip),
+            onSchedulePowerOff: () => _viewModel.schedulePowerOff(device.ip),
+            onCancelPowerOff: () => _viewModel.cancelPowerOff(device.ip),
+          );
+        },
+      ),
     );
   }
 
   Future<void> _logout(BuildContext context) async {
+    _viewModel.cancelAllPowerOffs();
     final locator = GetIt.instance;
     if (locator.isRegistered<TapoService>()) {
       await locator<TapoService>().disconnectAll();
-      locator.unregister<TapoService>();
+      await locator.unregister<TapoService>();
     }
 
     final storage = di<SecureStorageService>();
@@ -79,47 +210,62 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       await Navigator.pushReplacementNamed(context, '/config');
     }
   }
+}
 
-  Widget _buildBody(HomeViewModel vm) {
-    if (vm.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+class _MessageState extends StatelessWidget {
+  const _MessageState({
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
 
-    if (vm.errorMessage != null) {
-      return Center(
+  final IconData icon;
+  final String title;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              vm.errorMessage!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            Container(
+              width: 68,
+              height: 68,
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Icon(icon, color: colors.onSurfaceVariant, size: 30),
             ),
-            const SizedBox(height: 16),
-            FilledButton(onPressed: vm.refresh, child: const Text('Retry')),
+            const SizedBox(height: 18),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colors.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (actionLabel != null) ...[
+              const SizedBox(height: 18),
+              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
+            ],
           ],
         ),
-      );
-    }
-
-    if (vm.devices.isEmpty) {
-      return const Center(child: Text('No devices configured'));
-    }
-
-    return RefreshIndicator(
-      onRefresh: vm.refresh,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(8),
-        itemCount: vm.devices.length,
-        itemBuilder: (context, index) {
-          final device = vm.devices[index];
-          return PlugCard(
-            device: device,
-            onToggle: () => vm.toggleDevice(device.ip),
-            onRemove: () => vm.removeDevice(device.ip),
-            onEditIp: (newIp) => vm.updateDeviceIp(device.ip, newIp),
-            isToggling: vm.isToggling(device.ip),
-          );
-        },
       ),
     );
   }

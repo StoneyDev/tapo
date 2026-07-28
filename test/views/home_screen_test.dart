@@ -29,6 +29,14 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
   String? get errorMessage => _errorMessage;
   @override
   bool isToggling(String ip) => _togglingDevices.contains(ip);
+  @override
+  Duration? powerOffRemaining(String ip) => null;
+  @override
+  void schedulePowerOff(String ip) {}
+  @override
+  void cancelPowerOff(String ip, {bool notify = true}) {}
+  @override
+  void cancelAllPowerOffs() {}
 
   // State setters
   void setDevices(List<TapoDevice> devices) {
@@ -276,8 +284,7 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
-        // Tap the switch to toggle
-        await tester.tap(find.byType(Switch));
+        await tester.tap(find.byKey(const ValueKey('power-10.0.0.1')));
         await tester.pump();
 
         expect(mockViewModel.toggleDeviceCallCount, 1);
@@ -295,7 +302,7 @@ void main() {
 
         // When toggling, PlugCard shows spinner
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
-        expect(find.byType(Switch), findsNothing);
+        expect(find.byKey(const ValueKey('power-10.0.0.1')), findsOneWidget);
       });
     });
 
@@ -323,7 +330,7 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
-        expect(find.text('Tapo Devices'), findsOneWidget);
+        expect(find.text('Prises'), findsOneWidget);
         expect(mockViewModel.loadDevicesCallCount, 1);
       });
     });

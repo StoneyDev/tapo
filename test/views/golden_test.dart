@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:tapo/main.dart' show appTheme;
 import 'package:tapo/models/tapo_device.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
@@ -25,6 +26,14 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
   String? get errorMessage => _errorMessage;
   @override
   bool isToggling(String ip) => _togglingDevices.contains(ip);
+  @override
+  Duration? powerOffRemaining(String ip) => null;
+  @override
+  void schedulePowerOff(String ip) {}
+  @override
+  void cancelPowerOff(String ip, {bool notify = true}) {}
+  @override
+  void cancelAllPowerOffs() {}
 
   void setDevices(List<TapoDevice> devices) {
     _devices = devices;
@@ -133,7 +142,13 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(400, 700));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+      await tester.pumpWidget(
+        MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: appTheme,
+          home: const HomeScreen(),
+        ),
+      );
       await tester.pumpAndSettle();
 
       await expectLater(
@@ -151,7 +166,13 @@ void main() {
       await tester.binding.setSurfaceSize(const Size(400, 700));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(const MaterialApp(home: ConfigScreen()));
+      await tester.pumpWidget(
+        MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: appTheme,
+          home: const ConfigScreen(),
+        ),
+      );
       await tester.pumpAndSettle();
 
       await expectLater(

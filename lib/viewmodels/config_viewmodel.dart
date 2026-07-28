@@ -64,7 +64,7 @@ class ConfigViewModel extends ChangeNotifier {
     try {
       await _storageService.saveCredentials(email, password);
       await _storageService.saveDeviceIps(_deviceIps);
-      registerTapoService(email, password);
+      await registerTapoService(email, password);
       return true;
     } on Exception {
       _setError('Failed to save configuration');

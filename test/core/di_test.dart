@@ -69,15 +69,18 @@ void main() {
       );
     });
 
-    test('re-registration replaces existing service with new instance', () async {
-      await registerTapoService('user1@example.com', 'password1');
-      final service1 = testGetIt<TapoService>();
+    test(
+      're-registration replaces existing service with new instance',
+      () async {
+        await registerTapoService('user1@example.com', 'password1');
+        final service1 = testGetIt<TapoService>();
 
-      await registerTapoService('user2@example.com', 'password2');
-      final service2 = testGetIt<TapoService>();
+        await registerTapoService('user2@example.com', 'password2');
+        final service2 = testGetIt<TapoService>();
 
-      expect(identical(service1, service2), isFalse);
-    });
+        expect(identical(service1, service2), isFalse);
+      },
+    );
 
     test('works after setupLocator', () async {
       setupLocator();

@@ -1,28 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Widget surface -->
-    <color name="widget_surface">#FFFFFFFF</color>
+    <color name="brand_background">#FFF5F2E9</color>
 
-    <!-- Icon background tints (with alpha) -->
-    <color name="widget_on_icon_bg">#26673AB7</color>
-    <color name="widget_off_icon_bg">#1F757575</color>
-    <color name="widget_offline_icon_bg">#1FD32F2F</color>
+    <!-- Widget surface -->
+    <color name="widget_surface">#FFF5F2E9</color>
+    <color name="widget_item_surface">#FFFFFFFF</color>
+
+    <!-- Icon backgrounds -->
+    <color name="widget_on_icon_bg">#FFC7FF5E</color>
+    <color name="widget_off_icon_bg">#FFF0F1EC</color>
+    <color name="widget_offline_icon_bg">#FFFFE1DD</color>
 
     <!-- Icon tint colors -->
-    <color name="widget_on_icon_tint">#FF673AB7</color>
-    <color name="widget_off_icon_tint">#FF757575</color>
-    <color name="widget_offline_icon_tint">#FFD32F2F</color>
+    <color name="widget_on_icon_tint">#FF141A18</color>
+    <color name="widget_off_icon_tint">#FF626965</color>
+    <color name="widget_offline_icon_tint">#FFD4473F</color>
 
     <!-- Text colors -->
-    <color name="widget_text_primary">#DE000000</color>
-    <color name="widget_text_secondary">#99000000</color>
+    <color name="widget_text_primary">#FF141A18</color>
+    <color name="widget_text_secondary">#FF626965</color>
 
     <!-- Config activity colors -->
-    <color name="config_background">#FFF5F5F5</color>
+    <color name="config_background">#FFF5F2E9</color>
     <color name="config_surface">#FFFFFFFF</color>
-    <color name="config_text_primary">#FF1C1B1F</color>
-    <color name="config_text_secondary">#FF49454F</color>
-    <color name="config_text_tertiary">#FF79747E</color>
-    <color name="config_divider">#1F000000</color>
-    <color name="config_accent">#FF673AB7</color>
+    <color name="config_text_primary">#FF141A18</color>
+    <color name="config_text_secondary">#FF626965</color>
+    <color name="config_text_tertiary">#FF626965</color>
+    <color name="config_divider">#FFE3E5DF</color>
+    <color name="config_accent">#FFC7FF5E</color>
 </resources>
