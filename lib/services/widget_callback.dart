@@ -21,22 +21,21 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
 
   final widgetData = WidgetDataService();
   final storage = SecureStorageService();
-  final creds = await storage.getCredentials();
-  if (creds.email == null || creds.password == null) {
-    await HomeWidget.saveWidgetData('loading_$ip', null);
-    await widgetData.refreshWidgets();
-    return;
-  }
-
-  final tapoService = TapoService.fromCredentials(
-    creds.email!,
-    creds.password!,
-  );
-
-  final currentDevice = await _findDeviceByIp(ip);
+  TapoService? tapoService;
+  Map<String, dynamic>? currentDevice;
 
   try {
-    final device = await tapoService.toggleDevice(ip);
+    currentDevice = await _findDeviceByIp(ip);
+    final creds = await storage.getCredentials();
+    if (creds.email == null || creds.password == null) return;
+
+    tapoService = TapoService.fromCredentials(
+      creds.email!,
+      creds.password!,
+    );
+    final device = await tapoService
+        .toggleDevice(ip)
+        .timeout(const Duration(seconds: 10));
     await widgetData.saveDeviceState(
       ip: device.ip,
       model: device.model,
@@ -52,10 +51,11 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
       deviceOn: currentDevice?['deviceOn'] as bool? ?? false,
       isOnline: false,
     );
+  } finally {
+    await HomeWidget.saveWidgetData('loading_$ip', null);
+    await widgetData.refreshWidgets();
+    await tapoService?.disconnectAll();
   }
-
-  await HomeWidget.saveWidgetData('loading_$ip', null);
-  await widgetData.refreshWidgets();
 }
 
 Future<Map<String, dynamic>?> _findDeviceByIp(String ip) async {

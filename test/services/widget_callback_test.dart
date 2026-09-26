@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tapo/services/widget_callback.dart';
@@ -8,6 +12,8 @@ void main() {
   late Map<String, dynamic> widgetStore;
   late Map<String, String?> secureStore;
   late List<MethodCall> homeWidgetCalls;
+  var credentialsUnavailable = false;
+  var deviceWritesUnavailable = false;
 
   void setupChannelMocks() {
     homeWidgetCalls = [];
@@ -23,6 +29,9 @@ void main() {
               final args = call.arguments as Map;
               final id = args['id'] as String;
               final data = args['data'];
+              if (id == 'devices' && deviceWritesUnavailable) {
+                throw PlatformException(code: 'storage_unavailable');
+              }
               if (data == null) {
                 widgetStore.remove(id);
               } else {
@@ -49,6 +58,9 @@ void main() {
           (call) async {
             switch (call.method) {
               case 'read':
+                if (credentialsUnavailable) {
+                  throw PlatformException(code: 'storage_unavailable');
+                }
                 final args = call.arguments as Map;
                 final key = args['key'] as String;
                 return secureStore[key];
@@ -76,12 +88,97 @@ void main() {
   setUp(() {
     widgetStore = {};
     secureStore = {};
+    credentialsUnavailable = false;
+    deviceWritesUnavailable = false;
     setupChannelMocks();
   });
 
   tearDown(clearChannelMocks);
 
   group('widgetBackgroundCallback', () {
+    test('clears loading after 10 seconds when connection hangs', () async {
+      const ip = '192.168.1.100';
+      secureStore.addAll({
+        'tapo_email': 'test@example.com',
+        'tapo_password': 'password123',
+      });
+      widgetStore.addAll({
+        'loading_$ip': true,
+        'devices': jsonEncode([
+          {
+            'ip': ip,
+            'model': 'P110',
+            'nickname': 'Desk',
+            'deviceOn': true,
+            'isOnline': true,
+          },
+        ]),
+      });
+
+      final completed = await IOOverrides.runZoned(
+        () =>
+            widgetBackgroundCallback(
+                  Uri.parse('tapotoggle://toggle?ip=$ip'),
+                )
+                .then((_) => true)
+                .timeout(
+                  const Duration(seconds: 11),
+                  onTimeout: () => false,
+                ),
+        socketConnect: (host, port, {sourceAddress, sourcePort = 0, timeout}) =>
+            Completer<Socket>().future,
+      );
+
+      expect(completed, isTrue);
+      expect(widgetStore.containsKey('loading_$ip'), isFalse);
+      final devices = jsonDecode(widgetStore['devices'] as String) as List;
+      expect(devices.single, {
+        'ip': ip,
+        'model': 'P110',
+        'nickname': 'Desk',
+        'deviceOn': true,
+        'isOnline': false,
+      });
+      expect(
+        homeWidgetCalls.where((call) => call.method == 'updateWidget'),
+        hasLength(2),
+      );
+    });
+
+    test('clears loading when reading credentials fails', () async {
+      credentialsUnavailable = true;
+      widgetStore['loading_192.168.1.100'] = true;
+
+      await widgetBackgroundCallback(
+        Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
+      );
+
+      expect(widgetStore.containsKey('loading_192.168.1.100'), isFalse);
+      expect(
+        homeWidgetCalls.where((call) => call.method == 'updateWidget'),
+        hasLength(2),
+      );
+    });
+
+    test('clears loading even if saving the offline state fails', () async {
+      credentialsUnavailable = true;
+      deviceWritesUnavailable = true;
+      widgetStore['loading_192.168.1.100'] = true;
+
+      await expectLater(
+        widgetBackgroundCallback(
+          Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
+        ),
+        throwsA(isA<PlatformException>()),
+      );
+
+      expect(widgetStore.containsKey('loading_192.168.1.100'), isFalse);
+      expect(
+        homeWidgetCalls.where((call) => call.method == 'updateWidget'),
+        hasLength(2),
+      );
+    });
+
     group('URI guard clauses', () {
       test('returns immediately for null uri', () async {
         await widgetBackgroundCallback(null);
