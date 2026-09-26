@@ -62,7 +62,7 @@ class TapoService {
 
     // If device is known to require TPAP, skip KLAP
     if (_tpapDevices.contains(ip)) {
-      return _connectTpap(ip);
+      return await _connectTpap(ip);
     }
 
     // Try KLAP first
@@ -76,8 +76,7 @@ class TapoService {
     }
 
     // KLAP failed - try TPAP (firmware 1.4+)
-    _tpapDevices.add(ip);
-    return _connectTpap(ip);
+    return await _connectTpap(ip);
   }
 
   /// Connect via TPAP protocol
@@ -98,6 +97,8 @@ class TapoService {
     // Try TPAP handshake
     final success = await tpapSession.handshake();
     if (success) {
+      // A network failure alone does not identify the device's protocol.
+      _tpapDevices.add(ip);
       _tpapSessions[ip] = tpapSession;
       _tpapClients[ip] = TpapClient(session: tpapSession);
       return true;
@@ -146,7 +147,7 @@ class TapoService {
   /// Toggle device on/off, returns updated state
   Future<TapoDevice> toggleDevice(String ip) async {
     final currentState = await getDeviceState(ip);
-    return _setDevicePower(
+    return await _setDevicePower(
       ip,
       currentState: currentState,
       on: !currentState.deviceOn,
@@ -156,7 +157,7 @@ class TapoService {
   /// Set an explicit power state, returns the updated device state.
   Future<TapoDevice> setDevicePower(String ip, {required bool on}) async {
     final currentState = await getDeviceState(ip);
-    return _setDevicePower(ip, currentState: currentState, on: on);
+    return await _setDevicePower(ip, currentState: currentState, on: on);
   }
 
   Future<TapoDevice> _setDevicePower(

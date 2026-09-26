@@ -27,8 +27,6 @@ class HomeViewModel extends ChangeNotifier {
   final Map<String, DateTime> _powerOffDeadlines = {};
   final Map<String, Timer> _powerOffTimers = {};
   static const _toggleCooldown = Duration(milliseconds: 500);
-  DateTime? _lastLoadTime;
-  static const _loadCooldown = Duration(seconds: 2);
 
   List<TapoDevice> get devices => List.unmodifiable(_devices);
   bool get isLoading => _isLoading;
@@ -84,15 +82,8 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Refresh devices with cooldown to avoid redundant network calls
-  Future<void> refresh() {
-    final now = DateTime.now();
-    if (_lastLoadTime != null &&
-        now.difference(_lastLoadTime!) < _loadCooldown) {
-      return Future.value();
-    }
-    return loadDevices();
-  }
+  /// Retry immediately so a restored Wi-Fi connection can be used.
+  Future<void> refresh() => loadDevices();
 
   /// Load all configured devices and fetch their states
   Future<void> loadDevices() async {
@@ -119,7 +110,6 @@ class HomeViewModel extends ChangeNotifier {
 
       final tapoService = getIt<TapoService>();
       _devices = await Future.wait(ips.map(tapoService.getDeviceState));
-      _lastLoadTime = DateTime.now();
 
       // Widget sync is best-effort; don't mask a successful load
       try {

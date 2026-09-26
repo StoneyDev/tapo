@@ -547,22 +547,30 @@ void main() {
         expect(viewModel.devices.length, 1);
       });
 
-      test('skips refresh within cooldown period', () async {
-        when(
-          mockStorageService.getDeviceIps(),
-        ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
-        when(
-          mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
-        ).thenAnswer((_) async => TestFixtures.onlineDevice());
+      test(
+        'refreshes again immediately after Wi-Fi becomes available',
+        () async {
+          when(
+            mockStorageService.getDeviceIps(),
+          ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
+          when(
+            mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+          ).thenAnswer((_) async => TestFixtures.offlineDevice());
 
-        await viewModel.refresh();
-        // Immediate second refresh should be skipped
-        await viewModel.refresh();
+          await viewModel.refresh();
+          expect(viewModel.devices.first.isOnline, isFalse);
 
-        verify(mockStorageService.getDeviceIps()).called(1);
-      });
+          when(
+            mockTapoService.getDeviceState(TestFixtures.testDeviceIp),
+          ).thenAnswer((_) async => TestFixtures.onlineDevice());
+          await viewModel.refresh();
 
-      test('loadDevices bypasses cooldown', () async {
+          expect(viewModel.devices.first.isOnline, isTrue);
+          verify(mockStorageService.getDeviceIps()).called(2);
+        },
+      );
+
+      test('reloads device state on successive loads', () async {
         when(
           mockStorageService.getDeviceIps(),
         ).thenAnswer((_) async => [TestFixtures.testDeviceIp]);
@@ -571,7 +579,6 @@ void main() {
         ).thenAnswer((_) async => TestFixtures.onlineDevice());
 
         await viewModel.loadDevices();
-        // Direct loadDevices call ignores cooldown
         await viewModel.loadDevices();
 
         verify(mockStorageService.getDeviceIps()).called(2);
