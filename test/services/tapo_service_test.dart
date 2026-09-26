@@ -143,13 +143,13 @@ class TestableTapoService extends TapoService {
   @override
   Future<TapoDevice> toggleDevice(String ip) async {
     final currentState = await getDeviceState(ip);
-    return _setDevicePower(ip, currentState, on: !currentState.deviceOn);
+    return await _setDevicePower(ip, currentState, on: !currentState.deviceOn);
   }
 
   @override
   Future<TapoDevice> setDevicePower(String ip, {required bool on}) async {
     final currentState = await getDeviceState(ip);
-    return _setDevicePower(ip, currentState, on: on);
+    return await _setDevicePower(ip, currentState, on: on);
   }
 
   Future<TapoDevice> _setDevicePower(

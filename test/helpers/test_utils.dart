@@ -1,4 +1,3 @@
-// ignore_for_file: unreachable_from_main
 import 'dart:typed_data';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

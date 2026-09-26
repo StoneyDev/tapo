@@ -17,13 +17,6 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
-
-    configurations.configureEach {
-        resolutionStrategy.force(
-            "androidx.glance:glance-appwidget:1.1.1",
-            "androidx.work:work-runtime-ktx:2.11.1",
-        )
-    }
 }
 
 tasks.register<Delete>("clean") {

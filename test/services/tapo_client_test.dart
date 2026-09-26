@@ -17,7 +17,9 @@ class TestableTapoClient extends TapoClient {
 
   @override
   Future<Map<String, dynamic>?> getDeviceInfo() async {
-    return _mockRequest({'method': 'get_device_info'}, extractResult: true);
+    return await _mockRequest({
+      'method': 'get_device_info',
+    }, extractResult: true);
   }
 
   @override
