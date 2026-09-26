@@ -47,13 +47,12 @@ class PlugCard extends StatelessWidget {
         child: Card(
           margin: EdgeInsets.zero,
           elevation: 0,
-          color: colors.surface,
+          color: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
-            side: BorderSide(color: colors.outlineVariant),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.symmetric(vertical: 20),
             child: Column(
               children: [
                 Row(
@@ -66,8 +65,6 @@ class PlugCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Divider(height: 1, color: colors.outlineVariant),
-                const SizedBox(height: 12),
                 Row(
                   children: [
                     Icon(
@@ -76,15 +73,18 @@ class PlugCard extends StatelessWidget {
                       color: colors.onSurfaceVariant,
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      device.ip,
-                      style: TextStyle(
-                        color: colors.onSurfaceVariant,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Text(
+                        device.ip,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.onSurfaceVariant,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     _buildCountdownButton(colors),
                   ],
                 ),
@@ -101,16 +101,8 @@ class PlugCard extends StatelessWidget {
       device.isOnline,
       device.deviceOn,
     )) {
-      (false, _) => (
-        colors.errorContainer,
-        colors.error,
-        Icons.power_off,
-      ),
-      (true, true) => (
-        colors.secondaryContainer,
-        Colors.green,
-        Icons.power,
-      ),
+      (false, _) => (colors.errorContainer, colors.error, Icons.power_off),
+      (true, true) => (colors.secondaryContainer, Colors.green, Icons.power),
       (true, false) => (
         colors.surfaceContainerHighest,
         Colors.grey,
@@ -121,10 +113,7 @@ class PlugCard extends StatelessWidget {
     return Container(
       width: 52,
       height: 52,
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(17),
-      ),
+      decoration: BoxDecoration(color: background, shape: BoxShape.circle),
       child: Icon(icon, color: foreground, size: 25),
     );
   }
@@ -150,13 +139,16 @@ class PlugCard extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 17,
+            fontWeight: FontWeight.w500,
+            fontSize: 18,
             letterSpacing: -0.3,
           ),
         ),
         const SizedBox(height: 3),
-        Row(
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(
               device.model.isNotEmpty ? device.model : 'Tapo Plug',
@@ -166,7 +158,6 @@ class PlugCard extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(width: 8),
             Container(
               width: 4,
               height: 4,
@@ -175,13 +166,12 @@ class PlugCard extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 8),
             Text(
               status,
               style: TextStyle(
                 color: statusColor,
                 fontSize: 10,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w500,
                 letterSpacing: 0.5,
               ),
             ),
@@ -259,7 +249,7 @@ class PlugCard extends StatelessWidget {
               color: scheduled
                   ? colors.secondaryContainer
                   : colors.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

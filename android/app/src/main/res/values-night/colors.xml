@@ -1,26 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="brand_background">#FF0F1412</color>
+    <color name="brand_background">#FF000000</color>
 
-    <color name="widget_surface">#FF0F1412</color>
-    <color name="widget_item_surface">#FF171D1A</color>
+    <color name="widget_surface">#FF000000</color>
 
-    <color name="widget_on_icon_bg">#FFC7FF5E</color>
-    <color name="widget_off_icon_bg">#FF252C28</color>
-    <color name="widget_offline_icon_bg">#FF5B1F1C</color>
+    <color name="widget_on_icon_bg">#FF4D5BFF</color>
+    <color name="widget_off_icon_bg">#FF242424</color>
+    <color name="widget_offline_icon_bg">#FF321417</color>
 
-    <color name="widget_on_icon_tint">#FF141A18</color>
-    <color name="widget_off_icon_tint">#FFAEB7B1</color>
-    <color name="widget_offline_icon_tint">#FFFF8A80</color>
+    <color name="widget_on_icon_tint">#FFFFFFFF</color>
+    <color name="widget_off_icon_tint">#FF999999</color>
+    <color name="widget_offline_icon_tint">#FFFF515D</color>
 
-    <color name="widget_text_primary">#FFF4F5F0</color>
-    <color name="widget_text_secondary">#FFAEB7B1</color>
+    <color name="widget_text_primary">#FFF7F7F7</color>
+    <color name="widget_text_secondary">#FF999999</color>
 
-    <color name="config_background">#FF0F1412</color>
-    <color name="config_surface">#FF171D1A</color>
-    <color name="config_text_primary">#FFF4F5F0</color>
-    <color name="config_text_secondary">#FFAEB7B1</color>
-    <color name="config_text_tertiary">#FFAEB7B1</color>
-    <color name="config_divider">#FF343B37</color>
-    <color name="config_accent">#FFC7FF5E</color>
+    <color name="config_background">#FF000000</color>
+    <color name="config_surface">#FF121212</color>
+    <color name="config_text_primary">#FFF7F7F7</color>
+    <color name="config_text_secondary">#FF999999</color>
+    <color name="config_text_tertiary">#FF999999</color>
+    <color name="config_divider">#FF262626</color>
+    <color name="config_accent">#FF4D5BFF</color>
 </resources>

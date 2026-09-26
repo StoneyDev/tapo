@@ -59,15 +59,16 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
             val isLoading = deviceIp != null && widgetData.getBoolean("loading_$deviceIp", false)
 
             views.setTextViewText(R.id.widget_nickname_text, nickname)
-            views.setTextViewText(R.id.widget_model_text, model)
-
-            val iconColor = WidgetColors.iconTint(context, isOnline, deviceOn)
+            views.setTextViewText(
+                R.id.widget_model_text,
+                if (model.isEmpty()) "" else
+                    "${WidgetColors.statusText(context, isOnline, deviceOn)} · $model"
+            )
 
             views.setViewVisibility(R.id.widget_icon, if (isLoading) View.GONE else View.VISIBLE)
             views.setViewVisibility(R.id.widget_loading, if (isLoading) View.VISIBLE else View.GONE)
 
-            views.setImageViewResource(R.id.widget_icon, WidgetColors.iconDrawable(isOnline))
-            views.setInt(R.id.widget_icon, "setColorFilter", iconColor)
+            views.setImageViewResource(R.id.widget_icon, WidgetColors.iconDrawable(isOnline, deviceOn))
             views.setInt(R.id.widget_icon_container, "setBackgroundResource", WidgetColors.iconBgDrawable(isOnline, deviceOn))
 
             if (deviceIp != null) {

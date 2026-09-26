@@ -33,12 +33,12 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/widget_brand"
-                android:textAllCaps="true"
+                android:textAllCaps="false"
                 android:textColor="@color/widget_text_secondary"
                 android:textSize="11sp"
                 android:textStyle="bold"
                 android:includeFontPadding="false"
-                android:letterSpacing="0.12" />
+                android:letterSpacing="0.02" />
         </LinearLayout>
 
         <FrameLayout
@@ -63,7 +63,7 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:layout_gravity="center"
-                android:indeterminateTint="@color/widget_text_secondary"
+                android:indeterminateTint="@color/widget_text_primary"
                 android:visibility="gone" />
         </FrameLayout>
 
@@ -77,7 +77,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="15sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:includeFontPadding="false"
                 android:maxLines="1"

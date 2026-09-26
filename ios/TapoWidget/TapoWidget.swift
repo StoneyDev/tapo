@@ -24,19 +24,28 @@ func isDeviceLoading(ip: String) -> Bool {
 
 // MARK: - Brand
 
-private let brandInkLight = Color(red: 20.0/255.0, green: 26.0/255.0, blue: 24.0/255.0)
-private let brandInkDark = Color(red: 244.0/255.0, green: 245.0/255.0, blue: 240.0/255.0)
-private let brandLime = Color(red: 199.0/255.0, green: 255.0/255.0, blue: 94.0/255.0)
-private let brandIvory = Color(red: 245.0/255.0, green: 242.0/255.0, blue: 233.0/255.0)
-private let brandDarkBackground = Color(red: 15.0/255.0, green: 20.0/255.0, blue: 18.0/255.0)
-private let brandMutedLight = Color(red: 98.0/255.0, green: 105.0/255.0, blue: 101.0/255.0)
-private let brandMutedDark = Color(red: 174.0/255.0, green: 183.0/255.0, blue: 177.0/255.0)
-private let brandOffSurfaceLight = Color(red: 240.0/255.0, green: 241.0/255.0, blue: 236.0/255.0)
-private let brandOffSurfaceDark = Color(red: 37.0/255.0, green: 44.0/255.0, blue: 40.0/255.0)
-private let brandError = Color(red: 212.0/255.0, green: 71.0/255.0, blue: 63.0/255.0)
-private let brandErrorDark = Color(red: 255.0/255.0, green: 138.0/255.0, blue: 128.0/255.0)
-private let brandErrorSurfaceLight = Color(red: 255.0/255.0, green: 225.0/255.0, blue: 221.0/255.0)
-private let brandErrorSurfaceDark = Color(red: 91.0/255.0, green: 31.0/255.0, blue: 28.0/255.0)
+private let brandInkLight = Color(red: 16/255, green: 16/255, blue: 16/255)
+private let brandInkDark = Color(red: 247/255, green: 247/255, blue: 247/255)
+private let brandPearl = Color(red: 243/255, green: 243/255, blue: 241/255)
+private let brandMutedLight = Color(red: 109/255, green: 109/255, blue: 109/255)
+private let brandMutedDark = Color(red: 153/255, green: 153/255, blue: 153/255)
+private let brandOffSurfaceLight = Color(red: 234/255, green: 234/255, blue: 234/255)
+private let brandOffSurfaceDark = Color(red: 36/255, green: 36/255, blue: 36/255)
+private let brandError = Color(red: 216/255, green: 45/255, blue: 64/255)
+private let brandErrorDark = Color(red: 255/255, green: 81/255, blue: 93/255)
+private let brandErrorSurfaceLight = Color(red: 255/255, green: 232/255, blue: 235/255)
+private let brandErrorSurfaceDark = Color(red: 50/255, green: 20/255, blue: 23/255)
+
+private func brandAccent(_ colorScheme: ColorScheme) -> Color {
+    colorScheme == .dark
+        ? Color(red: 77/255, green: 91/255, blue: 255/255)
+        : Color(red: 57/255, green: 72/255, blue: 255/255)
+}
+
+private func deviceStatus(isOnline: Bool, deviceOn: Bool) -> String {
+    if !isOnline { return "Hors ligne" }
+    return deviceOn ? "Allumée" : "Éteinte"
+}
 
 private func brandInk(_ colorScheme: ColorScheme) -> Color {
     colorScheme == .dark ? brandInkDark : brandInkLight
@@ -51,32 +60,32 @@ private func brandOffSurface(_ colorScheme: ColorScheme) -> Color {
 }
 
 private func brandBackground(_ colorScheme: ColorScheme) -> Color {
-    colorScheme == .dark ? brandDarkBackground : brandIvory
+    colorScheme == .dark ? .black : brandPearl
 }
 
 private func iconTintColor(isOnline: Bool, deviceOn: Bool, colorScheme: ColorScheme) -> Color {
     if !isOnline { return colorScheme == .dark ? brandErrorDark : brandError }
-    return deviceOn ? brandInkLight : brandMuted(colorScheme)
+    return deviceOn ? .white : brandMuted(colorScheme)
 }
 
 private func iconBackgroundColor(isOnline: Bool, deviceOn: Bool, colorScheme: ColorScheme) -> Color {
     if !isOnline {
         return colorScheme == .dark ? brandErrorSurfaceDark : brandErrorSurfaceLight
     }
-    return deviceOn ? brandLime : brandOffSurface(colorScheme)
+    return deviceOn ? brandAccent(colorScheme) : brandOffSurface(colorScheme)
 }
 
-private func iconName(isOnline: Bool, deviceOn: Bool) -> String {
+private func iconName(isOnline: Bool) -> String {
     if !isOnline { return "exclamationmark.triangle.fill" }
-    return deviceOn ? "powerplug.fill" : "powerplug"
+    return "power"
 }
 
-private func brandMark(size: CGFloat) -> some View {
-    Image(systemName: "power")
-        .font(.system(size: size * 0.48, weight: .heavy))
-        .foregroundColor(brandInkLight)
+private func brandMark(size: CGFloat, colorScheme: ColorScheme) -> some View {
+    Image(systemName: "house.fill")
+        .font(.system(size: size * 0.48, weight: .medium))
+        .foregroundColor(brandBackground(colorScheme))
         .frame(width: size, height: size)
-        .background(RoundedRectangle(cornerRadius: size * 0.3).fill(brandLime))
+        .background(Circle().fill(brandInk(colorScheme)))
 }
 
 /// Load raw device dictionaries from shared UserDefaults.
@@ -159,17 +168,17 @@ struct TapoWidgetEntryView: View {
             Button(intent: ToggleDeviceIntent(ip: entry.ip)) {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: 6) {
-                        brandMark(size: 22)
-                        Text("TAPO HOME")
-                            .font(.system(size: 10, weight: .heavy))
-                            .tracking(1.2)
+                        brandMark(size: 22, colorScheme: colorScheme)
+                        Text("Tapo Home")
+                            .font(.system(size: 10, weight: .medium))
+                            .tracking(0.2)
                             .foregroundColor(brandMuted(colorScheme))
                     }
 
                     Spacer(minLength: 8)
 
                     ZStack {
-                        RoundedRectangle(cornerRadius: 16)
+                        Circle()
                             .fill(iconBackgroundColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn, colorScheme: colorScheme))
                             .frame(width: 52, height: 52)
 
@@ -178,7 +187,7 @@ struct TapoWidgetEntryView: View {
                                 .tint(iconTintColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn, colorScheme: colorScheme))
                                 .frame(width: 22, height: 22)
                         } else {
-                            Image(systemName: iconName(isOnline: entry.isOnline, deviceOn: entry.deviceOn))
+                            Image(systemName: iconName(isOnline: entry.isOnline))
                                 .font(.system(size: 22, weight: .semibold))
                                 .foregroundColor(iconTintColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn, colorScheme: colorScheme))
                         }
@@ -188,11 +197,11 @@ struct TapoWidgetEntryView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(entry.nickname)
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(brandInk(colorScheme))
                             .lineLimit(1)
 
-                        Text(entry.model)
+                        Text("\(deviceStatus(isOnline: entry.isOnline, deviceOn: entry.deviceOn)) · \(entry.model)")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(brandMuted(colorScheme))
                             .lineLimit(1)
@@ -202,28 +211,29 @@ struct TapoWidgetEntryView: View {
             }
             .buttonStyle(.plain)
             .disabled(entry.isLoading)
+            .accessibilityLabel("\(entry.nickname), \(deviceStatus(isOnline: entry.isOnline, deviceOn: entry.deviceOn))")
             .containerBackground(for: .widget) {
                 brandBackground(colorScheme)
             }
         } else {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
-                    brandMark(size: 22)
-                    Text("TAPO HOME")
-                        .font(.system(size: 10, weight: .heavy))
-                        .tracking(1.2)
+                    brandMark(size: 22, colorScheme: colorScheme)
+                    Text("Tapo Home")
+                        .font(.system(size: 10, weight: .medium))
+                        .tracking(0.2)
                         .foregroundColor(brandMuted(colorScheme))
                 }
                 Spacer()
                 Image(systemName: "plus")
                     .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(brandMuted(colorScheme))
+                    .foregroundColor(.white)
                     .frame(width: 48, height: 48)
-                    .background(RoundedRectangle(cornerRadius: 15).fill(brandOffSurface(colorScheme)))
-                Text("Add a plug")
-                    .font(.system(size: 15, weight: .semibold))
+                    .background(Circle().fill(brandAccent(colorScheme)))
+                Text("Ajouter une prise")
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(brandInk(colorScheme))
-                Text("Open Tapo to get started")
+                Text("Ouvrez Tapo pour commencer")
                     .font(.system(size: 11))
                     .foregroundColor(brandMuted(colorScheme))
                     .lineLimit(1)
@@ -300,18 +310,20 @@ struct TapoListWidgetEntryView: View {
         entry.devices.prefix(widgetFamily == .systemLarge ? 7 : 3)
     }
 
+    private var controlSize: CGFloat { widgetFamily == .systemLarge ? 32 : 28 }
+
     var body: some View {
         if entry.devices.isEmpty {
             VStack(spacing: 8) {
                 Image(systemName: "powerplug")
                     .font(.system(size: 22, weight: .semibold))
-                    .foregroundColor(brandInkLight)
+                    .foregroundColor(.white)
                     .frame(width: 48, height: 48)
-                    .background(RoundedRectangle(cornerRadius: 15).fill(brandLime))
-                Text("No plugs available")
+                    .background(Circle().fill(brandAccent(colorScheme)))
+                Text("Aucune prise")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(brandInk(colorScheme))
-                Text("Open Tapo to add a device")
+                Text("Ajoutez une prise dans Tapo")
                     .font(.system(size: 11))
                     .foregroundColor(brandMuted(colorScheme))
             }
@@ -319,14 +331,14 @@ struct TapoListWidgetEntryView: View {
                 brandBackground(colorScheme)
             }
         } else {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: widgetFamily == .systemLarge ? 6 : 4) {
                 HStack {
                     HStack(spacing: 7) {
-                        brandMark(size: 26)
+                        brandMark(size: 26, colorScheme: colorScheme)
                         VStack(alignment: .leading, spacing: 1) {
-                            Text("TAPO HOME")
-                                .font(.system(size: 9, weight: .heavy))
-                                .tracking(1.2)
+                            Text("Tapo Home")
+                                .font(.system(size: 9, weight: .medium))
+                                .tracking(0.2)
                                 .foregroundColor(brandMuted(colorScheme))
                             Text("Prises")
                                 .font(.system(size: 15, weight: .bold))
@@ -346,43 +358,51 @@ struct TapoListWidgetEntryView: View {
                 ForEach(visibleDevices, id: \.ip) { device in
                     Button(intent: ToggleDeviceIntent(ip: device.ip)) {
                         HStack(spacing: 8) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 9)
-                                    .fill(iconBackgroundColor(isOnline: device.isOnline, deviceOn: device.deviceOn, colorScheme: colorScheme))
-                                    .frame(width: 32, height: 32)
-
-                                if device.isLoading {
-                                    ProgressView()
-                                        .tint(iconTintColor(isOnline: device.isOnline, deviceOn: device.deviceOn, colorScheme: colorScheme))
-                                        .frame(width: 14, height: 14)
-                                } else {
-                                    Image(systemName: iconName(isOnline: device.isOnline, deviceOn: device.deviceOn))
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(iconTintColor(isOnline: device.isOnline, deviceOn: device.deviceOn, colorScheme: colorScheme))
-                                }
-                            }
-
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(device.nickname)
                                     .font(.system(size: 13, weight: .semibold))
                                     .foregroundColor(brandInk(colorScheme))
                                     .lineLimit(1)
-                                Text(device.model)
+                                Text("\(deviceStatus(isOnline: device.isOnline, deviceOn: device.deviceOn)) · \(device.model)")
                                     .font(.system(size: 10, weight: .medium))
                                     .foregroundColor(brandMuted(colorScheme))
                                     .lineLimit(1)
                             }
 
                             Spacer()
+
+                            ZStack {
+                                Circle()
+                                    .fill(iconBackgroundColor(isOnline: device.isOnline, deviceOn: device.deviceOn, colorScheme: colorScheme))
+                                    .frame(width: controlSize, height: controlSize)
+
+                                if device.isLoading {
+                                    ProgressView()
+                                        .tint(iconTintColor(isOnline: device.isOnline, deviceOn: device.deviceOn, colorScheme: colorScheme))
+                                        .frame(width: 14, height: 14)
+                                } else {
+                                    Image(systemName: iconName(isOnline: device.isOnline))
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(iconTintColor(isOnline: device.isOnline, deviceOn: device.deviceOn, colorScheme: colorScheme))
+                                }
+                            }
                         }
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .disabled(device.isLoading)
+                    .accessibilityLabel("\(device.nickname), \(deviceStatus(isOnline: device.isOnline, deviceOn: device.deviceOn))")
+                    .overlay(alignment: .bottom) {
+                        if device.ip != visibleDevices.last?.ip {
+                            Rectangle()
+                                .fill(brandOffSurface(colorScheme))
+                                .frame(height: 0.5)
+                                .offset(y: 2)
+                        }
+                    }
                 }
                 Spacer(minLength: 0)
             }
-            .padding()
             .containerBackground(for: .widget) {
                 brandBackground(colorScheme)
             }

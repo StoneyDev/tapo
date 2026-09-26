@@ -42,50 +42,46 @@ ThemeData _buildAppTheme(Brightness brightness) {
   final isDark = brightness == Brightness.dark;
   final colors = isDark
       ? const ColorScheme.dark(
-          primary: Color(0xFFC7FF5E),
-          onPrimary: Color(0xFF141A18),
-          secondary: Color(0xFFC7FF5E),
-          onSecondary: Color(0xFF141A18),
-          secondaryContainer: Color(0xFF31451E),
-          onSecondaryContainer: Color(0xFFE5FFB3),
-          error: Color(0xFFFF8A80),
-          errorContainer: Color(0xFF5B1F1C),
-          onErrorContainer: Color(0xFFFFDAD6),
-          surface: Color(0xFF171D1A),
-          onSurface: Color(0xFFF4F5F0),
-          onSurfaceVariant: Color(0xFFAEB7B1),
-          outline: Color(0xFF7A837D),
-          outlineVariant: Color(0xFF343B37),
-          surfaceContainerHighest: Color(0xFF252C28),
+          primary: Color(0xFF4D5BFF),
+          onPrimary: Colors.white,
+          secondary: Color(0xFF32D75A),
+          onSecondary: Color(0xFF001B08),
+          secondaryContainer: Color(0xFF102B18),
+          onSecondaryContainer: Color(0xFF32D75A),
+          error: Color(0xFFFF515D),
+          errorContainer: Color(0xFF321417),
+          onErrorContainer: Color(0xFFFFB3BA),
+          onSurface: Color(0xFFF7F7F7),
+          onSurfaceVariant: Color(0xFF999999),
+          outline: Color(0xFF737373),
+          outlineVariant: Color(0xFF262626),
+          surfaceContainerHighest: Color(0xFF242424),
         )
       : const ColorScheme.light(
-          primary: Color(0xFF141A18),
-          onPrimary: Color(0xFFC7FF5E),
-          secondary: Color(0xFFC7FF5E),
-          onSecondary: Color(0xFF141A18),
-          secondaryContainer: Color(0xFFE5FFB3),
-          onSecondaryContainer: Color(0xFF244500),
-          error: Color(0xFFD4473F),
-          errorContainer: Color(0xFFFFE1DD),
-          onErrorContainer: Color(0xFF6A110D),
-          onSurface: Color(0xFF141A18),
-          onSurfaceVariant: Color(0xFF626965),
-          outline: Color(0xFF9AA19D),
-          outlineVariant: Color(0xFFE3E5DF),
-          surfaceContainerHighest: Color(0xFFF0F1EC),
+          primary: Color(0xFF3948FF),
+          secondary: Color(0xFF138A35),
+          onSecondary: Colors.white,
+          secondaryContainer: Color(0xFFE2F6E7),
+          onSecondaryContainer: Color(0xFF138A35),
+          error: Color(0xFFD82D40),
+          errorContainer: Color(0xFFFFE8EB),
+          onErrorContainer: Color(0xFF8A1726),
+          onSurface: Color(0xFF101010),
+          onSurfaceVariant: Color(0xFF6D6D6D),
+          outline: Color(0xFF929292),
+          outlineVariant: Color(0xFFE0E0E0),
+          surfaceContainerHighest: Color(0xFFEAEAEA),
         );
 
   return ThemeData(
     useMaterial3: true,
     brightness: brightness,
     colorScheme: colors,
-    scaffoldBackgroundColor: isDark
-        ? const Color(0xFF0F1412)
-        : const Color(0xFFF5F2E9),
+    scaffoldBackgroundColor: isDark ? Colors.black : const Color(0xFFF3F3F1),
     textTheme: TextTheme(bodyMedium: TextStyle(color: colors.onSurface)),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: isDark ? const Color(0xFF202723) : const Color(0xFFF4F5F0),
+      fillColor: isDark ? const Color(0xFF1C1C1C) : const Color(0xFFF3F3F1),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -105,17 +101,14 @@ ThemeData _buildAppTheme(Brightness brightness) {
         minimumSize: const Size.fromHeight(56),
         backgroundColor: colors.primary,
         foregroundColor: colors.onPrimary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: colors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
     ),
-    progressIndicatorTheme: ProgressIndicatorThemeData(
-      color: colors.primary,
-    ),
+    progressIndicatorTheme: ProgressIndicatorThemeData(color: colors.primary),
   );
 }
 
@@ -143,9 +136,9 @@ class _StartupScreenState extends State<_StartupScreen> {
       final creds = await storage.getCredentials();
       await registerTapoService(creds.email!, creds.password!);
       if (!mounted) return;
-      unawaited(Navigator.pushReplacementNamed(context, '/home'));
+      Navigator.pushReplacementNamed(context, '/home');
     } else {
-      unawaited(Navigator.pushReplacementNamed(context, '/config'));
+      Navigator.pushReplacementNamed(context, '/config');
     }
   }
 
@@ -161,13 +154,13 @@ class _StartupScreenState extends State<_StartupScreen> {
               height: 64,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondary,
-                borderRadius: BorderRadius.circular(20),
+                color: Theme.of(context).colorScheme.primary,
+                shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.power_settings_new_rounded,
                 size: 34,
-                color: Theme.of(context).colorScheme.onSecondary,
+                color: Theme.of(context).colorScheme.onPrimary,
               ),
             ),
             const SizedBox(height: 18),
@@ -175,7 +168,7 @@ class _StartupScreenState extends State<_StartupScreen> {
               'TAPO HOME',
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w600,
                 letterSpacing: 1.8,
               ),
             ),

@@ -13,4 +13,7 @@
         <item quantity="one">%d plug</item>
         <item quantity="other">%d plugs</item>
     </plurals>
+    <string name="widget_status_on">Allumée</string>
+    <string name="widget_status_off">Éteinte</string>
+    <string name="widget_status_offline">Hors ligne</string>
 </resources>

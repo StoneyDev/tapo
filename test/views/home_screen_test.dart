@@ -330,7 +330,7 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
         await tester.pump();
 
-        expect(find.text('Prises'), findsOneWidget);
+        expect(find.text('Ma maison'), findsOneWidget);
         expect(mockViewModel.loadDevicesCallCount, 1);
       });
     });

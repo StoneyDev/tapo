@@ -62,7 +62,23 @@ class _ConfigScreenState extends State<ConfigScreen> {
       body: SafeArea(
         child: _viewModel.isLoading
             ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
-            : _buildForm(context),
+            : Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  child: Column(
+                    children: [
+                      Expanded(child: _buildForm(context)),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+                        child: FilledButton(
+                          onPressed: _save,
+                          child: const Text('Enregistrer'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
       ),
     );
   }
@@ -70,198 +86,184 @@ class _ConfigScreenState extends State<ConfigScreen> {
   Widget _buildForm(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 32),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Configuration',
-            style: TextStyle(
-              color: colors.onSurfaceVariant,
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Connecter\nvotre maison.',
-            style: TextStyle(
-              fontSize: 38,
-              height: 0.98,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1.6,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Vos identifiants restent sur cet appareil. '
-            'Les prises sont contrôlées sur votre réseau local.',
-            style: TextStyle(
-              color: colors.onSurfaceVariant,
-              height: 1.45,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 28),
-          _Section(
-            title: 'Compte Tapo',
-            child: Column(
-              children: [
-                TextField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.alternate_email_rounded),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: colors.onSurface,
+                child: Icon(
+                  Icons.tune_rounded,
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  size: 22,
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock_outline_rounded),
-                  ),
-                  obscureText: true,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _Section(
-            title: 'Device IPs',
-            subtitle: 'Ajoutez les prises présentes sur votre Wi-Fi.',
-            child: Column(
-              children: [
-                Row(
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _ipController,
-                        decoration: const InputDecoration(
-                          labelText: 'IP Address',
-                          hintText: '192.168.1.100',
-                          prefixIcon: Icon(Icons.router_outlined),
-                        ),
-                        keyboardType: TextInputType.number,
-                        onSubmitted: (_) => _addIp(),
+                    const Text(
+                      'Configuration',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.8,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    IconButton.filled(
-                      onPressed: _addIp,
-                      icon: const Icon(Icons.add),
-                      style: IconButton.styleFrom(
-                        minimumSize: const Size(54, 54),
-                        backgroundColor: colors.primary,
-                        foregroundColor: colors.onPrimary,
+                    Text(
+                      'Compte et prises',
+                      style: TextStyle(
+                        color: colors.onSurfaceVariant,
+                        fontSize: 13,
                       ),
                     ),
                   ],
                 ),
-                if (_viewModel.deviceIps.isNotEmpty) ...[
-                  const SizedBox(height: 14),
-                  for (final ip in _viewModel.deviceIps)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Container(
-                        padding: const EdgeInsets.fromLTRB(14, 8, 6, 8),
-                        decoration: BoxDecoration(
-                          color: colors.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                ip,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              tooltip: 'Supprimer',
-                              visualDensity: VisualDensity.compact,
-                              onPressed: () => _viewModel.removeDeviceIp(ip),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ],
-            ),
-          ),
-          if (_viewModel.errorMessage != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: colors.errorContainer,
-                borderRadius: BorderRadius.circular(14),
               ),
-              child: Text(
-                _viewModel.errorMessage!,
-                style: TextStyle(
-                  color: colors.onErrorContainer,
-                  fontWeight: FontWeight.w700,
+            ],
+          ),
+          const SizedBox(height: 28),
+          const Text(
+            'Compte Tapo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _emailController,
+            decoration: InputDecoration(
+              labelText: 'Adresse e-mail',
+              fillColor: colors.surface,
+              prefixIcon: const Icon(Icons.alternate_email_rounded, size: 20),
+            ),
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            autocorrect: false,
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _passwordController,
+            decoration: InputDecoration(
+              labelText: 'Mot de passe',
+              fillColor: colors.surface,
+              prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
+            ),
+            obscureText: true,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 28),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Vos prises',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
+              Text(
+                '${_viewModel.deviceIps.length}',
+                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Ajoutez l’adresse IP de chaque prise sur votre Wi-Fi.',
+            style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _ipController,
+                  decoration: InputDecoration(
+                    labelText: 'Adresse IP',
+                    hintText: '192.168.1.100',
+                    fillColor: colors.surface,
+                    prefixIcon: const Icon(Icons.router_outlined, size: 20),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _addIp(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              IconButton.filled(
+                onPressed: _addIp,
+                tooltip: 'Ajouter la prise',
+                icon: const Icon(Icons.add),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  backgroundColor: colors.primary,
+                  foregroundColor: colors.onPrimary,
+                ),
+              ),
+            ],
+          ),
+          if (_viewModel.deviceIps.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            for (final ip in _viewModel.deviceIps) ...[
+              Row(
+                children: [
+                  Icon(
+                    Icons.power_outlined,
+                    size: 20,
+                    color: colors.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      ip,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, size: 20),
+                    color: colors.onSurfaceVariant,
+                    tooltip: 'Supprimer $ip',
+                    onPressed: () => _viewModel.removeDeviceIp(ip),
+                  ),
+                ],
+              ),
+              Divider(height: 1, color: colors.outlineVariant),
+            ],
+          ],
+          if (_viewModel.errorMessage != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              _viewModel.errorMessage!,
+              style: TextStyle(color: colors.error, fontSize: 13),
             ),
           ],
           const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: _save,
-            icon: const Icon(Icons.arrow_forward_rounded),
-            label: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.child, this.subtitle});
-
-  final String title;
-  final String? subtitle;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colors.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 3),
-            Text(
-              subtitle!,
-              style: TextStyle(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.lock_outline_rounded,
+                size: 14,
                 color: colors.onSurfaceVariant,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
               ),
-            ),
-          ],
-          const SizedBox(height: 16),
-          child,
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Identifiants stockés sur cet appareil. '
+                  'Contrôle sur le réseau local.',
+                  style: TextStyle(
+                    color: colors.onSurfaceVariant,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

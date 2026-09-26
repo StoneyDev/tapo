@@ -57,89 +57,148 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _buildHeader(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final online = _viewModel.devices.where((device) => device.isOnline).length;
-    final powered = _viewModel.devices
-        .where((device) => device.isOnline && device.deviceOn)
-        .length;
-
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
-      child: Column(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: colors.secondary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.power_settings_new_rounded,
-                  color: colors.onSecondary,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'TAPO HOME',
-                style: TextStyle(
-                  color: colors.onSurfaceVariant,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
-                ),
-              ),
-              const Spacer(),
-              Semantics(
-                button: true,
-                label: 'Se déconnecter',
-                child: IconButton(
-                  icon: const Icon(Icons.logout, size: 20),
-                  tooltip: 'Logout',
-                  style: IconButton.styleFrom(
-                    backgroundColor: colors.surface,
-                    foregroundColor: colors.onSurface,
-                    side: BorderSide(color: colors.outlineVariant),
-                  ),
-                  onPressed: () => _logout(context),
-                ),
-              ),
-            ],
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: colors.onSurface,
+            child: Icon(
+              Icons.home_rounded,
+              color: Theme.of(context).scaffoldBackgroundColor,
+              size: 27,
+            ),
           ),
-          const SizedBox(height: 22),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Expanded(
-                child: Text(
-                  'Prises',
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Ma maison',
                   style: TextStyle(
-                    fontSize: 38,
-                    height: 0.95,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -1.8,
+                    fontSize: 23,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.7,
                   ),
                 ),
-              ),
-              if (_viewModel.devices.isNotEmpty)
                 Text(
-                  '$powered allumée${powered > 1 ? 's' : ''}\n'
-                  '$online en ligne',
-                  textAlign: TextAlign.right,
+                  'Tapo · chez vous',
                   style: TextStyle(
                     color: colors.onSurfaceVariant,
-                    fontSize: 12,
-                    height: 1.45,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
                   ),
                 ),
-            ],
+              ],
+            ),
+          ),
+          Semantics(
+            button: true,
+            label: 'Se déconnecter',
+            child: IconButton(
+              icon: const Icon(Icons.logout, size: 21),
+              tooltip: 'Logout',
+              style: IconButton.styleFrom(
+                minimumSize: const Size.square(48),
+                backgroundColor: colors.surface,
+                foregroundColor: colors.onSurface,
+                side: BorderSide(color: colors.outlineVariant),
+              ),
+              onPressed: () => _logout(context),
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildOverview(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final devices = _viewModel.devices;
+    final online = devices.where((device) => device.isOnline).length;
+    final connectionColor = online > 0
+        ? colors.secondary
+        : colors.onSurfaceVariant;
+    final powered = devices
+        .where((device) => device.isOnline && device.deviceOn)
+        .length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 26),
+        Text(
+          'Prises allumées',
+          style: TextStyle(color: colors.onSurfaceVariant, fontSize: 16),
+        ),
+        const SizedBox(height: 6),
+        Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(text: powered.toString().padLeft(2, '0')),
+              TextSpan(
+                text: ' / ${devices.length.toString().padLeft(2, '0')}',
+                style: TextStyle(color: colors.outline, fontSize: 36),
+              ),
+            ],
+          ),
+          style: const TextStyle(
+            fontSize: 68,
+            height: 1.1,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -3,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Icon(
+              online > 0 ? Icons.wifi_rounded : Icons.wifi_off_rounded,
+              size: 18,
+              color: connectionColor,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '$online en ligne · réseau local',
+                style: TextStyle(
+                  color: connectionColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 30),
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Prises',
+                style: TextStyle(
+                  fontSize: 23,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Text(
+                '${devices.length} appareil${devices.length > 1 ? 's' : ''}',
+                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+      ],
     );
   }
 
@@ -169,12 +228,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return RefreshIndicator(
       onRefresh: _viewModel.refresh,
       child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(20, 2, 20, 28),
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
         physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: _viewModel.devices.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 14),
+        itemCount: _viewModel.devices.length + 1,
+        separatorBuilder: (context, index) => index == 0
+            ? const SizedBox.shrink()
+            : Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
         itemBuilder: (context, index) {
-          final device = _viewModel.devices[index];
+          if (index == 0) return _buildOverview(context);
+          final device = _viewModel.devices[index - 1];
           return PlugCard(
             device: device,
             onToggle: () => _viewModel.toggleDevice(device.ip),

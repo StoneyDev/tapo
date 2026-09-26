@@ -70,17 +70,19 @@ class TapoListWidgetProvider : AppWidgetProvider() {
                     val deviceOn = device.optBoolean("deviceOn", false)
                     val isOnline = device.optBoolean("isOnline", true)
                     val isLoading = widgetData.getBoolean("loading_$ip", false)
-                    val iconColor = WidgetColors.iconTint(context, isOnline, deviceOn)
 
                     val itemView = RemoteViews(context.packageName, R.layout.tapo_list_widget_item)
 
                     itemView.setTextViewText(R.id.list_item_nickname, nickname)
-                    itemView.setTextViewText(R.id.list_item_model, model)
+                    itemView.setTextViewText(
+                        R.id.list_item_model,
+                        "${WidgetColors.statusText(context, isOnline, deviceOn)} · $model"
+                    )
 
-                    itemView.setImageViewResource(R.id.list_item_icon, WidgetColors.iconDrawable(isOnline))
-                    itemView.setInt(R.id.list_item_icon, "setColorFilter", iconColor)
+                    itemView.setImageViewResource(R.id.list_item_icon, WidgetColors.iconDrawable(isOnline, deviceOn))
                     itemView.setInt(R.id.list_item_icon_container, "setBackgroundResource", WidgetColors.iconBgDrawable(isOnline, deviceOn))
 
+                    itemView.setViewVisibility(R.id.list_item_icon, if (isLoading) View.GONE else View.VISIBLE)
                     itemView.setViewVisibility(R.id.list_item_loading, if (isLoading) View.VISIBLE else View.GONE)
 
                     if (ip.isNotEmpty()) {

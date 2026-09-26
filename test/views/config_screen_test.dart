@@ -124,11 +124,17 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
-        expect(find.widgetWithText(TextField, 'Email'), findsOneWidget);
-        expect(find.widgetWithText(TextField, 'Password'), findsOneWidget);
-        expect(find.widgetWithText(TextField, 'IP Address'), findsOneWidget);
-        expect(find.widgetWithText(FilledButton, 'Save'), findsOneWidget);
-        expect(find.text('Device IPs'), findsOneWidget);
+        expect(
+          find.widgetWithText(TextField, 'Adresse e-mail'),
+          findsOneWidget,
+        );
+        expect(find.widgetWithText(TextField, 'Mot de passe'), findsOneWidget);
+        expect(find.widgetWithText(TextField, 'Adresse IP'), findsOneWidget);
+        expect(
+          find.widgetWithText(FilledButton, 'Enregistrer'),
+          findsOneWidget,
+        );
+        expect(find.text('Vos prises'), findsOneWidget);
         expect(find.text(TestFixtures.testEmail), findsOneWidget);
       });
     });
@@ -149,7 +155,7 @@ void main() {
 
         // Enter IP in the IP field
         await tester.enterText(
-          find.widgetWithText(TextField, 'IP Address'),
+          find.widgetWithText(TextField, 'Adresse IP'),
           TestFixtures.testDeviceIp,
         );
         await tester.pump();
@@ -167,7 +173,7 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
-        final ipFieldFinder = find.widgetWithText(TextField, 'IP Address');
+        final ipFieldFinder = find.widgetWithText(TextField, 'Adresse IP');
         await tester.enterText(ipFieldFinder, TestFixtures.testDeviceIp);
         await tester.pump();
 
@@ -204,7 +210,7 @@ void main() {
 
         // Enter and add IP
         await tester.enterText(
-          find.widgetWithText(TextField, 'IP Address'),
+          find.widgetWithText(TextField, 'Adresse IP'),
           addedIp,
         );
         await tester.tap(find.byIcon(Icons.add));
@@ -241,6 +247,7 @@ void main() {
         // Verify IP is displayed in list
         expect(find.text(testIp1), findsOneWidget);
 
+        await tester.ensureVisible(find.byIcon(Icons.delete).first);
         await tester.tap(find.byIcon(Icons.delete).first);
         await tester.pumpAndSettle();
 
@@ -259,6 +266,7 @@ void main() {
         expect(find.text(testIp1), findsOneWidget);
 
         // Tap delete
+        await tester.ensureVisible(find.byIcon(Icons.delete).first);
         await tester.tap(find.byIcon(Icons.delete).first);
         await tester.pumpAndSettle();
 
@@ -277,17 +285,18 @@ void main() {
 
         // Enter email and password
         await tester.enterText(
-          find.widgetWithText(TextField, 'Email'),
+          find.widgetWithText(TextField, 'Adresse e-mail'),
           TestFixtures.testEmail,
         );
         await tester.enterText(
-          find.widgetWithText(TextField, 'Password'),
+          find.widgetWithText(TextField, 'Mot de passe'),
           TestFixtures.testPassword,
         );
         await tester.pump();
 
         // Tap save
-        await tester.tap(find.text('Save'));
+        await tester.ensureVisible(find.text('Enregistrer'));
+        await tester.tap(find.text('Enregistrer'));
         await tester.pumpAndSettle();
 
         expect(mockViewModel.saveConfigCallCount, 1);
@@ -304,17 +313,18 @@ void main() {
 
         // Enter email and password
         await tester.enterText(
-          find.widgetWithText(TextField, 'Email'),
+          find.widgetWithText(TextField, 'Adresse e-mail'),
           TestFixtures.testEmail,
         );
         await tester.enterText(
-          find.widgetWithText(TextField, 'Password'),
+          find.widgetWithText(TextField, 'Mot de passe'),
           TestFixtures.testPassword,
         );
         await tester.pump();
 
         // Tap save
-        await tester.tap(find.text('Save'));
+        await tester.ensureVisible(find.text('Enregistrer'));
+        await tester.tap(find.text('Enregistrer'));
         await tester.pumpAndSettle();
 
         // Should be on home screen
@@ -330,17 +340,18 @@ void main() {
 
         // Enter email and password
         await tester.enterText(
-          find.widgetWithText(TextField, 'Email'),
+          find.widgetWithText(TextField, 'Adresse e-mail'),
           TestFixtures.testEmail,
         );
         await tester.enterText(
-          find.widgetWithText(TextField, 'Password'),
+          find.widgetWithText(TextField, 'Mot de passe'),
           TestFixtures.testPassword,
         );
         await tester.pump();
 
         // Tap save
-        await tester.tap(find.text('Save'));
+        await tester.ensureVisible(find.text('Enregistrer'));
+        await tester.tap(find.text('Enregistrer'));
         await tester.pumpAndSettle();
 
         // Should still be on config screen
@@ -384,8 +395,8 @@ void main() {
         await tester.pump();
 
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
-        expect(find.text('Email'), findsNothing);
-        expect(find.text('Password'), findsNothing);
+        expect(find.text('Adresse e-mail'), findsNothing);
+        expect(find.text('Mot de passe'), findsNothing);
       });
 
       testWidgets('shows form when not loading', (tester) async {
@@ -395,7 +406,10 @@ void main() {
         await tester.pumpWidget(buildTestWidget());
         await tester.pumpAndSettle();
 
-        expect(find.widgetWithText(TextField, 'Email'), findsOneWidget);
+        expect(
+          find.widgetWithText(TextField, 'Adresse e-mail'),
+          findsOneWidget,
+        );
         expect(find.byType(CircularProgressIndicator), findsNothing);
       });
     });
