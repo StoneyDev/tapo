@@ -24,6 +24,10 @@ puro dart run build_runner build --delete-conflicting-outputs
 
 # Analyze code
 puro flutter analyze
+
+# Platform builds (see `make` for the full list)
+make build-android
+make build-windows      # Windows host only
 ```
 
 ## Architecture
@@ -57,6 +61,22 @@ TapoService tries KLAP first, falls back to TPAP. Sessions cached per device IP.
 ### State Management
 
 ViewModels extend `ChangeNotifier`. Views use `watch_it` package (`watchIt()`) for reactive updates.
+
+### Windows desktop
+
+`windows/runner/` hosts a tray icon (`tray_icon.cpp`), launch at startup
+(`launch_at_startup.cpp`) and the `tapo/desktop` method channel
+(`flutter_window.cpp`). Dart side: `DesktopShell` (channel wrapper),
+`TrayController` (builds the tray menu from `HomeViewModel`, refreshing plug
+states within a 450 ms budget), `LaunchAtStartupViewModel`. Closing the window
+hides it to the tray. Platform checks live in `lib/core/platform.dart`;
+`WidgetDataService` is a no-op without home screen widgets.
+
+The runner compiles with `/W4 /WX`: keep C++ warning-free. It cannot be built
+on macOS; Windows builds need a Windows host.
+
+Layout switches to the desktop layout (`lib/views/desktop/`) at >= 720 px
+width; mobile layout stays unchanged below.
 
 ### Models
 

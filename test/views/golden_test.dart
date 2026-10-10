@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
-import 'package:tapo/main.dart' show appTheme;
+import 'package:tapo/main.dart' show appTheme, darkAppTheme;
 import 'package:tapo/models/tapo_device.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
 import 'package:tapo/viewmodels/config_viewmodel.dart';
 import 'package:tapo/viewmodels/home_viewmodel.dart';
+import 'package:tapo/viewmodels/launch_at_startup_viewmodel.dart';
 import 'package:tapo/views/config_screen.dart';
 import 'package:tapo/views/home_screen.dart';
+
+import '../helpers/fake_desktop_shell.dart';
 
 // --- Mock ViewModels ---
 
@@ -46,11 +49,15 @@ class MockHomeViewModel extends ChangeNotifier implements HomeViewModel {
   }
 
   @override
-  Future<void> loadDevices() async {}
+  Future<void> loadDevices({bool silent = false}) async {}
   @override
-  Future<void> refresh() async {}
+  Future<void> refresh({bool silent = false}) async {}
   @override
-  Future<void> toggleDevice(String ip) async {}
+  Future<void> refreshIfStale(Duration maxAge) async {}
+  @override
+  Future<void> turnOffAll() async {}
+  @override
+  Future<bool> toggleDevice(String ip) async => true;
   @override
   Future<void> removeDevice(String ip) async {}
   @override
@@ -95,8 +102,44 @@ class MockTapoService implements TapoService {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+const _devices = [
+  TapoDevice(
+    ip: '192.168.1.10',
+    nickname: 'Lampe Salon',
+    model: 'P110',
+    deviceOn: true,
+    isOnline: true,
+  ),
+  TapoDevice(
+    ip: '192.168.1.11',
+    nickname: 'Bureau',
+    model: 'P100',
+    deviceOn: false,
+    isOnline: true,
+  ),
+  TapoDevice(
+    ip: '192.168.1.12',
+    nickname: 'Chambre',
+    model: 'P110',
+    deviceOn: false,
+    isOnline: false,
+  ),
+];
+
+/// Windows renders with the compact density of desktop platforms.
+ThemeData _desktop(ThemeData theme) => theme.copyWith(
+  platform: TargetPlatform.windows,
+  visualDensity: VisualDensity.compact,
+);
+
+const _desktopSize = Size(1000, 660);
+
 void main() {
   final getIt = GetIt.instance;
+
+  // Build the themes before any platform override so they keep the test
+  // fonts (Segoe UI, the Windows default, is not available in tests).
+  setUpAll(() => [appTheme, darkAppTheme]);
 
   setUp(() async {
     await getIt.reset();
@@ -114,29 +157,7 @@ void main() {
         ..registerSingleton<SecureStorageService>(MockSecureStorageService())
         ..registerSingleton<TapoService>(MockTapoService());
 
-      vm.setDevices([
-        const TapoDevice(
-          ip: '192.168.1.10',
-          nickname: 'Lampe Salon',
-          model: 'P110',
-          deviceOn: true,
-          isOnline: true,
-        ),
-        const TapoDevice(
-          ip: '192.168.1.11',
-          nickname: 'Bureau',
-          model: 'P100',
-          deviceOn: false,
-          isOnline: true,
-        ),
-        const TapoDevice(
-          ip: '192.168.1.12',
-          nickname: 'Chambre',
-          model: 'P110',
-          deviceOn: false,
-          isOnline: false,
-        ),
-      ]);
+      vm.setDevices(_devices);
 
       await tester.binding.setSurfaceSize(const Size(400, 700));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -177,6 +198,63 @@ void main() {
       await expectLater(
         find.byType(MaterialApp),
         matchesGoldenFile('goldens/config_screen.png'),
+      );
+    });
+
+    for (final (name, theme) in [('light', appTheme), ('dark', darkAppTheme)]) {
+      testWidgets('desktop home screen ($name)', (tester) async {
+        final vm = MockHomeViewModel();
+        getIt
+          ..registerSingleton<HomeViewModel>(vm)
+          ..registerSingleton<SecureStorageService>(MockSecureStorageService())
+          ..registerSingleton<TapoService>(MockTapoService())
+          ..registerSingleton<LaunchAtStartupViewModel>(
+            LaunchAtStartupViewModel(
+              shell: FakeDesktopShell()..launchAtStartup = true,
+            ),
+          );
+        vm.setDevices(_devices);
+        await getIt<LaunchAtStartupViewModel>().load();
+
+        await tester.binding.setSurfaceSize(_desktopSize);
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        await tester.pumpWidget(
+          MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: _desktop(theme),
+            home: const HomeScreen(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('goldens/desktop_home_$name.png'),
+        );
+      }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+    }
+
+    testWidgets('desktop config screen', (tester) async {
+      final vm = MockConfigViewModel();
+      getIt.registerSingleton<ConfigViewModel>(vm);
+      vm.setDeviceIps(['192.168.1.10', '192.168.1.11']);
+
+      await tester.binding.setSurfaceSize(_desktopSize);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: _desktop(appTheme),
+          home: const ConfigScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile('goldens/desktop_config_screen.png'),
       );
     });
   });

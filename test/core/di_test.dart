@@ -1,11 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:tapo/core/di.dart';
+import 'package:tapo/services/desktop_shell.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
+import 'package:tapo/services/tray_controller.dart';
 import 'package:tapo/services/widget_data_service.dart';
 import 'package:tapo/viewmodels/config_viewmodel.dart';
 import 'package:tapo/viewmodels/home_viewmodel.dart';
+import 'package:tapo/viewmodels/launch_at_startup_viewmodel.dart';
 
 void main() {
   // Use the global getIt instance from di.dart
@@ -30,6 +33,9 @@ void main() {
       expect(testGetIt.isRegistered<WidgetDataService>(), isTrue);
       expect(testGetIt.isRegistered<ConfigViewModel>(), isTrue);
       expect(testGetIt.isRegistered<HomeViewModel>(), isTrue);
+      expect(testGetIt.isRegistered<DesktopShell>(), isTrue);
+      expect(testGetIt.isRegistered<LaunchAtStartupViewModel>(), isTrue);
+      expect(testGetIt.isRegistered<TrayController>(), isTrue);
       expect(testGetIt.isRegistered<TapoService>(), isFalse);
 
       // Verify singleton behavior

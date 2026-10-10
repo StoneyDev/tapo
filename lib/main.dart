@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:tapo/core/di.dart';
+import 'package:tapo/core/platform.dart';
 import 'package:tapo/services/secure_storage_service.dart';
+import 'package:tapo/services/tray_controller.dart';
 import 'package:tapo/services/widget_callback.dart';
 import 'package:tapo/views/config_screen.dart';
 import 'package:tapo/views/home_screen.dart';
@@ -11,8 +13,13 @@ import 'package:tapo/views/home_screen.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   setupLocator();
-  unawaited(HomeWidget.setAppGroupId('group.stoneydev.tapo'));
-  unawaited(HomeWidget.registerInteractivityCallback(widgetBackgroundCallback));
+  if (supportsHomeWidgets) {
+    unawaited(HomeWidget.setAppGroupId('group.stoneydev.tapo'));
+    unawaited(
+      HomeWidget.registerInteractivityCallback(widgetBackgroundCallback),
+    );
+  }
+  if (isWindowsDesktop) unawaited(getIt<TrayController>().start());
   runApp(const MyApp());
 }
 

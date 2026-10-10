@@ -26,6 +26,17 @@ class HomeViewModel extends ChangeNotifier {
   final Map<String, DateTime> _lastToggleTime = {};
   final Map<String, DateTime> _powerOffDeadlines = {};
   final Map<String, Timer> _powerOffTimers = {};
+  Future<void>? _inFlightLoad;
+  DateTime? _lastLoadedAt;
+
+  /// Only the latest load may publish its results.
+  int _loadGeneration = 0;
+
+  /// Plugs toggled or removed while a load runs keep their newer state:
+  /// [_lastChange] holds, per IP, the value of [_changeCount] at its last
+  /// change.
+  int _changeCount = 0;
+  final Map<String, int> _lastChange = {};
   static const _toggleCooldown = Duration(milliseconds: 500);
 
   List<TapoDevice> get devices => List.unmodifiable(_devices);
@@ -83,33 +94,77 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   /// Retry immediately so a restored Wi-Fi connection can be used.
-  Future<void> refresh() => loadDevices();
+  ///
+  /// A [silent] refresh (tray menu, window focus) keeps the current devices
+  /// on screen without a spinner, keeps them when it fails, and joins a load
+  /// that is already running.
+  Future<void> refresh({bool silent = false}) {
+    final running = _inFlightLoad;
+    if (silent && running != null) return running;
+    return loadDevices(silent: silent);
+  }
+
+  /// Silently refresh unless devices were loaded less than [maxAge] ago.
+  Future<void> refreshIfStale(Duration maxAge) {
+    final lastLoadedAt = _lastLoadedAt;
+    if (lastLoadedAt != null &&
+        DateTime.now().difference(lastLoadedAt) < maxAge) {
+      return Future.value();
+    }
+    return refresh(silent: true);
+  }
 
   /// Load all configured devices and fetch their states
-  Future<void> loadDevices() async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+  Future<void> loadDevices({bool silent = false}) {
+    final load = _loadDevices(silent: silent, generation: ++_loadGeneration);
+    _inFlightLoad = load;
+    return load.whenComplete(() {
+      if (identical(_inFlightLoad, load)) _inFlightLoad = null;
+    });
+  }
+
+  Future<void> _loadDevices({
+    required bool silent,
+    required int generation,
+  }) async {
+    bool isLatest() => generation == _loadGeneration;
+
+    if (!silent) {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+    }
+    final changesAtStart = _changeCount;
 
     try {
       final ips = await _storageService.getDeviceIps();
+      if (!isLatest()) return;
       if (ips.isEmpty) {
         cancelAllPowerOffs();
         _devices = [];
-        _isLoading = false;
-        notifyListeners();
+        _errorMessage = null;
+        _lastLoadedAt = DateTime.now();
         return;
       }
 
       if (!getIt.isRegistered<TapoService>()) {
-        _errorMessage = 'Not authenticated';
-        _isLoading = false;
-        notifyListeners();
+        if (!silent) _errorMessage = 'Not authenticated';
         return;
       }
 
       final tapoService = getIt<TapoService>();
-      _devices = await Future.wait(ips.map(tapoService.getDeviceState));
+      final fetched = await Future.wait(ips.map(tapoService.getDeviceState));
+      if (!isLatest()) return;
+      _devices = [
+        for (final device in fetched)
+          if ((_lastChange[device.ip] ?? 0) <= changesAtStart)
+            device
+          else
+            // Changed meanwhile: keep the newer state, or drop it if removed.
+            ?_deviceAt(device.ip),
+      ];
+      _errorMessage = null;
+      _lastLoadedAt = DateTime.now();
 
       // Widget sync is best-effort; don't mask a successful load
       try {
@@ -119,11 +174,28 @@ class HomeViewModel extends ChangeNotifier {
         // Non-critical: devices loaded but widget state may be stale
       }
     } on Exception {
-      _errorMessage = 'Failed to load devices';
+      if (!silent && isLatest()) _errorMessage = 'Failed to load devices';
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (isLatest()) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
+  }
+
+  TapoDevice? _deviceAt(String ip) =>
+      _devices.where((device) => device.ip == ip).firstOrNull;
+
+  void _markChanged(String ip) => _lastChange[ip] = ++_changeCount;
+
+  /// Turn off every online device that is on, cancelling any countdown.
+  Future<void> turnOffAll() async {
+    cancelAllPowerOffs();
+    final ips = [
+      for (final device in _devices)
+        if (device.isOnline && device.deviceOn) device.ip,
+    ];
+    await Future.wait(ips.map(_turnOffDevice));
   }
 
   /// Update a device's IP address
@@ -152,6 +224,7 @@ class HomeViewModel extends ChangeNotifier {
   Future<void> removeDevice(String ip) async {
     cancelPowerOff(ip);
     _devices = _devices.where((d) => d.ip != ip).toList();
+    _markChanged(ip);
     notifyListeners();
 
     final ips = await _storageService.getDeviceIps();
@@ -165,26 +238,29 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  /// Toggle device on/off state
-  Future<void> toggleDevice(String ip) async {
+  /// Toggle device on/off state.
+  ///
+  /// Returns false when the plug could not be reached. A toggle skipped
+  /// because one is already running, or by the double-click cooldown, is not
+  /// a failure.
+  Future<bool> toggleDevice(String ip) async {
     if (!getIt.isRegistered<TapoService>()) {
       _errorMessage = 'Not authenticated';
       notifyListeners();
-      return;
+      return false;
     }
 
     final lastToggle = _lastToggleTime[ip];
     if (lastToggle != null &&
         DateTime.now().difference(lastToggle) < _toggleCooldown) {
-      return;
+      return true;
     }
     _lastToggleTime[ip] = DateTime.now();
 
-    final index = _devices.indexWhere((d) => d.ip == ip);
-    if (index == -1) return;
+    if (_deviceAt(ip) == null) return true;
 
     cancelPowerOff(ip);
-    await _updateDevice(
+    return await _updateDevice(
       ip,
       (service) => service.toggleDevice(ip),
       failureMessage: 'Failed to toggle device',
@@ -207,20 +283,25 @@ class HomeViewModel extends ChangeNotifier {
     );
   }
 
-  Future<void> _updateDevice(
+  /// Returns false when the plug could not be reached.
+  Future<bool> _updateDevice(
     String ip,
     Future<TapoDevice> Function(TapoService service) action, {
     required String failureMessage,
   }) async {
-    final index = _devices.indexWhere((device) => device.ip == ip);
-    if (index == -1 || _togglingDevices.contains(ip)) return;
+    if (_deviceAt(ip) == null || _togglingDevices.contains(ip)) return true;
 
     _togglingDevices.add(ip);
     notifyListeners();
 
     try {
       final updatedDevice = await action(getIt<TapoService>());
-      _devices = List.from(_devices)..[index] = updatedDevice;
+      // The list may have changed (reload, removal) while waiting.
+      final index = _devices.indexWhere((device) => device.ip == ip);
+      if (index != -1) {
+        _devices = List.of(_devices)..[index] = updatedDevice;
+        _markChanged(ip);
+      }
       _errorMessage = null;
 
       // Widget sync is best-effort; don't mask a successful toggle
@@ -236,8 +317,10 @@ class HomeViewModel extends ChangeNotifier {
       } on Exception {
         // Non-critical: device was toggled but widget state may be stale
       }
+      return updatedDevice.isOnline;
     } on Exception {
       _errorMessage = failureMessage;
+      return false;
     } finally {
       _togglingDevices.remove(ip);
       notifyListeners();

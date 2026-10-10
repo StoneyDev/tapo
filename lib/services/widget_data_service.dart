@@ -1,9 +1,12 @@
 import 'dart:convert';
 
 import 'package:home_widget/home_widget.dart';
+import 'package:tapo/core/platform.dart';
 import 'package:tapo/models/tapo_device.dart';
 
 /// Persists device state to home widget storage via home_widget package.
+///
+/// Every operation is a no-op on platforms without home screen widgets.
 class WidgetDataService {
   static const _devicesKey = 'devices';
 
@@ -16,6 +19,7 @@ class WidgetDataService {
     bool isOnline = true,
     String? nickname,
   }) async {
+    if (!supportsHomeWidgets) return;
     final devices = await _readDevices();
     final index = devices.indexWhere((d) => d['ip'] == ip);
     final entry = {
@@ -37,6 +41,7 @@ class WidgetDataService {
 
   /// Save all devices to widget storage, replacing existing data.
   Future<void> saveAllDevices(List<TapoDevice> deviceList) async {
+    if (!supportsHomeWidgets) return;
     final devices = deviceList
         .map(
           (d) => {
@@ -53,6 +58,7 @@ class WidgetDataService {
 
   /// Clear all widget data.
   Future<void> clearWidgetData() async {
+    if (!supportsHomeWidgets) return;
     await HomeWidget.saveWidgetData<String>(_devicesKey, null);
   }
 
@@ -64,16 +70,19 @@ class WidgetDataService {
   }
 
   /// Notify all home screen widgets to refresh their data.
-  Future<void> refreshWidgets() => Future.wait([
-    HomeWidget.updateWidget(
-      androidName: 'TapoSingleWidgetProvider',
-      iOSName: 'TapoWidget',
-    ),
-    HomeWidget.updateWidget(
-      androidName: 'TapoListWidgetProvider',
-      iOSName: 'TapoListWidget',
-    ),
-  ]);
+  Future<void> refreshWidgets() async {
+    if (!supportsHomeWidgets) return;
+    await Future.wait([
+      HomeWidget.updateWidget(
+        androidName: 'TapoSingleWidgetProvider',
+        iOSName: 'TapoWidget',
+      ),
+      HomeWidget.updateWidget(
+        androidName: 'TapoListWidgetProvider',
+        iOSName: 'TapoListWidget',
+      ),
+    ]);
+  }
 
   Future<void> _writeDevices(List<Map<String, dynamic>> devices) async {
     await HomeWidget.saveWidgetData<String>(_devicesKey, jsonEncode(devices));

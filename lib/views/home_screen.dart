@@ -1,10 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tapo/core/platform.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
 import 'package:tapo/services/widget_data_service.dart';
 import 'package:tapo/viewmodels/home_viewmodel.dart';
+import 'package:tapo/views/desktop/desktop_breakpoint.dart';
+import 'package:tapo/views/desktop/desktop_home_layout.dart';
+import 'package:tapo/views/widgets/home_summary.dart';
+import 'package:tapo/views/widgets/message_state.dart';
 import 'package:tapo/views/widgets/plug_card.dart';
 import 'package:watch_it/watch_it.dart';
 
@@ -34,9 +39,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      unawaited(_viewModel.refresh());
-    }
+    if (state != AppLifecycleState.resumed) return;
+    // Desktop windows resume on every focus gain: only refresh stale data.
+    unawaited(
+      isDesktopPlatform
+          ? _viewModel.refreshIfStale(const Duration(seconds: 30))
+          : _viewModel.refresh(),
+    );
   }
 
   @override
@@ -45,11 +54,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            Expanded(child: _buildBody()),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth >= desktopBreakpoint) {
+              return DesktopHomeLayout(
+                viewModel: _viewModel,
+                onLogout: () => _logout(context),
+              );
+            }
+            return Column(
+              children: [
+                _buildHeader(context),
+                Expanded(child: _buildBody()),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -113,90 +132,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildOverview(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+  Widget _buildOverview() {
     final devices = _viewModel.devices;
-    final online = devices.where((device) => device.isOnline).length;
-    final connectionColor = online > 0
-        ? colors.secondary
-        : colors.onSurfaceVariant;
-    final powered = devices
-        .where((device) => device.isOnline && device.deviceOn)
-        .length;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 26),
-        Text(
-          'Prises allumées',
-          style: TextStyle(color: colors.onSurfaceVariant, fontSize: 16),
-        ),
-        const SizedBox(height: 6),
-        Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(text: powered.toString().padLeft(2, '0')),
-              TextSpan(
-                text: ' / ${devices.length.toString().padLeft(2, '0')}',
-                style: TextStyle(color: colors.outline, fontSize: 36),
-              ),
-            ],
-          ),
-          style: const TextStyle(
-            fontSize: 68,
-            height: 1.1,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -3,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            Icon(
-              online > 0 ? Icons.wifi_rounded : Icons.wifi_off_rounded,
-              size: 18,
-              color: connectionColor,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                '$online en ligne · réseau local',
-                style: TextStyle(
-                  color: connectionColor,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
+        PoweredSummary(devices: devices),
         const SizedBox(height: 30),
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Prises',
-                style: TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Text(
-                '${devices.length} appareil${devices.length > 1 ? 's' : ''}',
-                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
-              ),
-            ),
-          ],
-        ),
+        DevicesHeader(count: devices.length),
         const SizedBox(height: 8),
       ],
     );
@@ -208,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
 
     if (_viewModel.errorMessage != null) {
-      return _MessageState(
+      return MessageState(
         icon: Icons.cloud_off_rounded,
         title: 'Connexion impossible',
         message: _viewModel.errorMessage!,
@@ -218,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
 
     if (_viewModel.devices.isEmpty) {
-      return const _MessageState(
+      return const MessageState(
         icon: Icons.power_outlined,
         title: 'No devices configured',
         message: 'Ajoutez une adresse IP depuis la configuration.',
@@ -238,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 color: Theme.of(context).colorScheme.outlineVariant,
               ),
         itemBuilder: (context, index) {
-          if (index == 0) return _buildOverview(context);
+          if (index == 0) return _buildOverview();
           final device = _viewModel.devices[index - 1];
           return PlugCard(
             device: device,
@@ -274,64 +218,5 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (context.mounted) {
       await Navigator.pushReplacementNamed(context, '/config');
     }
-  }
-}
-
-class _MessageState extends StatelessWidget {
-  const _MessageState({
-    required this.icon,
-    required this.title,
-    required this.message,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  final IconData icon;
-  final String title;
-  final String message;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 68,
-              height: 68,
-              decoration: BoxDecoration(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Icon(icon, color: colors.onSurfaceVariant, size: 30),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 7),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            if (actionLabel != null) ...[
-              const SizedBox(height: 18),
-              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
-            ],
-          ],
-        ),
-      ),
-    );
   }
 }
