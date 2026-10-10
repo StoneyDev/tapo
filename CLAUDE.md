@@ -30,6 +30,9 @@ make build-android
 make build-windows      # Windows host only
 ```
 
+Pushing a `v*` tag matching the pubspec version publishes a GitHub Release
+(Windows zip + signed APK) via `.github/workflows/release.yml`.
+
 ## Architecture
 
 Flutter app for controlling TP-Link Tapo smart plugs over local network.
