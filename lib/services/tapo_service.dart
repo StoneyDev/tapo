@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:tapo/core/http_utils.dart';
 import 'package:tapo/core/klap_crypto.dart';
 import 'package:tapo/core/klap_session.dart';
 import 'package:tapo/core/tpap_session.dart';
@@ -105,6 +106,32 @@ class TapoService {
     return false;
   }
 
+  /// Runs [command] on the plug at [ip]; null if it cannot be reached.
+  ///
+  /// A plug drops our session when it expires or when another app logs in to
+  /// it: [command] then runs once more on a new session. A second refusal
+  /// propagates.
+  Future<T?> _send<T>(
+    String ip,
+    Future<T> Function(_DeviceClient client) command,
+  ) async {
+    try {
+      return await _sendOnce(ip, command);
+    } on SessionRejectedException {
+      await disconnect(ip);
+      return await _sendOnce(ip, command);
+    }
+  }
+
+  Future<T?> _sendOnce<T>(
+    String ip,
+    Future<T> Function(_DeviceClient client) command,
+  ) async {
+    if (!await connectToDevice(ip)) return null;
+    final client = _getClient(ip);
+    return client == null ? null : await command(client);
+  }
+
   /// Get client for device (TPAP or KLAP), null if not connected
   _DeviceClient? _getClient(String ip) {
     if (_tpapDevices.contains(ip) && _tpapClients.containsKey(ip)) {
@@ -131,12 +158,7 @@ class TapoService {
   }
 
   Future<TapoDevice> _fetchDeviceState(String ip) async {
-    if (!await connectToDevice(ip)) {
-      return _offlineDevice(ip);
-    }
-
-    final client = _getClient(ip);
-    final info = await client?.getInfo();
+    final info = await _send(ip, (client) => client.getInfo());
 
     if (info == null) {
       await disconnect(ip);
@@ -176,13 +198,13 @@ class TapoService {
     if (!currentState.isOnline) return currentState;
     if (currentState.deviceOn == on) return currentState;
 
-    final client = _getClient(ip);
-    if (client == null) return currentState;
-
     // A malformed reply counts as a failed command.
-    final success = await client.setOn(on: on).catchError((Object _) => false);
+    final success = await _send(
+      ip,
+      (client) => client.setOn(on: on),
+    ).catchError((Object _) => false);
 
-    if (!success) {
+    if (success != true) {
       await disconnect(ip);
       return currentState.copyWith(isOnline: false);
     }

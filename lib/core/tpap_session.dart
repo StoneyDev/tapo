@@ -118,6 +118,8 @@ class TpapSession {
 
     try {
       return await _request(payload).timeout(deviceTimeout);
+    } on SessionRejectedException {
+      rethrow;
     } on Exception {
       return null;
     }
@@ -138,8 +140,10 @@ class TpapSession {
       ..headers.set('Cookie', 'TP_SESSIONID=$_sessionId')
       ..add(encrypted);
 
+    // A plug that no longer has this session refuses the request, or answers
+    // with a reply our key cannot open.
     final response = await request.close();
-    if (response.statusCode != 200) return null;
+    if (response.statusCode != 200) throw const SessionRejectedException();
 
     // Read and decrypt response
     final responseBytes = await response.fold<List<int>>(
@@ -147,7 +151,12 @@ class TpapSession {
       (prev, chunk) => prev..addAll(chunk),
     );
 
-    final decrypted = _cipher!.decrypt(Uint8List.fromList(responseBytes));
+    final Uint8List decrypted;
+    try {
+      decrypted = _cipher!.decrypt(Uint8List.fromList(responseBytes));
+    } on Object {
+      throw const SessionRejectedException();
+    }
     final result = jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>;
 
     return result['error_code'] == 0 ? result : null;

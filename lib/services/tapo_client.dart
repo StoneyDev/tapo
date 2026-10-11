@@ -68,6 +68,8 @@ class TapoClient {
 
       final response = await sendRawRequest(session.deviceIp, request, body);
 
+      // 403 Forbidden: the plug no longer has this session.
+      if (response.statusCode == 403) throw const SessionRejectedException();
       if (response.statusCode != 200 || response.body.length < 32) return null;
 
       // Decrypt: skip signature (32 bytes), decrypt the rest
@@ -76,6 +78,8 @@ class TapoClient {
       final result = jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>;
 
       return result['error_code'] == 0 ? result : null;
+    } on SessionRejectedException {
+      rethrow;
     } on Exception {
       return null;
     }

@@ -61,6 +61,11 @@ class HangUpReply extends PlugReply {
   const HangUpReply();
 }
 
+/// Answers 403 with no body, as a plug does for a session it no longer has.
+class ForbiddenReply extends PlugReply {
+  const ForbiddenReply();
+}
+
 /// Answers 200 with [bytes] as the body, unencrypted.
 class RawReply extends PlugReply {
   const RawReply(this.bytes);
@@ -92,6 +97,13 @@ class FakeKlapPlug {
   final _remoteSeed = Uint8List.fromList(List.filled(16, 1));
   Uint8List _localSeed = Uint8List(16);
   final _sockets = <_FakeSocket>[];
+
+  /// The plug keeps a single session: each login replaces the previous one.
+  int _logins = 0;
+  String get _sessionCookie => 'TP_SESSIONID=session$_logins';
+
+  /// Another app logs in to the plug, which drops the app's session.
+  void logInFromAnotherApp() => _logins++;
 
   /// Whether every socket the app opened has been closed or destroyed.
   bool get allSocketsReleased => _sockets.every((socket) => socket.released);
@@ -126,6 +138,7 @@ class FakeKlapPlug {
   Stream<Uint8List> _answer(String head, List<int> body) {
     final path = head.split(' ')[1];
     if (path == '/app/handshake1') {
+      _logins++;
       _localSeed = Uint8List.fromList(body);
       return _frame(
         handshake1 ??
@@ -136,6 +149,9 @@ class FakeKlapPlug {
       );
     }
     if (path == '/app/handshake2') return _frame(const RawReply([]));
+    if (!head.contains('Cookie: $_sessionCookie\r\n')) {
+      return _frame(const ForbiddenReply());
+    }
 
     final iv = _ivFor(int.parse(Uri.parse(path).queryParameters['seq']!));
     final request = aesDecrypt(
@@ -170,7 +186,7 @@ class FakeKlapPlug {
     ..setAll(0, _derive('iv', 12))
     ..buffer.asByteData().setInt32(12, seq);
 
-  static Stream<Uint8List> _frame(PlugReply reply) {
+  Stream<Uint8List> _frame(PlugReply reply) {
     // The default cancel future belongs to the root zone: breaking out of an
     // `await for` would then resume outside fake time.
     final controller = StreamController<Uint8List>(
@@ -181,13 +197,18 @@ class FakeKlapPlug {
         break;
       case HangUpReply():
         unawaited(controller.close());
+      case ForbiddenReply():
+        controller.add(
+          utf8.encode('HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n'),
+        );
+        unawaited(controller.close());
       case RawReply(:final bytes):
         controller.add(
           Uint8List.fromList([
             ...utf8.encode(
               'HTTP/1.1 200 OK\r\n'
               'Content-Length: ${bytes.length}\r\n'
-              'Set-Cookie: TP_SESSIONID=fake\r\n\r\n',
+              'Set-Cookie: $_sessionCookie\r\n\r\n',
             ),
             ...bytes,
           ]),
@@ -307,6 +328,9 @@ class _FakeHttpRequest extends Fake implements HttpClientRequest {
         HangUpReply() => Future.error(
           const HttpException('Connection closed before full header'),
         ),
+        ForbiddenReply() => Future.value(
+          _FakeHttpResponse(const [], statusCode: HttpStatus.forbidden),
+        ),
         RawReply(:final bytes) => Future.value(_FakeHttpResponse(bytes)),
         JsonReply(:final payload) => Future.value(
           _FakeHttpResponse(utf8.encode(jsonEncode(payload))),
@@ -325,10 +349,11 @@ class _FakeHttpHeaders extends Fake implements HttpHeaders {
 
 class _FakeHttpResponse extends StreamView<List<int>>
     implements HttpClientResponse {
-  _FakeHttpResponse(List<int> body) : super(Stream.value(body));
+  _FakeHttpResponse(List<int> body, {this.statusCode = HttpStatus.ok})
+    : super(Stream.value(body));
 
   @override
-  int get statusCode => 200;
+  final int statusCode;
 
   @override
   List<Cookie> get cookies => [];

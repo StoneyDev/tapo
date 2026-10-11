@@ -19,6 +19,12 @@ class HttpResponse {
 /// How long a plug may take to accept a connection or answer a request.
 const deviceTimeout = Duration(seconds: 10);
 
+/// A plug answered but no longer knows our session: it expired, or the plug
+/// dropped it when another app logged in.
+class SessionRejectedException implements Exception {
+  const SessionRejectedException();
+}
+
 /// POSTs [body] to port 80 of [host] over a raw socket and reads the reply,
 /// each bounded by [deviceTimeout]. The socket is always released.
 Future<HttpResponse> sendRawRequest(

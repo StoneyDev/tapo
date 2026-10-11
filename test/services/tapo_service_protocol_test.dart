@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pointycastle/export.dart';
+import 'package:tapo/core/http_utils.dart';
 import 'package:tapo/models/tapo_device.dart';
 import 'package:tapo/services/tapo_service.dart';
 
@@ -14,6 +15,12 @@ final Matcher _isOffline = isA<TapoDevice>().having(
   (d) => d.isOnline,
   'isOnline',
   isFalse,
+);
+
+final Matcher _isOnline = isA<TapoDevice>().having(
+  (d) => d.isOnline,
+  'isOnline',
+  isTrue,
 );
 
 /// A KLAP request whose ciphertext is not a whole AES block.
@@ -63,11 +70,17 @@ void main() {
       final plug = FakeKlapPlug()..onRequest = _plugOff;
       final service = _service();
 
-      final states = runAgainstPlugs(() async {
-        final connected = await service.getDeviceState(_ip);
-        plug.port = PortState.dropped;
-        return [connected, await service.getDeviceState(_ip)];
-      }, klap: plug);
+      final states = runAgainstPlugs(
+        () async {
+          final connected = await service.getDeviceState(_ip);
+          plug.port = PortState.dropped;
+          return [connected, await service.getDeviceState(_ip)];
+        },
+        klap: plug,
+        // A single timeout: a plug that does not answer is not logged in to
+        // again.
+        elapse: deviceTimeout + const Duration(seconds: 1),
+      );
 
       expect(states?.map((d) => d.isOnline), [true, false]);
     });
@@ -81,6 +94,44 @@ void main() {
       );
 
       expect(device, _isOffline);
+    });
+  });
+
+  group('logs in again when another app took over the plug', () {
+    test('before reading its state', () {
+      final plug = FakeKlapPlug()..onRequest = _plugOff;
+      final service = _service();
+
+      final device = runAgainstPlugs(() async {
+        await service.getDeviceState(_ip);
+        plug.logInFromAnotherApp();
+        return await service.getDeviceState(_ip);
+      }, klap: plug);
+
+      expect(device, _isOnline);
+    });
+
+    test('between reading its state and switching it', () {
+      final plug = FakeKlapPlug();
+      var tookOver = false;
+      plug.onRequest = (request) {
+        if (request['method'] == 'set_device_info') {
+          return const JsonReply({'error_code': 0});
+        }
+        if (!tookOver) {
+          tookOver = true;
+          plug.logInFromAnotherApp();
+        }
+        return _plugOff(request);
+      };
+
+      final device = runAgainstPlugs(
+        () => _service().toggleDevice(_ip),
+        klap: plug,
+      );
+
+      expect(device, _isOnline);
+      expect(device?.deviceOn, isTrue);
     });
   });
 
