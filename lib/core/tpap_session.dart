@@ -28,7 +28,7 @@ class TpapSession {
   /// Perform full TPAP handshake (SPAKE2+)
   Future<bool> handshake() async {
     try {
-      if (await _handshake().timeout(deviceTimeout)) return true;
+      if (await _handshake()) return true;
     } on Object {
       // A malformed reply raises Errors too (e.g. TypeError).
     }
@@ -39,8 +39,10 @@ class TpapSession {
   Future<bool> _handshake() async {
     _httpClient = HttpClient()..badCertificateCallback = (_, _, _) => true;
 
+    // Each exchange gets its own timeout: deriving the password between
+    // them is CPU time that can take seconds on a slow phone.
     // Step 1: Initial handshake to get parameters
-    final initResult = await _initHandshake();
+    final initResult = await _initHandshake().timeout(deviceTimeout);
     if (initResult == null || initResult.iterations > _maxIterations) {
       return false;
     }
@@ -62,7 +64,7 @@ class TpapSession {
     final serverShare = await _sendClientShare(
       clientShare,
       initResult.transactionId,
-    );
+    ).timeout(deviceTimeout);
     if (serverShare == null) return false;
 
     // Process server share and get confirmation
@@ -73,7 +75,7 @@ class TpapSession {
     final serverConfirm = await _sendConfirmation(
       clientConfirm,
       serverShare.transactionId,
-    );
+    ).timeout(deviceTimeout);
     if (serverConfirm == null) return false;
 
     // Verify server confirmation

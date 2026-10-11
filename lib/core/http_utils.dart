@@ -19,14 +19,21 @@ class HttpResponse {
 /// How long a plug may take to accept a connection or answer a request.
 const deviceTimeout = Duration(seconds: 10);
 
-/// Read raw HTTP response from socket, destroying the socket if the plug
-/// does not answer within [deviceTimeout].
-Future<HttpResponse> readHttpResponse(Socket socket) async {
+/// POSTs [body] to port 80 of [host] over a raw socket and reads the reply,
+/// each bounded by [deviceTimeout]. The socket is always released.
+Future<HttpResponse> sendRawRequest(
+  String host,
+  String head,
+  List<int> body,
+) async {
+  final socket = await Socket.connect(host, 80, timeout: deviceTimeout);
   try {
+    socket
+      ..add(utf8.encode(head))
+      ..add(body);
     return await _readHttpResponse(socket).timeout(deviceTimeout);
-  } on TimeoutException {
+  } finally {
     socket.destroy();
-    rethrow;
   }
 }
 

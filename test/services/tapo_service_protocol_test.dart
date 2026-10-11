@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pointycastle/export.dart';
 import 'package:tapo/models/tapo_device.dart';
 import 'package:tapo/services/tapo_service.dart';
 
@@ -83,6 +84,34 @@ void main() {
     });
   });
 
+  test('gives each TPAP handshake step its own timeout', () {
+    // Each answer takes 6 s: together they exceed a single 10 s budget.
+    final tpap = FakeTpapPlug()
+      ..onPost = (url, _) => DelayedReply(
+        const Duration(seconds: 6),
+        switch (url.path) {
+          '/app' => JsonReply({
+            'result': {
+              'salt': base64Encode(List.filled(16, 7)),
+              'iterations': 1000,
+              'transaction_id': 'tx',
+            },
+          }),
+          '/app/handshake2' => JsonReply({
+            'result': {
+              'server_share': base64Encode(ECCurve_secp256r1().G.getEncoded()),
+              'transaction_id': 'tx',
+            },
+          }),
+          _ => const HangUpReply(),
+        },
+      );
+
+    runAgainstPlugs(() => _service().getDeviceState(_ip), tpap: tpap);
+
+    expect(tpap.requests.map((url) => url.path), contains('/app/handshake3'));
+  });
+
   test('tries TPAP with a single request when the plug refuses it', () {
     final tpap = FakeTpapPlug();
 
@@ -115,6 +144,18 @@ void main() {
       );
 
       expect(device, _isOffline);
+    });
+
+    test('releases the socket when the plug hangs up on a request', () {
+      final plug = FakeKlapPlug()..onRequest = (_) => const HangUpReply();
+
+      final device = runAgainstPlugs(
+        () => _service().getDeviceState(_ip),
+        klap: plug,
+      );
+
+      expect(device, _isOffline);
+      expect(plug.allSocketsReleased, isTrue);
     });
 
     test('reports the plug offline when its toggle reply is malformed', () {

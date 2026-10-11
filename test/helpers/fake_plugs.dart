@@ -75,6 +75,14 @@ class JsonReply extends PlugReply {
   final Object payload;
 }
 
+/// Sends [reply] after [delay]; TPAP plugs only.
+class DelayedReply extends PlugReply {
+  const DelayedReply(this.delay, this.reply);
+
+  final Duration delay;
+  final PlugReply reply;
+}
+
 /// A plug speaking KLAP on port 80, reached through raw sockets.
 class FakeKlapPlug {
   FakeKlapPlug({Uint8List? authHash})
@@ -83,6 +91,10 @@ class FakeKlapPlug {
   final Uint8List _authHash;
   final _remoteSeed = Uint8List.fromList(List.filled(16, 1));
   Uint8List _localSeed = Uint8List(16);
+  final _sockets = <_FakeSocket>[];
+
+  /// Whether every socket the app opened has been closed or destroyed.
+  bool get allSocketsReleased => _sockets.every((socket) => socket.released);
 
   PortState port = PortState.open;
 
@@ -93,8 +105,14 @@ class FakeKlapPlug {
   PlugReply Function(Map<String, dynamic> request) onRequest = (_) =>
       const JsonReply({'error_code': 0, 'result': <String, dynamic>{}});
 
+  _FakeSocket _openSocket() {
+    final socket = _FakeSocket(this);
+    _sockets.add(socket);
+    return socket;
+  }
+
   Future<Socket> connect(Duration? timeout) => switch (port) {
-    PortState.open => Future.value(_FakeSocket(this)),
+    PortState.open => Future.value(_openSocket()),
     PortState.refused => Future.error(
       const SocketException('Connection refused'),
     ),
@@ -177,6 +195,8 @@ class FakeKlapPlug {
         unawaited(controller.close());
       case JsonReply():
         throw UnsupportedError('Encrypt JSON before framing it');
+      case DelayedReply():
+        throw UnsupportedError('Only TPAP plugs delay replies');
     }
     return controller.stream;
   }
@@ -188,15 +208,19 @@ class _FakeSocket extends Fake implements Socket {
   final FakeKlapPlug _plug;
   final _sent = <List<int>>[];
   StreamSubscription<Uint8List>? _subscription;
+  bool released = false;
 
   @override
   void add(List<int> data) => _sent.add(data);
 
   @override
-  Future<void> close() async {}
+  Future<void> close() async => released = true;
 
   @override
-  void destroy() => unawaited(_subscription?.cancel());
+  void destroy() {
+    released = true;
+    unawaited(_subscription?.cancel());
+  }
 
   @override
   StreamSubscription<Uint8List> listen(
@@ -275,7 +299,10 @@ class _FakeHttpRequest extends Fake implements HttpClientRequest {
 
   @override
   Future<HttpClientResponse> close() =>
-      switch (_onPost(_url, utf8.decode(_body))) {
+      _respond(_onPost(_url, utf8.decode(_body)));
+
+  static Future<HttpClientResponse> _respond(PlugReply reply) =>
+      switch (reply) {
         SilentReply() => Completer<HttpClientResponse>().future,
         HangUpReply() => Future.error(
           const HttpException('Connection closed before full header'),
@@ -283,6 +310,10 @@ class _FakeHttpRequest extends Fake implements HttpClientRequest {
         RawReply(:final bytes) => Future.value(_FakeHttpResponse(bytes)),
         JsonReply(:final payload) => Future.value(
           _FakeHttpResponse(utf8.encode(jsonEncode(payload))),
+        ),
+        DelayedReply(:final delay, :final reply) => Future.delayed(
+          delay,
+          () => _respond(reply),
         ),
       };
 }
