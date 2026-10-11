@@ -58,7 +58,11 @@ class TapoClient {
       final body = Uint8List.fromList([...signature, ...encrypted]);
 
       // Send via raw socket
-      final socket = await Socket.connect(session.deviceIp, 80);
+      final socket = await Socket.connect(
+        session.deviceIp,
+        80,
+        timeout: deviceTimeout,
+      );
       final request =
           'POST /app/request?seq=$seqNum HTTP/1.1\r\n'
           'Host: ${session.deviceIp}\r\n'

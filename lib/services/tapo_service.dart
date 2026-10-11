@@ -91,9 +91,6 @@ class TapoService {
       credentials: TpapCredentials(email: _email, password: _password),
     );
 
-    // Probe to understand what the device supports
-    await tpapSession.probeDevice();
-
     // Try TPAP handshake
     final success = await tpapSession.handshake();
     if (success) {
@@ -123,6 +120,17 @@ class TapoService {
 
   /// Get device state, returns TapoDevice (offline if unreachable)
   Future<TapoDevice> getDeviceState(String ip) async {
+    try {
+      return await _fetchDeviceState(ip);
+    } on Object {
+      // A malformed reply raises Errors too (e.g. ArgumentError); it must not
+      // fail a caller refreshing every plug at once.
+      await disconnect(ip);
+      return _offlineDevice(ip);
+    }
+  }
+
+  Future<TapoDevice> _fetchDeviceState(String ip) async {
     if (!await connectToDevice(ip)) {
       return _offlineDevice(ip);
     }
@@ -171,7 +179,8 @@ class TapoService {
     final client = _getClient(ip);
     if (client == null) return currentState;
 
-    final success = await client.setOn(on: on);
+    // A malformed reply counts as a failed command.
+    final success = await client.setOn(on: on).catchError((Object _) => false);
 
     if (!success) {
       await disconnect(ip);

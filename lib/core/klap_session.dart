@@ -34,7 +34,8 @@ class KlapSession {
       if (!await _handshake2()) return false;
       _deriveSessionKeys();
       return true;
-    } on Exception {
+    } on Object {
+      // A malformed reply raises Errors too (e.g. RangeError).
       return false;
     }
   }
@@ -43,11 +44,7 @@ class KlapSession {
   Future<bool> _handshake1() async {
     _localSeed = _generateRandomBytes(16);
 
-    final socket = await Socket.connect(
-      deviceIp,
-      80,
-      timeout: const Duration(seconds: 10),
-    );
+    final socket = await Socket.connect(deviceIp, 80, timeout: deviceTimeout);
     final request =
         'POST /app/handshake1 HTTP/1.1\r\n'
         'Host: $deviceIp\r\n'
@@ -95,11 +92,7 @@ class KlapSession {
       ...authHash,
     ]);
 
-    final socket = await Socket.connect(
-      deviceIp,
-      80,
-      timeout: const Duration(seconds: 10),
-    );
+    final socket = await Socket.connect(deviceIp, 80, timeout: deviceTimeout);
     final request =
         'POST /app/handshake2 HTTP/1.1\r\n'
         'Host: $deviceIp\r\n'

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -15,8 +16,21 @@ class HttpResponse {
   final String? cookie;
 }
 
-/// Read raw HTTP response from socket
+/// How long a plug may take to accept a connection or answer a request.
+const deviceTimeout = Duration(seconds: 10);
+
+/// Read raw HTTP response from socket, destroying the socket if the plug
+/// does not answer within [deviceTimeout].
 Future<HttpResponse> readHttpResponse(Socket socket) async {
+  try {
+    return await _readHttpResponse(socket).timeout(deviceTimeout);
+  } on TimeoutException {
+    socket.destroy();
+    rethrow;
+  }
+}
+
+Future<HttpResponse> _readHttpResponse(Socket socket) async {
   final data = <int>[];
 
   await for (final chunk in socket) {

@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tapo/services/widget_callback.dart';
 
+import '../helpers/fake_plugs.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -58,11 +60,11 @@ void main() {
           (call) async {
             switch (call.method) {
               case 'read':
-                if (credentialsUnavailable) {
-                  throw PlatformException(code: 'storage_unavailable');
-                }
                 final args = call.arguments as Map;
                 final key = args['key'] as String;
+                if (credentialsUnavailable && key != 'tapo_device_ips') {
+                  throw PlatformException(code: 'storage_unavailable');
+                }
                 return secureStore[key];
               case 'write':
                 final args = call.arguments as Map;
@@ -87,7 +89,9 @@ void main() {
 
   setUp(() {
     widgetStore = {};
-    secureStore = {};
+    secureStore = {
+      'tapo_device_ips': jsonEncode(['192.168.1.100']),
+    };
     credentialsUnavailable = false;
     deviceWritesUnavailable = false;
     setupChannelMocks();
@@ -116,15 +120,9 @@ void main() {
       });
 
       final completed = await IOOverrides.runZoned(
-        () =>
-            widgetBackgroundCallback(
-                  Uri.parse('tapotoggle://toggle?ip=$ip'),
-                )
-                .then((_) => true)
-                .timeout(
-                  const Duration(seconds: 11),
-                  onTimeout: () => false,
-                ),
+        () => widgetBackgroundCallback(Uri.parse('tapotoggle://toggle?ip=$ip'))
+            .then((_) => true)
+            .timeout(const Duration(seconds: 11), onTimeout: () => false),
         socketConnect: (host, port, {sourceAddress, sourcePort = 0, timeout}) =>
             Completer<Socket>().future,
       );
@@ -208,6 +206,37 @@ void main() {
         await widgetBackgroundCallback(Uri.parse('tapotoggle://toggle?ip='));
         expect(homeWidgetCalls, isEmpty);
       });
+
+      test('returns when ip param is a host name', () async {
+        await widgetBackgroundCallback(
+          Uri.parse('tapotoggle://toggle?ip=attacker.example'),
+        );
+        expect(homeWidgetCalls, isEmpty);
+      });
+    });
+
+    test('ignores plugs that are not configured', () async {
+      const ip = '192.168.1.200';
+      secureStore.addAll({
+        'tapo_email': 'test@example.com',
+        'tapo_password': 'password123',
+      });
+      final hosts = <Object?>[];
+
+      await IOOverrides.runZoned(
+        () => HttpOverrides.runZoned(
+          () =>
+              widgetBackgroundCallback(Uri.parse('tapotoggle://toggle?ip=$ip')),
+          createHttpClient: FakeTpapPlug().createClient,
+        ),
+        socketConnect: (host, port, {sourceAddress, sourcePort = 0, timeout}) {
+          hosts.add(host);
+          return (FakeKlapPlug()..port = PortState.refused).connect(timeout);
+        },
+      );
+
+      expect(hosts, isEmpty);
+      expect(widgetStore['devices'], isNull);
     });
 
     group('credential guard clauses', () {
