@@ -75,9 +75,9 @@ class TapoClient {
       // Decrypt: skip signature (32 bytes), decrypt the rest
       final ciphertext = Uint8List.sublistView(response.body, 32);
       final decrypted = aesDecrypt(ciphertext, session.key!, iv);
-      final result = jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>;
-
-      return result['error_code'] == 0 ? result : null;
+      return successfulReply(
+        jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>,
+      );
     } on SessionRejectedException {
       rethrow;
     } on Exception {

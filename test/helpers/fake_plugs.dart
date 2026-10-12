@@ -3,9 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pointycastle/export.dart';
 import 'package:tapo/core/klap_crypto.dart';
+import 'package:tapo/core/tpap_crypto.dart';
 
 import 'test_utils.dart';
 
@@ -61,9 +64,17 @@ class HangUpReply extends PlugReply {
   const HangUpReply();
 }
 
-/// Answers 403 with no body, as a plug does for a session it no longer has.
-class ForbiddenReply extends PlugReply {
-  const ForbiddenReply();
+/// Resets the connection: reading and writing both fail.
+class ResetReply extends PlugReply {
+  const ResetReply();
+}
+
+/// Answers [statusCode] with no body; a plug answers 403 for a session it no
+/// longer has.
+class StatusReply extends PlugReply {
+  const StatusReply(this.statusCode);
+
+  final int statusCode;
 }
 
 /// Answers 200 with [bytes] as the body, unencrypted.
@@ -88,8 +99,18 @@ class DelayedReply extends PlugReply {
   final PlugReply reply;
 }
 
+/// A plug the app logs in to, whatever its protocol.
+abstract interface class LoginPlug {
+  /// Answers a decrypted `/app/request`.
+  PlugReply Function(Map<String, dynamic> request) get onRequest;
+  set onRequest(PlugReply Function(Map<String, dynamic> request) answer);
+
+  /// Another app logs in to the plug, which drops the app's session.
+  void logInFromAnotherApp();
+}
+
 /// A plug speaking KLAP on port 80, reached through raw sockets.
-class FakeKlapPlug {
+class FakeKlapPlug implements LoginPlug {
   FakeKlapPlug({Uint8List? authHash})
     : _authHash = authHash ?? TestFixtures.testAuthHash;
 
@@ -102,7 +123,7 @@ class FakeKlapPlug {
   int _logins = 0;
   String get _sessionCookie => 'TP_SESSIONID=session$_logins';
 
-  /// Another app logs in to the plug, which drops the app's session.
+  @override
   void logInFromAnotherApp() => _logins++;
 
   /// Whether every socket the app opened has been closed or destroyed.
@@ -113,7 +134,7 @@ class FakeKlapPlug {
   /// Replaces the valid handshake1 answer when set.
   PlugReply? handshake1;
 
-  /// Answers a decrypted `/app/request`.
+  @override
   PlugReply Function(Map<String, dynamic> request) onRequest = (_) =>
       const JsonReply({'error_code': 0, 'result': <String, dynamic>{}});
 
@@ -150,7 +171,7 @@ class FakeKlapPlug {
     }
     if (path == '/app/handshake2') return _frame(const RawReply([]));
     if (!head.contains('Cookie: $_sessionCookie\r\n')) {
-      return _frame(const ForbiddenReply());
+      return _frame(const StatusReply(HttpStatus.forbidden));
     }
 
     final iv = _ivFor(int.parse(Uri.parse(path).queryParameters['seq']!));
@@ -197,9 +218,14 @@ class FakeKlapPlug {
         break;
       case HangUpReply():
         unawaited(controller.close());
-      case ForbiddenReply():
+      case ResetReply():
+        controller.addError(const SocketException('Connection reset by peer'));
+        unawaited(controller.close());
+      case StatusReply(:final statusCode):
         controller.add(
-          utf8.encode('HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n'),
+          utf8.encode(
+            'HTTP/1.1 $statusCode Error\r\nContent-Length: 0\r\n\r\n',
+          ),
         );
         unawaited(controller.close());
       case RawReply(:final bytes):
@@ -228,18 +254,27 @@ class _FakeSocket extends Fake implements Socket {
 
   final FakeKlapPlug _plug;
   final _sent = <List<int>>[];
+  final _done = Completer<void>();
   StreamSubscription<Uint8List>? _subscription;
   bool released = false;
 
   @override
   void add(List<int> data) => _sent.add(data);
 
+  /// Fails like a real socket's when the connection breaks.
   @override
-  Future<void> close() async => released = true;
+  Future<void> get done => _done.future;
+
+  @override
+  Future<void> close() async {
+    released = true;
+    if (!_done.isCompleted) _done.complete();
+  }
 
   @override
   void destroy() {
     released = true;
+    if (!_done.isCompleted) _done.complete();
     unawaited(_subscription?.cancel());
   }
 
@@ -251,6 +286,14 @@ class _FakeSocket extends Fake implements Socket {
     bool? cancelOnError,
   }) => _subscription = _plug
       ._answer(utf8.decode(_sent.first), [..._sent.skip(1).expand((b) => b)])
+      .transform(
+        StreamTransformer<Uint8List, Uint8List>.fromHandlers(
+          handleError: (error, stackTrace, sink) {
+            if (!_done.isCompleted) _done.completeError(error, stackTrace);
+            sink.addError(error, stackTrace);
+          },
+        ),
+      )
       .listen(
         onData,
         onError: onError,
@@ -268,21 +311,270 @@ class FakeTpapPlug {
   final requests = <Uri>[];
 
   final _clients = <_FakeHttpClient>[];
+  final _openRequests = <_FakeHttpRequest>{};
 
   /// Whether every HttpClient the app created has been closed.
   bool get allClientsClosed => _clients.every((client) => client.closed);
+
+  /// Whether every request the app sent was answered or aborted.
+  bool get allRequestsFinished => _openRequests.isEmpty;
 
   HttpClient createClient(SecurityContext? context) {
     final client = _FakeHttpClient(this);
     _clients.add(client);
     return client;
   }
+
+  bool get _acceptsConnections => onPost != null;
+
+  PlugReply _answer(Uri url, List<int> body, String? cookie) =>
+      onPost!(url, utf8.decode(body));
+}
+
+/// A TPAP plug holding the test account: it logs the app in with SPAKE2+,
+/// then answers each decrypted `/app/request` through [onRequest].
+class FakeTpapPlugWithLogin extends FakeTpapPlug implements LoginPlug {
+  FakeTpapPlugWithLogin({
+    String email = TestFixtures.testEmail,
+    String password = TestFixtures.testPassword,
+  }) : _email = email,
+       _password = password;
+
+  final String _email;
+  final String _password;
+  final List<int> _salt = List.filled(16, 7);
+  static const _iterations = 1000;
+
+  @override
+  PlugReply Function(Map<String, dynamic> request) onRequest = (_) =>
+      const JsonReply({'error_code': 0, 'result': <String, dynamic>{}});
+
+  /// The plug keeps a single session: each login replaces the previous one.
+  int _logins = 0;
+  String get _sessionId => 'session$_logins';
+  _SpakeExchange? _pending;
+  _SpakeExchange? _session;
+
+  /// How many times the app completed a login.
+  int get appLogins => _appLogins;
+  int _appLogins = 0;
+
+  @override
+  void logInFromAnotherApp() => _logins++;
+
+  @override
+  bool get _acceptsConnections => true;
+
+  @override
+  PlugReply _answer(Uri url, List<int> body, String? cookie) {
+    switch (url.path) {
+      case '/app':
+        return JsonReply({
+          'result': {
+            'salt': base64Encode(_salt),
+            'iterations': _iterations,
+            'transaction_id': 'tx',
+          },
+        });
+      case '/app/handshake2':
+        final params = _params(body);
+        final exchange = _pending = _SpakeExchange(
+          email: _email,
+          password: _password,
+          salt: _salt,
+          iterations: _iterations,
+          clientShare: base64Decode(params['client_share'] as String),
+        );
+        return JsonReply({
+          'result': {
+            'server_share': base64Encode(exchange.serverShare),
+            'transaction_id': 'tx',
+          },
+        });
+      case '/app/handshake3':
+        final exchange = _pending;
+        final confirm = base64Decode(_params(body)['client_confirm'] as String);
+        if (exchange == null || !exchange.confirmsClient(confirm)) {
+          return const StatusReply(HttpStatus.forbidden);
+        }
+        _logins++;
+        _appLogins++;
+        _session = exchange;
+        return JsonReply({
+          'result': {
+            'server_confirm': base64Encode(exchange.serverConfirm),
+            'session_id': _sessionId,
+            'start_seq': 1,
+            'cipher_suite': 1,
+          },
+        });
+      case '/app/request':
+        final session = _session;
+        if (session == null || cookie != 'TP_SESSIONID=$_sessionId') {
+          return const StatusReply(HttpStatus.forbidden);
+        }
+        final seq = int.parse(url.queryParameters['seq']!);
+        final request = session
+            .cipher(seq)
+            .decryptWithSeq(Uint8List.fromList(body), seq);
+        return _seal(
+          onRequest(jsonDecode(utf8.decode(request)) as Map<String, dynamic>),
+          session,
+          seq,
+        );
+    }
+    return const StatusReply(HttpStatus.notFound);
+  }
+
+  /// Encrypts JSON replies with the nonce the app reads them with: the one
+  /// following the request's.
+  PlugReply _seal(PlugReply reply, _SpakeExchange session, int seq) =>
+      switch (reply) {
+        JsonReply(:final payload) => RawReply(
+          session
+              .cipher(seq)
+              .encrypt(Uint8List.fromList(utf8.encode(jsonEncode(payload)))),
+        ),
+        DelayedReply(:final delay, :final reply) => DelayedReply(
+          delay,
+          _seal(reply, session, seq),
+        ),
+        _ => reply,
+      };
+
+  static Map<String, dynamic> _params(List<int> body) =>
+      (jsonDecode(utf8.decode(body)) as Map<String, dynamic>)['params']
+          as Map<String, dynamic>;
+}
+
+/// The plug's side of a SPAKE2+ exchange (RFC 9383, P-256), as the app's
+/// Spake2Plus expects it.
+class _SpakeExchange {
+  _SpakeExchange({
+    required String email,
+    required String password,
+    required List<int> salt,
+    required int iterations,
+    required Uint8List clientShare,
+  }) {
+    final derived =
+        (PBKDF2KeyDerivator(
+              HMac(SHA256Digest(), 64),
+            )..init(Pbkdf2Parameters(Uint8List.fromList(salt), iterations, 80)))
+            .process(Uint8List.fromList(utf8.encode(password)));
+    final w0 = _toBigInt(derived.sublist(0, 40)) % _curve.n;
+    final w1 = _toBigInt(derived.sublist(40, 80)) % _curve.n;
+
+    // Fixed: a test plug needs no secret.
+    final y = BigInt.from(424242);
+    final x = _curve.curve.decodePoint(clientShare)!;
+    final yPoint = ((_curve.G * y)! + (_n * w0))!;
+    final z = ((x + (-(_m * w0)!))! * y)!;
+    final v = ((_curve.G * w1)! * y)!;
+    serverShare = yPoint.getEncoded();
+
+    final transcript = BytesBuilder();
+    for (final field in [
+      utf8.encode('PAKE V1'),
+      utf8.encode(email),
+      <int>[],
+      _m.getEncoded(false),
+      _n.getEncoded(false),
+      x.getEncoded(false),
+      yPoint.getEncoded(false),
+      z.getEncoded(false),
+      v.getEncoded(false),
+      _toBytes(w0, 32),
+    ]) {
+      transcript
+        ..add(
+          (ByteData(
+            8,
+          )..setUint64(0, field.length, Endian.little)).buffer.asUint8List(),
+        )
+        ..add(field);
+    }
+    final kMain = Uint8List.fromList(
+      sha256.convert(transcript.toBytes()).bytes,
+    );
+    final confirmKeys = TpapHkdf.expand(
+      kMain,
+      Uint8List.fromList(utf8.encode('ConfirmationKeys')),
+      64,
+    );
+    _clientConfirm = Hmac(
+      sha256,
+      confirmKeys.sublist(0, 32),
+    ).convert(serverShare).bytes;
+    serverConfirm = Uint8List.fromList(
+      Hmac(sha256, confirmKeys.sublist(32)).convert(clientShare).bytes,
+    );
+
+    final sharedKey = TpapHkdf.expand(
+      kMain,
+      Uint8List.fromList(utf8.encode('SharedKey')),
+      32,
+    );
+    _key = TpapHkdf.expand(
+      sharedKey,
+      Uint8List.fromList(utf8.encode('SessionKey')),
+      32,
+    );
+    _baseNonce = TpapHkdf.expand(
+      sharedKey,
+      Uint8List.fromList(utf8.encode('SessionNonce')),
+      12,
+    );
+  }
+
+  static final _curve = ECCurve_secp256r1();
+  static final ECPoint _m = _curve.curve.decodePoint(
+    _hex('02886e2f97ace46e55ba9dd7242579f2993b64e16ef3dcab95afd497333d8fa12f'),
+  )!;
+  static final ECPoint _n = _curve.curve.decodePoint(
+    _hex('03d8bbd6c639c62937b04d997f38c3770719c629d7014d49a24b4f98baa1292b49'),
+  )!;
+
+  late final Uint8List serverShare;
+  late final Uint8List serverConfirm;
+  late final List<int> _clientConfirm;
+  late final Uint8List _key;
+  late final Uint8List _baseNonce;
+
+  bool confirmsClient(List<int> confirm) => bytesEqual(
+    Uint8List.fromList(confirm),
+    Uint8List.fromList(_clientConfirm),
+  );
+
+  /// A cipher whose next nonce follows [seq].
+  TpapSessionCipher cipher(int seq) => TpapSessionCipher(
+    key: _key,
+    baseNonce: _baseNonce,
+    cipherSuite: 1,
+    startSeq: seq,
+  );
+
+  static BigInt _toBigInt(List<int> bytes) => bytes.fold(
+    BigInt.zero,
+    (value, byte) => (value << 8) | BigInt.from(byte),
+  );
+
+  static Uint8List _toBytes(BigInt value, int length) => Uint8List.fromList([
+    for (var i = length - 1; i >= 0; i--)
+      ((value >> (8 * i)) & BigInt.from(0xff)).toInt(),
+  ]);
+
+  static Uint8List _hex(String hex) => Uint8List.fromList([
+    for (var i = 0; i < hex.length; i += 2)
+      int.parse(hex.substring(i, i + 2), radix: 16),
+  ]);
 }
 
 class _FakeHttpClient extends Fake implements HttpClient {
   _FakeHttpClient(this._plug);
 
   final FakeTpapPlug _plug;
+  final _requests = <_FakeHttpRequest>{};
   bool closed = false;
 
   @override
@@ -295,32 +587,67 @@ class _FakeHttpClient extends Fake implements HttpClient {
 
   @override
   Future<HttpClientRequest> postUrl(Uri url) async {
+    if (closed) throw StateError('Client is closed');
     _plug.requests.add(url);
-    final onPost = _plug.onPost;
-    if (onPost == null) throw const SocketException('Connection refused');
-    return _FakeHttpRequest(url, onPost);
+    if (!_plug._acceptsConnections) {
+      throw const SocketException('Connection refused');
+    }
+    return _FakeHttpRequest(this, url);
   }
 
+  /// Unless [force], requests in flight still get their answer.
   @override
-  void close({bool force = false}) => closed = true;
+  void close({bool force = false}) {
+    closed = true;
+    if (!force) return;
+    for (final request in [..._requests]) {
+      request._fail(const HttpException('Client closed'));
+    }
+  }
 }
 
 class _FakeHttpRequest extends Fake implements HttpClientRequest {
-  _FakeHttpRequest(this._url, this._onPost);
+  _FakeHttpRequest(this._client, this._url);
 
+  final _FakeHttpClient _client;
   final Uri _url;
-  final PlugReply Function(Uri url, String body) _onPost;
   final _body = <int>[];
+  final _response = Completer<HttpClientResponse>();
 
   @override
-  final HttpHeaders headers = _FakeHttpHeaders();
+  final _FakeHttpHeaders headers = _FakeHttpHeaders();
 
   @override
   void add(List<int> data) => _body.addAll(data);
 
   @override
-  Future<HttpClientResponse> close() =>
-      _respond(_onPost(_url, utf8.decode(_body)));
+  Future<HttpClientResponse> close() {
+    _client._requests.add(this);
+    _client._plug._openRequests.add(this);
+    unawaited(
+      _respond(
+        _client._plug._answer(_url, _body, headers.value('Cookie')),
+      ).then(_finish, onError: _fail),
+    );
+    return _response.future;
+  }
+
+  void _finish(HttpClientResponse response) {
+    if (_response.isCompleted) return;
+    _forget();
+    _response.complete(response);
+  }
+
+  void _fail(Object error) {
+    if (_response.isCompleted) return;
+    _forget();
+    _response.completeError(error);
+  }
+
+  void _forget() {
+    _client._requests.remove(this);
+    _client._plug._openRequests.remove(this);
+  }
 
   static Future<HttpClientResponse> _respond(PlugReply reply) =>
       switch (reply) {
@@ -328,8 +655,11 @@ class _FakeHttpRequest extends Fake implements HttpClientRequest {
         HangUpReply() => Future.error(
           const HttpException('Connection closed before full header'),
         ),
-        ForbiddenReply() => Future.value(
-          _FakeHttpResponse(const [], statusCode: HttpStatus.forbidden),
+        ResetReply() => Future.error(
+          const SocketException('Connection reset by peer'),
+        ),
+        StatusReply(:final statusCode) => Future.value(
+          _FakeHttpResponse(const [], statusCode: statusCode),
         ),
         RawReply(:final bytes) => Future.value(_FakeHttpResponse(bytes)),
         JsonReply(:final payload) => Future.value(
@@ -343,8 +673,14 @@ class _FakeHttpRequest extends Fake implements HttpClientRequest {
 }
 
 class _FakeHttpHeaders extends Fake implements HttpHeaders {
+  final _values = <String, String>{};
+
   @override
-  void set(String name, Object value, {bool preserveHeaderCase = false}) {}
+  void set(String name, Object value, {bool preserveHeaderCase = false}) =>
+      _values[name] = '$value';
+
+  @override
+  String? value(String name) => _values[name];
 }
 
 class _FakeHttpResponse extends StreamView<List<int>>

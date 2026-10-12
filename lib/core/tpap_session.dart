@@ -140,10 +140,13 @@ class TpapSession {
       ..headers.set('Cookie', 'TP_SESSIONID=$_sessionId')
       ..add(encrypted);
 
-    // A plug that no longer has this session refuses the request, or answers
-    // with a reply our key cannot open.
     final response = await request.close();
-    if (response.statusCode != 200) throw const SessionRejectedException();
+    final status = response.statusCode;
+    // A plug that no longer has this session refuses the request.
+    if (status == HttpStatus.unauthorized || status == HttpStatus.forbidden) {
+      throw const SessionRejectedException();
+    }
+    if (status != HttpStatus.ok) return null;
 
     // Read and decrypt response
     final responseBytes = await response.fold<List<int>>(
@@ -151,15 +154,10 @@ class TpapSession {
       (prev, chunk) => prev..addAll(chunk),
     );
 
-    final Uint8List decrypted;
-    try {
-      decrypted = _cipher!.decrypt(Uint8List.fromList(responseBytes));
-    } on Object {
-      throw const SessionRejectedException();
-    }
-    final result = jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>;
-
-    return result['error_code'] == 0 ? result : null;
+    final decrypted = _cipher!.decrypt(Uint8List.fromList(responseBytes));
+    return successfulReply(
+      jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>,
+    );
   }
 
   Future<_InitResult?> _initHandshake() async {
