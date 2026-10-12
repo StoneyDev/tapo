@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:tapo/core/validators.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
 import 'package:tapo/services/widget_data_service.dart';
@@ -15,7 +14,9 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
   if (uri.scheme != 'tapotoggle' || uri.host != 'toggle') return;
 
   final ip = uri.queryParameters['ip'];
-  if (ip == null || !isValidIpv4(ip)) return;
+  if (ip == null) return;
+  // TapoWidgetClickReceiver set loading_$ip for any value: every path below
+  // must clear it.
 
   WidgetsFlutterBinding.ensureInitialized();
   await HomeWidget.setAppGroupId('group.stoneydev.tapo');
@@ -26,16 +27,13 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
   Map<String, dynamic>? currentDevice;
 
   try {
+    currentDevice = await _findDeviceByIp(ip);
     // Credentials only ever go to plugs the user configured.
     if (!(await storage.getDeviceIps()).contains(ip)) return;
-    currentDevice = await _findDeviceByIp(ip);
     final creds = await storage.getCredentials();
     if (creds.email == null || creds.password == null) return;
 
-    tapoService = TapoService.fromCredentials(
-      creds.email!,
-      creds.password!,
-    );
+    tapoService = TapoService.fromCredentials(creds.email!, creds.password!);
     final device = await tapoService
         .toggleDevice(ip)
         .timeout(const Duration(seconds: 10));

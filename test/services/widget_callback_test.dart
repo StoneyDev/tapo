@@ -14,7 +14,7 @@ void main() {
   late Map<String, dynamic> widgetStore;
   late Map<String, String?> secureStore;
   late List<MethodCall> homeWidgetCalls;
-  var credentialsUnavailable = false;
+  var secureStorageUnavailable = false;
   var deviceWritesUnavailable = false;
 
   void setupChannelMocks() {
@@ -60,12 +60,11 @@ void main() {
           (call) async {
             switch (call.method) {
               case 'read':
-                final args = call.arguments as Map;
-                final key = args['key'] as String;
-                if (credentialsUnavailable && key != 'tapo_device_ips') {
+                if (secureStorageUnavailable) {
                   throw PlatformException(code: 'storage_unavailable');
                 }
-                return secureStore[key];
+                final args = call.arguments as Map;
+                return secureStore[args['key'] as String];
               case 'write':
                 final args = call.arguments as Map;
                 secureStore[args['key'] as String] = args['value'] as String?;
@@ -92,7 +91,7 @@ void main() {
     secureStore = {
       'tapo_device_ips': jsonEncode(['192.168.1.100']),
     };
-    credentialsUnavailable = false;
+    secureStorageUnavailable = false;
     deviceWritesUnavailable = false;
     setupChannelMocks();
   });
@@ -144,7 +143,7 @@ void main() {
     });
 
     test('clears loading when reading credentials fails', () async {
-      credentialsUnavailable = true;
+      secureStorageUnavailable = true;
       widgetStore['loading_192.168.1.100'] = true;
 
       await widgetBackgroundCallback(
@@ -158,8 +157,34 @@ void main() {
       );
     });
 
+    test('keeps the plug name when secure storage is unavailable', () async {
+      secureStorageUnavailable = true;
+      widgetStore['devices'] = jsonEncode([
+        {
+          'ip': '192.168.1.100',
+          'model': 'P110',
+          'nickname': 'Desk',
+          'deviceOn': true,
+          'isOnline': true,
+        },
+      ]);
+
+      await widgetBackgroundCallback(
+        Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
+      );
+
+      final devices = jsonDecode(widgetStore['devices'] as String) as List;
+      expect(devices.single, {
+        'ip': '192.168.1.100',
+        'model': 'P110',
+        'nickname': 'Desk',
+        'deviceOn': true,
+        'isOnline': false,
+      });
+    });
+
     test('clears loading even if saving the offline state fails', () async {
-      credentialsUnavailable = true;
+      secureStorageUnavailable = true;
       deviceWritesUnavailable = true;
       widgetStore['loading_192.168.1.100'] = true;
 
@@ -201,43 +226,38 @@ void main() {
         await widgetBackgroundCallback(Uri.parse('tapotoggle://toggle'));
         expect(homeWidgetCalls, isEmpty);
       });
+    });
 
-      test('returns when ip param is empty', () async {
-        await widgetBackgroundCallback(Uri.parse('tapotoggle://toggle?ip='));
-        expect(homeWidgetCalls, isEmpty);
-      });
+    for (final ip in ['192.168.1.200', 'attacker.example', '']) {
+      test('ignores "$ip", which is not a configured plug', () async {
+        secureStore.addAll({
+          'tapo_email': 'test@example.com',
+          'tapo_password': 'password123',
+        });
+        widgetStore['loading_$ip'] = true;
+        final hosts = <Object?>[];
 
-      test('returns when ip param is a host name', () async {
-        await widgetBackgroundCallback(
-          Uri.parse('tapotoggle://toggle?ip=attacker.example'),
+        await IOOverrides.runZoned(
+          () => HttpOverrides.runZoned(
+            () => widgetBackgroundCallback(
+              Uri.parse('tapotoggle://toggle?ip=$ip'),
+            ),
+            createHttpClient: FakeTpapPlug().createClient,
+          ),
+          socketConnect:
+              (host, port, {sourceAddress, sourcePort = 0, timeout}) {
+                hosts.add(host);
+                return (FakeKlapPlug()..port = PortState.refused).connect(
+                  timeout,
+                );
+              },
         );
-        expect(homeWidgetCalls, isEmpty);
+
+        expect(hosts, isEmpty);
+        expect(widgetStore['devices'], isNull);
+        expect(widgetStore.containsKey('loading_$ip'), isFalse);
       });
-    });
-
-    test('ignores plugs that are not configured', () async {
-      const ip = '192.168.1.200';
-      secureStore.addAll({
-        'tapo_email': 'test@example.com',
-        'tapo_password': 'password123',
-      });
-      final hosts = <Object?>[];
-
-      await IOOverrides.runZoned(
-        () => HttpOverrides.runZoned(
-          () =>
-              widgetBackgroundCallback(Uri.parse('tapotoggle://toggle?ip=$ip')),
-          createHttpClient: FakeTpapPlug().createClient,
-        ),
-        socketConnect: (host, port, {sourceAddress, sourcePort = 0, timeout}) {
-          hosts.add(host);
-          return (FakeKlapPlug()..port = PortState.refused).connect(timeout);
-        },
-      );
-
-      expect(hosts, isEmpty);
-      expect(widgetStore['devices'], isNull);
-    });
+    }
 
     group('credential guard clauses', () {
       test('calls setAppGroupId before checking creds', () async {
