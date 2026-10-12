@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -34,7 +33,8 @@ class KlapSession {
       if (!await _handshake2()) return false;
       _deriveSessionKeys();
       return true;
-    } on Exception {
+    } on Object {
+      // A malformed reply raises Errors too (e.g. RangeError).
       return false;
     }
   }
@@ -43,11 +43,6 @@ class KlapSession {
   Future<bool> _handshake1() async {
     _localSeed = _generateRandomBytes(16);
 
-    final socket = await Socket.connect(
-      deviceIp,
-      80,
-      timeout: const Duration(seconds: 10),
-    );
     final request =
         'POST /app/handshake1 HTTP/1.1\r\n'
         'Host: $deviceIp\r\n'
@@ -56,12 +51,7 @@ class KlapSession {
         'Accept: */*\r\n'
         '\r\n';
 
-    socket
-      ..add(utf8.encode(request))
-      ..add(_localSeed!);
-
-    final response = await readHttpResponse(socket);
-    await socket.close();
+    final response = await sendRawRequest(deviceIp, request, _localSeed!);
 
     if (response.statusCode != 200 || response.body.length != 48) return false;
 
@@ -95,11 +85,6 @@ class KlapSession {
       ...authHash,
     ]);
 
-    final socket = await Socket.connect(
-      deviceIp,
-      80,
-      timeout: const Duration(seconds: 10),
-    );
     final request =
         'POST /app/handshake2 HTTP/1.1\r\n'
         'Host: $deviceIp\r\n'
@@ -109,12 +94,7 @@ class KlapSession {
         'Accept: */*\r\n'
         '\r\n';
 
-    socket
-      ..add(utf8.encode(request))
-      ..add(clientHash);
-
-    final response = await readHttpResponse(socket);
-    await socket.close();
+    final response = await sendRawRequest(deviceIp, request, clientHash);
 
     return response.statusCode == 200;
   }

@@ -58,9 +58,5 @@ void main() {
       await session.close();
       expect(session.isEstablished, isFalse);
     });
-
-    // Note: handshake, probeDevice, testTlsConnection require actual network
-    // connections. These would need integration tests or extensive mocking
-    // of HttpClient which is complex in Dart.
   });
 }

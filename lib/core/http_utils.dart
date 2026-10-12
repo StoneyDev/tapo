@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -15,8 +16,51 @@ class HttpResponse {
   final String? cookie;
 }
 
-/// Read raw HTTP response from socket
-Future<HttpResponse> readHttpResponse(Socket socket) async {
+/// How long a plug may take to accept a connection or answer a request.
+const deviceTimeout = Duration(seconds: 10);
+
+/// A plug answered but no longer knows our session: it expired, or the plug
+/// dropped it when another app logged in.
+class SessionRejectedException implements Exception {
+  const SessionRejectedException();
+}
+
+/// Error codes of a reply sent for a session the plug no longer has, as
+/// python-kasa's SESSION_TIMEOUT_ERROR and SESSION_EXPIRED.
+const _sessionExpiredErrorCodes = {9999, -40401};
+
+/// [reply] if its error code reports success, null otherwise.
+///
+/// Throws [SessionRejectedException] when the plug reports an expired session.
+Map<String, dynamic>? successfulReply(Map<String, dynamic> reply) {
+  final errorCode = reply['error_code'];
+  if (_sessionExpiredErrorCodes.contains(errorCode)) {
+    throw const SessionRejectedException();
+  }
+  return errorCode == 0 ? reply : null;
+}
+
+/// POSTs [body] to port 80 of [host] over a raw socket and reads the reply,
+/// each bounded by [deviceTimeout]. The socket is always released.
+Future<HttpResponse> sendRawRequest(
+  String host,
+  String head,
+  List<int> body,
+) async {
+  final socket = await Socket.connect(host, 80, timeout: deviceTimeout);
+  // A failed write also fails the read below, which reports it.
+  socket.done.ignore();
+  try {
+    socket
+      ..add(utf8.encode(head))
+      ..add(body);
+    return await _readHttpResponse(socket).timeout(deviceTimeout);
+  } finally {
+    socket.destroy();
+  }
+}
+
+Future<HttpResponse> _readHttpResponse(Socket socket) async {
   final data = <int>[];
 
   await for (final chunk in socket) {

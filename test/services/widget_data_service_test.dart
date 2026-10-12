@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tapo/services/widget_data_service.dart';
@@ -226,6 +227,29 @@ void main() {
         expect(stored, hasLength(1));
         expect(stored[0]['deviceOn'], false);
         expect(stored[0]['isOnline'], false);
+      });
+    });
+
+    group('on platforms without home screen widgets', () {
+      setUp(() {
+        // Windows has no home_widget plugin: any channel call would throw
+        // MissingPluginException.
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(const MethodChannel('home_widget'), null);
+        debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      });
+
+      tearDown(() => debugDefaultTargetPlatformOverride = null);
+
+      test('every operation completes without touching the plugin', () async {
+        await service.saveAllDevices([TestFixtures.onlineDevice()]);
+        await service.saveDeviceState(
+          ip: TestFixtures.testDeviceIp,
+          model: 'P110',
+          deviceOn: true,
+        );
+        await service.refreshWidgets();
+        await service.clearWidgetData();
       });
     });
   });

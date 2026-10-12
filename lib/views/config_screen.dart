@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:tapo/viewmodels/config_viewmodel.dart';
+import 'package:tapo/views/desktop/desktop_breakpoint.dart';
 import 'package:watch_it/watch_it.dart';
 
 class ConfigScreen extends StatefulWidget with WatchItStatefulWidgetMixin {
@@ -62,29 +63,61 @@ class _ConfigScreenState extends State<ConfigScreen> {
       body: SafeArea(
         child: _viewModel.isLoading
             ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
-            : Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 560),
-                  child: Column(
-                    children: [
-                      Expanded(child: _buildForm(context)),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
-                        child: FilledButton(
-                          onPressed: _save,
-                          child: const Text('Enregistrer'),
+            : LayoutBuilder(
+                builder: (context, constraints) =>
+                    constraints.maxWidth >= desktopBreakpoint
+                    ? _buildCard(context)
+                    : Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 560),
+                          child: _buildContent(context, inCard: false),
                         ),
                       ),
-                    ],
-                  ),
-                ),
               ),
       ),
     );
   }
 
-  Widget _buildForm(BuildContext context) {
+  /// Wide windows: the form sits in a card on the page background.
+  Widget _buildCard(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560, maxHeight: 760),
+          child: Material(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: _buildContent(context, inCard: true),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, {required bool inCard}) {
+    return Column(
+      children: [
+        Expanded(child: _buildForm(context, inCard: inCard)),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+          child: FilledButton(
+            onPressed: _save,
+            child: const Text('Enregistrer'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildForm(BuildContext context, {required bool inCard}) {
     final colors = Theme.of(context).colorScheme;
+    // On the surface-colored card, fields keep the theme's contrasting fill.
+    final fieldFill = inCard ? null : colors.surface;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
       child: Column(
@@ -136,7 +169,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
             controller: _emailController,
             decoration: InputDecoration(
               labelText: 'Adresse e-mail',
-              fillColor: colors.surface,
+              fillColor: fieldFill,
               prefixIcon: const Icon(Icons.alternate_email_rounded, size: 20),
             ),
             keyboardType: TextInputType.emailAddress,
@@ -148,7 +181,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
             controller: _passwordController,
             decoration: InputDecoration(
               labelText: 'Mot de passe',
-              fillColor: colors.surface,
+              fillColor: fieldFill,
               prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
             ),
             obscureText: true,
@@ -183,7 +216,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                   decoration: InputDecoration(
                     labelText: 'Adresse IP',
                     hintText: '192.168.1.100',
-                    fillColor: colors.surface,
+                    fillColor: fieldFill,
                     prefixIcon: const Icon(Icons.router_outlined, size: 20),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(
@@ -218,10 +251,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      ip,
-                      style: const TextStyle(fontSize: 14),
-                    ),
+                    child: Text(ip, style: const TextStyle(fontSize: 14)),
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete, size: 20),

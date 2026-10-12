@@ -14,7 +14,9 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
   if (uri.scheme != 'tapotoggle' || uri.host != 'toggle') return;
 
   final ip = uri.queryParameters['ip'];
-  if (ip == null || ip.isEmpty) return;
+  if (ip == null) return;
+  // TapoWidgetClickReceiver set loading_$ip for any value: every path below
+  // must clear it.
 
   WidgetsFlutterBinding.ensureInitialized();
   await HomeWidget.setAppGroupId('group.stoneydev.tapo');
@@ -26,13 +28,12 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
 
   try {
     currentDevice = await _findDeviceByIp(ip);
+    // Credentials only ever go to plugs the user configured.
+    if (!(await storage.getDeviceIps()).contains(ip)) return;
     final creds = await storage.getCredentials();
     if (creds.email == null || creds.password == null) return;
 
-    tapoService = TapoService.fromCredentials(
-      creds.email!,
-      creds.password!,
-    );
+    tapoService = TapoService.fromCredentials(creds.email!, creds.password!);
     final device = await tapoService
         .toggleDevice(ip)
         .timeout(const Duration(seconds: 10));

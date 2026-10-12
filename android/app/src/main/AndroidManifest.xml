@@ -66,14 +66,12 @@
             android:name=".TapoWidgetClickReceiver"
             android:exported="false" />
 
-        <!-- home_widget background receiver for Dart callbacks -->
+        <!-- home_widget background receiver for Dart callbacks. Not exported:
+             it toggles plugs with the stored credentials, and its only sender
+             is TapoWidgetClickReceiver through an explicit intent. -->
         <receiver
             android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="es.antonborri.home_widget.action.BACKGROUND" />
-            </intent-filter>
-        </receiver>
+            android:exported="false" />
 
         <!-- home_widget background service for executing Dart callbacks -->
         <service

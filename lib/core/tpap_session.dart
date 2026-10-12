@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:tapo/core/http_utils.dart';
 import 'package:tapo/core/spake2plus.dart';
 import 'package:tapo/core/tpap_crypto.dart';
 
@@ -20,128 +21,95 @@ class TpapSession {
 
   bool get isEstablished => _cipher != null && _sessionId != null;
 
-  /// Probe device to understand what protocol it supports
-  Future<void> probeDevice() async {
-    _httpClient = HttpClient()..connectionTimeout = const Duration(seconds: 10);
-
-    final endpoints = ['/app', '/app/handshake', '/app/login', '/'];
-    final methods = [
-      {'method': 'get_device_info'},
-      {'method': 'handshake'},
-      {'method': 'login'},
-      {'method': 'securePassthrough', 'params': <String, dynamic>{}},
-    ];
-
-    for (final endpoint in endpoints) {
-      for (final method in methods) {
-        try {
-          final uri = Uri.parse('http://$deviceIp$endpoint');
-          final request = await _httpClient!.postUrl(uri)
-            ..headers.set('Content-Type', 'application/json')
-            ..add(utf8.encode(jsonEncode(method)));
-          final response = await request.close();
-          await response.drain<void>();
-        } on Exception {
-          // Ignore probe errors
-        }
-        _httpClient = HttpClient()
-          ..connectionTimeout = const Duration(seconds: 10);
-      }
-    }
-  }
-
-  /// Test TLS connection to device on port 4433 (for robot vacuums)
-  Future<bool> testTlsConnection() async {
-    try {
-      _httpClient = HttpClient()..badCertificateCallback = (_, _, _) => true;
-
-      final uri = Uri.parse('https://$deviceIp:4433/app');
-      final request = await _httpClient!.getUrl(uri);
-      final response = await request.close();
-      await response.drain<void>();
-
-      return true;
-    } on Exception {
-      return false;
-    }
-  }
+  /// Highest PBKDF2 iteration count accepted from a plug, as in Matter's
+  /// SPAKE2+: the plug picks it, and deriving the password blocks the UI.
+  static const _maxIterations = 100000;
 
   /// Perform full TPAP handshake (SPAKE2+)
   Future<bool> handshake() async {
     try {
-      _httpClient = HttpClient()..badCertificateCallback = (_, _, _) => true;
+      if (await _handshake()) return true;
+    } on Object {
+      // A malformed reply raises Errors too (e.g. TypeError).
+    }
+    await close();
+    return false;
+  }
 
-      // Step 1: Initial handshake to get parameters
-      final initResult = await _initHandshake();
-      if (initResult == null) return false;
+  Future<bool> _handshake() async {
+    _httpClient = HttpClient()..badCertificateCallback = (_, _, _) => true;
 
-      // Step 2: SPAKE2+ key exchange
-      final spake = Spake2Plus(
-        identity: credentials.email,
-        password: credentials.password,
-        iterations: initResult.iterations,
-      );
-
-      // Generate our public share
-      final clientShare = spake.generatePublicShare(
-        initResult.salt,
-        initResult.iterations,
-      );
-
-      // Send client share, receive server share
-      final serverShare = await _sendClientShare(
-        clientShare,
-        initResult.transactionId,
-      );
-      if (serverShare == null) return false;
-
-      // Process server share and get confirmation
-      final clientConfirm = spake.processServerShare(serverShare.share);
-      if (clientConfirm == null) return false;
-
-      // Send confirmation, receive server confirmation
-      final serverConfirm = await _sendConfirmation(
-        clientConfirm,
-        serverShare.transactionId,
-      );
-      if (serverConfirm == null) return false;
-
-      // Verify server confirmation
-      if (!spake.verifyServerConfirmation(serverConfirm.confirmation)) {
-        return false;
-      }
-
-      // Setup session cipher
-      _sessionId = serverConfirm.sessionId;
-      _seq = serverConfirm.startSeq;
-
-      final sharedKey = spake.sharedKey;
-      if (sharedKey == null) return false;
-
-      // Derive cipher key and nonce from shared key
-      final cipherKey = TpapHkdf.expand(
-        sharedKey,
-        Uint8List.fromList(utf8.encode('SessionKey')),
-        32,
-      );
-      final baseNonce = TpapHkdf.expand(
-        sharedKey,
-        Uint8List.fromList(utf8.encode('SessionNonce')),
-        12,
-      );
-
-      _cipher = TpapSessionCipher(
-        key: cipherKey,
-        baseNonce: baseNonce,
-        cipherSuite: serverConfirm.cipherSuite,
-        startSeq: _seq,
-      );
-
-      return true;
-    } on Exception {
-      await close();
+    // Each exchange gets its own timeout: deriving the password between
+    // them is CPU time that can take seconds on a slow phone.
+    // Step 1: Initial handshake to get parameters
+    final initResult = await _initHandshake().timeout(deviceTimeout);
+    if (initResult == null || initResult.iterations > _maxIterations) {
       return false;
     }
+
+    // Step 2: SPAKE2+ key exchange
+    final spake = Spake2Plus(
+      identity: credentials.email,
+      password: credentials.password,
+      iterations: initResult.iterations,
+    );
+
+    // Generate our public share
+    final clientShare = spake.generatePublicShare(
+      initResult.salt,
+      initResult.iterations,
+    );
+
+    // Send client share, receive server share
+    final serverShare = await _sendClientShare(
+      clientShare,
+      initResult.transactionId,
+    ).timeout(deviceTimeout);
+    if (serverShare == null) return false;
+
+    // Process server share and get confirmation
+    final clientConfirm = spake.processServerShare(serverShare.share);
+    if (clientConfirm == null) return false;
+
+    // Send confirmation, receive server confirmation
+    final serverConfirm = await _sendConfirmation(
+      clientConfirm,
+      serverShare.transactionId,
+    ).timeout(deviceTimeout);
+    if (serverConfirm == null) return false;
+
+    // Verify server confirmation
+    if (!spake.verifyServerConfirmation(serverConfirm.confirmation)) {
+      return false;
+    }
+
+    // Setup session cipher
+    _sessionId = serverConfirm.sessionId;
+    _seq = serverConfirm.startSeq;
+
+    final sharedKey = spake.sharedKey;
+    if (sharedKey == null) return false;
+
+    // Derive cipher key and nonce from shared key
+    final cipherKey = TpapHkdf.expand(
+      sharedKey,
+      Uint8List.fromList(utf8.encode('SessionKey')),
+      32,
+    );
+    final baseNonce = TpapHkdf.expand(
+      sharedKey,
+      Uint8List.fromList(utf8.encode('SessionNonce')),
+      12,
+    );
+
+    _cipher = TpapSessionCipher(
+      key: cipherKey,
+      baseNonce: baseNonce,
+      cipherSuite: serverConfirm.cipherSuite,
+      startSeq: _seq,
+    );
+
+    return true;
   }
 
   /// Send encrypted request and get response
@@ -149,36 +117,47 @@ class TpapSession {
     if (!isEstablished) return null;
 
     try {
-      final payloadJson = jsonEncode(payload);
-      final payloadBytes = utf8.encode(payloadJson);
-
-      // Encrypt
-      final encrypted = _cipher!.encrypt(Uint8List.fromList(payloadBytes));
-      final seq = _cipher!.seq;
-
-      // Send request
-      final uri = Uri.parse('https://$deviceIp:4433/app/request?seq=$seq');
-      final request = await _httpClient!.postUrl(uri)
-        ..headers.set('Content-Type', 'application/octet-stream')
-        ..headers.set('Cookie', 'TP_SESSIONID=$_sessionId')
-        ..add(encrypted);
-
-      final response = await request.close();
-      if (response.statusCode != 200) return null;
-
-      // Read and decrypt response
-      final responseBytes = await response.fold<List<int>>(
-        <int>[],
-        (prev, chunk) => prev..addAll(chunk),
-      );
-
-      final decrypted = _cipher!.decrypt(Uint8List.fromList(responseBytes));
-      final result = jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>;
-
-      return result['error_code'] == 0 ? result : null;
+      return await _request(payload).timeout(deviceTimeout);
+    } on SessionRejectedException {
+      rethrow;
     } on Exception {
       return null;
     }
+  }
+
+  Future<Map<String, dynamic>?> _request(Map<String, dynamic> payload) async {
+    final payloadJson = jsonEncode(payload);
+    final payloadBytes = utf8.encode(payloadJson);
+
+    // Encrypt
+    final encrypted = _cipher!.encrypt(Uint8List.fromList(payloadBytes));
+    final seq = _cipher!.seq;
+
+    // Send request
+    final uri = Uri.parse('https://$deviceIp:4433/app/request?seq=$seq');
+    final request = await _httpClient!.postUrl(uri)
+      ..headers.set('Content-Type', 'application/octet-stream')
+      ..headers.set('Cookie', 'TP_SESSIONID=$_sessionId')
+      ..add(encrypted);
+
+    final response = await request.close();
+    final status = response.statusCode;
+    // A plug that no longer has this session refuses the request.
+    if (status == HttpStatus.unauthorized || status == HttpStatus.forbidden) {
+      throw const SessionRejectedException();
+    }
+    if (status != HttpStatus.ok) return null;
+
+    // Read and decrypt response
+    final responseBytes = await response.fold<List<int>>(
+      <int>[],
+      (prev, chunk) => prev..addAll(chunk),
+    );
+
+    final decrypted = _cipher!.decrypt(Uint8List.fromList(responseBytes));
+    return successfulReply(
+      jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>,
+    );
   }
 
   Future<_InitResult?> _initHandshake() async {
@@ -325,7 +304,8 @@ class TpapSession {
   }
 
   Future<void> close() async {
-    _httpClient?.close();
+    // Forced, so that a request the plug never answers is aborted.
+    _httpClient?.close(force: true);
     _httpClient = null;
     _sessionId = null;
     _cipher = null;
