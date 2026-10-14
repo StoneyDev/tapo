@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'tapo_device.dart';
@@ -9,6 +9,7 @@ part of 'tapo_device.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $TapoDeviceCopyWith<TapoDevice> get copyWith => _$TapoDeviceCopyWithImpl<TapoDev
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TapoDevice&&(identical(other.ip, ip) || other.ip == ip)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.model, model) || other.model == model)&&(identical(other.deviceOn, deviceOn) || other.deviceOn == deviceOn)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline));
+  final _this = this as TapoDevice;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TapoDevice&&(identical(other.ip, _this.ip) || other.ip == _this.ip)&&(identical(other.nickname, _this.nickname) || other.nickname == _this.nickname)&&(identical(other.model, _this.model) || other.model == _this.model)&&(identical(other.deviceOn, _this.deviceOn) || other.deviceOn == _this.deviceOn)&&(identical(other.isOnline, _this.isOnline) || other.isOnline == _this.isOnline));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,ip,nickname,model,deviceOn,isOnline);
+int get hashCode {
+  final _this = this as TapoDevice;
+  return Object.hash(runtimeType,_this.ip,_this.nickname,_this.model,_this.deviceOn,_this.isOnline);
+}
 
 @override
 String toString() {
-  return 'TapoDevice(ip: $ip, nickname: $nickname, model: $model, deviceOn: $deviceOn, isOnline: $isOnline)';
+  final _this = this as TapoDevice;
+  return 'TapoDevice(ip: ${_this.ip}, nickname: ${_this.nickname}, model: ${_this.model}, deviceOn: ${_this.deviceOn}, isOnline: ${_this.isOnline})';
 }
 
 
@@ -63,7 +69,7 @@ class _$TapoDeviceCopyWithImpl<$Res>
 /// Create a copy of TapoDevice
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? ip = null,Object? nickname = null,Object? model = null,Object? deviceOn = null,Object? isOnline = null,}) {
-  return _then(_self.copyWith(
+  return _then(TapoDevice(
 ip: null == ip ? _self.ip : ip // ignore: cast_nullable_to_non_nullable
 as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String,model: null == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
@@ -229,16 +235,18 @@ _$TapoDeviceCopyWith<_TapoDevice> get copyWith => __$TapoDeviceCopyWithImpl<_Tap
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TapoDevice&&(identical(other.ip, ip) || other.ip == ip)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.model, model) || other.model == model)&&(identical(other.deviceOn, deviceOn) || other.deviceOn == deviceOn)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TapoDevice&&(identical(other.ip, ip) || other.ip == ip)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.model, model) || other.model == model)&&(identical(other.deviceOn, deviceOn) || other.deviceOn == deviceOn)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,ip,nickname,model,deviceOn,isOnline);
+int get hashCode {
+    return Object.hash(runtimeType,ip,nickname,model,deviceOn,isOnline);
+}
 
 @override
 String toString() {
-  return 'TapoDevice(ip: $ip, nickname: $nickname, model: $model, deviceOn: $deviceOn, isOnline: $isOnline)';
+    return 'TapoDevice(ip: $ip, nickname: $nickname, model: $model, deviceOn: $deviceOn, isOnline: $isOnline)';
 }
 
 

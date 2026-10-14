@@ -119,9 +119,7 @@ void main() {
     });
 
     group('isToggling state', () {
-      testWidgets('shows spinner while toggling', (
-        tester,
-      ) async {
+      testWidgets('shows spinner while toggling', (tester) async {
         final device = TestFixtures.onlineDevice();
 
         await tester.pumpWidget(buildTestWidget(device, isToggling: true));
@@ -130,9 +128,7 @@ void main() {
     });
 
     group('power interaction', () {
-      testWidgets('power tap calls onToggle for online device', (
-        tester,
-      ) async {
+      testWidgets('power tap calls onToggle for online device', (tester) async {
         final device = TestFixtures.onlineDevice(deviceOn: false);
         await tester.pumpWidget(buildTestWidget(device));
 
@@ -289,9 +285,7 @@ void main() {
         expect(editedIp, isNull);
       });
 
-      testWidgets('save with empty IP shows validation error', (
-        tester,
-      ) async {
+      testWidgets('save with empty IP shows validation error', (tester) async {
         final device = TestFixtures.onlineDevice();
         await tester.pumpWidget(buildTestWidget(device));
 

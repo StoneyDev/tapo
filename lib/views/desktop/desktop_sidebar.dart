@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapo/core/platform.dart';
-import 'package:tapo/viewmodels/home_viewmodel.dart';
-import 'package:tapo/viewmodels/launch_at_startup_viewmodel.dart';
+import 'package:tapo/providers/home_provider.dart';
+import 'package:tapo/providers/launch_at_startup_provider.dart';
 import 'package:tapo/views/widgets/home_summary.dart';
-import 'package:watch_it/watch_it.dart';
 
 /// Left column of the desktop layout: summary, global actions and settings.
-class DesktopSidebar extends StatelessWidget {
+class DesktopSidebar extends ConsumerWidget {
   const DesktopSidebar({
-    required this.viewModel,
     required this.isRefreshing,
     required this.onRefresh,
     required this.onLogout,
@@ -17,15 +16,14 @@ class DesktopSidebar extends StatelessWidget {
 
   static const double width = 320;
 
-  final HomeViewModel viewModel;
   final bool isRefreshing;
   final VoidCallback onRefresh;
   final VoidCallback onLogout;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
-    final devices = viewModel.devices;
+    final devices = ref.watch(homeProvider.select((home) => home.devices));
     final anyOn = devices.any((device) => device.isOnline && device.deviceOn);
 
     // A Material (not a DecoratedBox) so the setting tiles can paint ink.
@@ -59,7 +57,9 @@ class DesktopSidebar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   FilledButton.icon(
-                    onPressed: anyOn ? viewModel.turnOffAll : null,
+                    onPressed: anyOn
+                        ? ref.read(homeProvider.notifier).turnOffAll
+                        : null,
                     icon: const Icon(Icons.power_settings_new_rounded),
                     label: const Text('Tout éteindre'),
                   ),
@@ -183,23 +183,25 @@ class _RefreshButton extends StatelessWidget {
   }
 }
 
-class _LaunchAtStartupTile extends WatchingWidget {
+class _LaunchAtStartupTile extends ConsumerWidget {
   const _LaunchAtStartupTile();
 
   @override
-  Widget build(BuildContext context) {
-    final launchAtStartup = watchIt<LaunchAtStartupViewModel>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isEnabled = ref.watch(
+      launchAtStartupProvider.select((setting) => setting.value ?? false),
+    );
+    final launchAtStartup = ref.read(launchAtStartupProvider.notifier);
     return _SettingTile(
       icon: Icons.rocket_launch_outlined,
       label: 'Lancer au démarrage',
-      onTap: () =>
-          launchAtStartup.setEnabled(enabled: !launchAtStartup.isEnabled),
+      onTap: () => launchAtStartup.setEnabled(enabled: !isEnabled),
       // Compact toggle, close to the Windows 11 switch size.
       trailing: SizedBox(
         height: 24,
         child: FittedBox(
           child: Switch(
-            value: launchAtStartup.isEnabled,
+            value: isEnabled,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             onChanged: (enabled) =>
                 launchAtStartup.setEnabled(enabled: enabled),

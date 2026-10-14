@@ -1,34 +1,31 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapo/core/platform.dart';
-import 'package:tapo/services/secure_storage_service.dart';
-import 'package:tapo/services/tapo_service.dart';
-import 'package:tapo/services/widget_data_service.dart';
-import 'package:tapo/viewmodels/home_viewmodel.dart';
+import 'package:tapo/models/tapo_device.dart';
+import 'package:tapo/providers/auth_provider.dart';
+import 'package:tapo/providers/home_provider.dart';
 import 'package:tapo/views/desktop/desktop_breakpoint.dart';
 import 'package:tapo/views/desktop/desktop_home_layout.dart';
 import 'package:tapo/views/widgets/home_summary.dart';
 import 'package:tapo/views/widgets/message_state.dart';
+import 'package:tapo/views/widgets/plug_builder.dart';
 import 'package:tapo/views/widgets/plug_card.dart';
-import 'package:watch_it/watch_it.dart';
 
-class HomeScreen extends StatefulWidget with WatchItStatefulWidgetMixin {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
-  late final HomeViewModel _viewModel;
-
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _viewModel = di<HomeViewModel>();
-    unawaited(_viewModel.loadDevices());
   }
 
   @override
@@ -40,32 +37,30 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
+    final home = ref.read(homeProvider.notifier);
     // Desktop windows resume on every focus gain: only refresh stale data.
     unawaited(
       isDesktopPlatform
-          ? _viewModel.refreshIfStale(const Duration(seconds: 30))
-          : _viewModel.refresh(),
+          ? home.refreshIfStale(const Duration(seconds: 30))
+          : home.refresh(),
     );
   }
 
+  void _logout() => unawaited(ref.read(authProvider.notifier).logout());
+
   @override
   Widget build(BuildContext context) {
-    watchIt<HomeViewModel>();
-
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth >= desktopBreakpoint) {
-              return DesktopHomeLayout(
-                viewModel: _viewModel,
-                onLogout: () => _logout(context),
-              );
+              return DesktopHomeLayout(onLogout: _logout);
             }
             return Column(
               children: [
                 _buildHeader(context),
-                Expanded(child: _buildBody()),
+                const Expanded(child: _PlugList()),
               ],
             );
           },
@@ -124,16 +119,66 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 foregroundColor: colors.onSurface,
                 side: BorderSide(color: colors.outlineVariant),
               ),
-              onPressed: () => _logout(context),
+              onPressed: _logout,
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildOverview() {
-    final devices = _viewModel.devices;
+class _PlugList extends ConsumerWidget {
+  const _PlugList();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final (:isLoading, :errorMessage, :devices) = ref.watch(plugListProvider);
+    final home = ref.read(homeProvider.notifier);
+
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+    }
+
+    if (errorMessage != null) {
+      return MessageState(
+        icon: Icons.cloud_off_rounded,
+        title: 'Connexion impossible',
+        message: errorMessage,
+        actionLabel: 'Retry',
+        onAction: home.refresh,
+      );
+    }
+
+    if (devices.isEmpty) {
+      return const MessageState(
+        icon: Icons.power_outlined,
+        title: 'No devices configured',
+        message: 'Ajoutez une adresse IP depuis la configuration.',
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: home.refresh,
+      child: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: devices.length + 1,
+        separatorBuilder: (context, index) => index == 0
+            ? const SizedBox.shrink()
+            : Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+        itemBuilder: (context, index) {
+          if (index == 0) return _buildOverview(devices);
+          return PlugBuilder(ip: devices[index - 1].ip, card: PlugCard.new);
+        },
+      ),
+    );
+  }
+
+  Widget _buildOverview(List<TapoDevice> devices) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -144,79 +189,5 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         const SizedBox(height: 8),
       ],
     );
-  }
-
-  Widget _buildBody() {
-    if (_viewModel.isLoading) {
-      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-    }
-
-    if (_viewModel.errorMessage != null) {
-      return MessageState(
-        icon: Icons.cloud_off_rounded,
-        title: 'Connexion impossible',
-        message: _viewModel.errorMessage!,
-        actionLabel: 'Retry',
-        onAction: _viewModel.refresh,
-      );
-    }
-
-    if (_viewModel.devices.isEmpty) {
-      return const MessageState(
-        icon: Icons.power_outlined,
-        title: 'No devices configured',
-        message: 'Ajoutez une adresse IP depuis la configuration.',
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _viewModel.refresh,
-      child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: _viewModel.devices.length + 1,
-        separatorBuilder: (context, index) => index == 0
-            ? const SizedBox.shrink()
-            : Divider(
-                height: 1,
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-        itemBuilder: (context, index) {
-          if (index == 0) return _buildOverview();
-          final device = _viewModel.devices[index - 1];
-          return PlugCard(
-            device: device,
-            onToggle: () => _viewModel.toggleDevice(device.ip),
-            onRemove: () => _viewModel.removeDevice(device.ip),
-            onEditIp: (newIp) => _viewModel.updateDeviceIp(device.ip, newIp),
-            isToggling: _viewModel.isToggling(device.ip),
-            powerOffRemaining: _viewModel.powerOffRemaining(device.ip),
-            onSchedulePowerOff: () => _viewModel.schedulePowerOff(device.ip),
-            onCancelPowerOff: () => _viewModel.cancelPowerOff(device.ip),
-          );
-        },
-      ),
-    );
-  }
-
-  Future<void> _logout(BuildContext context) async {
-    _viewModel.cancelAllPowerOffs();
-    final locator = GetIt.instance;
-    if (locator.isRegistered<TapoService>()) {
-      await locator<TapoService>().disconnectAll();
-      await locator.unregister<TapoService>();
-    }
-
-    final storage = di<SecureStorageService>();
-    await storage.clearCredentials();
-    await storage.clearDeviceIps();
-
-    final widgetData = di<WidgetDataService>();
-    await widgetData.clearWidgetData();
-    await widgetData.refreshWidgets();
-
-    if (context.mounted) {
-      await Navigator.pushReplacementNamed(context, '/config');
-    }
   }
 }

@@ -3,14 +3,11 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:tapo/models/tapo_device.dart';
-import 'package:tapo/services/secure_storage_service.dart';
-import 'package:tapo/services/tapo_service.dart';
-import 'package:tapo/services/widget_data_service.dart';
-import 'package:tapo/viewmodels/home_viewmodel.dart';
-import 'package:tapo/viewmodels/launch_at_startup_viewmodel.dart';
+import 'package:tapo/providers/home_provider.dart';
+import 'package:tapo/providers/services.dart';
 import 'package:tapo/views/desktop/plug_tile.dart';
 import 'package:tapo/views/home_screen.dart';
 import 'package:tapo/views/widgets/plug_card.dart';
@@ -41,25 +38,13 @@ const _bedroom = TapoDevice(
 );
 
 void main() {
-  late MockHomeViewModel viewModel;
+  late FakeHomeNotifier home;
   late FakeDesktopShell shell;
-  final getIt = GetIt.instance;
 
-  setUp(() async {
-    await getIt.reset();
-    viewModel = MockHomeViewModel();
+  setUp(() {
+    home = FakeHomeNotifier();
     shell = FakeDesktopShell();
-    getIt
-      ..registerSingleton<HomeViewModel>(viewModel)
-      ..registerSingleton<LaunchAtStartupViewModel>(
-        LaunchAtStartupViewModel(shell: shell),
-      )
-      ..registerSingleton<SecureStorageService>(MockSecureStorageService())
-      ..registerSingleton<TapoService>(MockTapoService())
-      ..registerSingleton<WidgetDataService>(MockWidgetDataService());
   });
-
-  tearDown(getIt.reset);
 
   Future<void> pumpHome(
     WidgetTester tester, {
@@ -71,9 +56,15 @@ void main() {
     addTearDown(tester.view.reset);
     // Roboto: the Windows default font (Segoe UI) is not available in tests.
     await tester.pumpWidget(
-      MaterialApp(
-        theme: ThemeData(fontFamily: 'Roboto'),
-        home: const HomeScreen(),
+      ProviderScope(
+        overrides: [
+          homeProvider.overrideWith(() => home),
+          desktopShellProvider.overrideWithValue(shell),
+        ],
+        child: MaterialApp(
+          theme: ThemeData(fontFamily: 'Roboto'),
+          home: const HomeScreen(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -90,7 +81,7 @@ void main() {
 
   group('Desktop home layout', () {
     testWidgets('shows a tile per device on a wide window', (tester) async {
-      viewModel.setDevices([_lamp, _desk, _bedroom]);
+      home = FakeHomeNotifier.withDevices([_lamp, _desk, _bedroom]);
       await pumpHome(tester);
 
       expect(find.byType(PlugTile), findsNWidgets(3));
@@ -98,7 +89,7 @@ void main() {
     });
 
     testWidgets('keeps the mobile list on a narrow window', (tester) async {
-      viewModel.setDevices([_lamp, _desk, _bedroom]);
+      home = FakeHomeNotifier.withDevices([_lamp, _desk, _bedroom]);
       await pumpHome(tester, size: const Size(400, 800));
 
       expect(find.byType(PlugCard), findsNWidgets(3));
@@ -106,7 +97,9 @@ void main() {
     });
 
     testWidgets('error state keeps the sidebar', (tester) async {
-      viewModel.setErrorMessage('Connection failed');
+      home = FakeHomeNotifier(
+        const HomeState(errorMessage: 'Connection failed'),
+      );
       await pumpHome(tester);
 
       expect(find.text('Connexion impossible'), findsOneWidget);
@@ -116,60 +109,59 @@ void main() {
 
     group('sidebar', () {
       testWidgets('Tout éteindre turns every plug off', (tester) async {
-        viewModel.setDevices([_lamp, _desk]);
+        home = FakeHomeNotifier.withDevices([_lamp, _desk]);
         await pumpHome(tester);
 
         await tester.tap(find.text('Tout éteindre'));
         await tester.pump();
 
-        expect(viewModel.turnOffAllCallCount, 1);
+        expect(home.turnOffAllCallCount, 1);
       });
 
       testWidgets('Tout éteindre does nothing when no plug is on', (
         tester,
       ) async {
-        viewModel.setDevices([_desk, _bedroom]);
+        home = FakeHomeNotifier.withDevices([_desk, _bedroom]);
         await pumpHome(tester);
 
         await tester.tap(find.text('Tout éteindre'));
         await tester.pump();
 
-        expect(viewModel.turnOffAllCallCount, 0);
+        expect(home.turnOffAllCallCount, 0);
       });
 
       testWidgets('Actualiser refreshes silently with a spinner', (
         tester,
       ) async {
-        viewModel
-          ..setDevices([_lamp])
+        home = FakeHomeNotifier.withDevices([_lamp])
           ..refreshCompleter = Completer<void>();
         await pumpHome(tester);
 
         await tester.tap(find.text('Actualiser'));
         await tester.pump();
 
-        expect(viewModel.refreshCallCount, 1);
-        expect(viewModel.lastRefreshSilent, isTrue);
+        expect(home.refreshCallCount, 1);
+        expect(home.lastRefreshSilent, isTrue);
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-        viewModel.refreshCompleter!.complete();
+        home.refreshCompleter!.complete();
         await tester.pumpAndSettle();
         expect(find.byType(CircularProgressIndicator), findsNothing);
       });
 
       testWidgets('F5 refreshes silently', (tester) async {
-        viewModel.setDevices([_lamp]);
+        home = FakeHomeNotifier.withDevices([_lamp]);
         await pumpHome(tester);
 
         await tester.sendKeyEvent(LogicalKeyboardKey.f5);
         await tester.pumpAndSettle();
 
-        expect(viewModel.refreshCallCount, 1);
-        expect(viewModel.lastRefreshSilent, isTrue);
+        expect(home.refreshCallCount, 1);
+        expect(home.lastRefreshSilent, isTrue);
       });
 
       testWidgets('hides launch at startup outside Windows', (tester) async {
-        viewModel.setDevices([_lamp]);
+        home = FakeHomeNotifier.withDevices([_lamp]);
         await pumpHome(tester);
 
         expect(find.text('Lancer au démarrage'), findsNothing);
@@ -178,40 +170,40 @@ void main() {
       testWidgets('launch at startup switch updates the setting on Windows', (
         tester,
       ) async {
-        viewModel.setDevices([_lamp]);
+        home = FakeHomeNotifier.withDevices([_lamp]);
         await pumpHome(tester);
 
         await tester.tap(find.byType(Switch));
         await tester.pumpAndSettle();
 
         expect(shell.launchAtStartup, isTrue);
-        expect(getIt<LaunchAtStartupViewModel>().isEnabled, isTrue);
+        expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
       }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
     });
 
     group('plug tile', () {
       testWidgets('power button toggles the plug', (tester) async {
-        viewModel.setDevices([_desk]);
+        home = FakeHomeNotifier.withDevices([_desk]);
         await pumpHome(tester);
 
         await tester.tap(find.byKey(const ValueKey('power-192.168.1.11')));
         await tester.pump();
 
-        expect(viewModel.lastToggledIp, '192.168.1.11');
+        expect(home.lastToggledIp, '192.168.1.11');
       });
 
       testWidgets('countdown chip schedules the power-off', (tester) async {
-        viewModel.setDevices([_lamp]);
+        home = FakeHomeNotifier.withDevices([_lamp]);
         await pumpHome(tester);
 
         await tester.tap(find.byKey(const ValueKey('countdown-192.168.1.10')));
         await tester.pump();
 
-        expect(viewModel.schedulePowerOffCallCount, 1);
+        expect(home.lastScheduledIp, '192.168.1.10');
       });
 
       testWidgets('right click opens the plug menu', (tester) async {
-        viewModel.setDevices([_lamp]);
+        home = FakeHomeNotifier.withDevices([_lamp]);
         await pumpHome(tester);
 
         await openTileMenu(tester, 'Lampe Salon');
@@ -221,7 +213,7 @@ void main() {
       });
 
       testWidgets('options button opens the plug menu', (tester) async {
-        viewModel.setDevices([_lamp]);
+        home = FakeHomeNotifier.withDevices([_lamp]);
         await pumpHome(tester);
 
         await tester.tap(find.byTooltip('Options'));
@@ -233,22 +225,22 @@ void main() {
       testWidgets('Supprimer removes the plug after confirmation', (
         tester,
       ) async {
-        viewModel.setDevices([_lamp, _desk]);
+        home = FakeHomeNotifier.withDevices([_lamp, _desk]);
         await pumpHome(tester);
 
         await openTileMenu(tester, 'Bureau');
         await tester.tap(find.text('Supprimer'));
         await tester.pumpAndSettle();
-        expect(viewModel.removeDeviceCallCount, 0);
+        expect(home.lastRemovedIp, isNull);
 
         await tester.tap(find.widgetWithText(TextButton, 'Supprimer'));
         await tester.pumpAndSettle();
 
-        expect(viewModel.lastRemovedIp, '192.168.1.11');
+        expect(home.lastRemovedIp, '192.168.1.11');
       });
 
       testWidgets("Modifier l'IP saves the new address", (tester) async {
-        viewModel.setDevices([_lamp]);
+        home = FakeHomeNotifier.withDevices([_lamp]);
         await pumpHome(tester);
 
         await openTileMenu(tester, 'Lampe Salon');
@@ -258,23 +250,24 @@ void main() {
         await tester.tap(find.text('Enregistrer'));
         await tester.pumpAndSettle();
 
-        expect(viewModel.lastOldIp, '192.168.1.10');
-        expect(viewModel.lastNewIp, '192.168.1.50');
+        expect(home.lastIpUpdate, (
+          oldIp: '192.168.1.10',
+          newIp: '192.168.1.50',
+        ));
       });
     });
 
     testWidgets('window focus only refreshes stale data on desktop', (
       tester,
     ) async {
-      viewModel.setDevices([_lamp]);
+      home = FakeHomeNotifier.withDevices([_lamp]);
       await pumpHome(tester);
-      viewModel.refreshCallCount = 0;
 
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump();
 
-      expect(viewModel.refreshIfStaleCallCount, 1);
-      expect(viewModel.refreshCallCount, 0);
+      expect(home.refreshIfStaleCallCount, 1);
+      expect(home.refreshCallCount, 0);
     }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
   });
 }

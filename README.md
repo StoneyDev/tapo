@@ -17,12 +17,13 @@ Flutter app for controlling TP-Link Tapo smart plugs over local network.
 lib/
 ├── core/           # Protocol implementations (KLAP, TPAP, SPAKE2+)
 ├── services/       # Device communication & business logic
-├── viewmodels/     # State management (ChangeNotifier)
+├── providers/      # State management (Riverpod notifiers)
 ├── views/          # UI screens & widgets
 └── models/         # Data models (freezed)
 ```
 
-DI via `get_it`. Reactive UI via `watch_it`.
+State and dependency injection via `flutter_riverpod`: the signed-in account
+drives the screens and the plug sessions.
 
 ## Development
 

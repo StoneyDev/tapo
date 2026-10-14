@@ -335,10 +335,9 @@ class FakeTpapPlug {
 /// then answers each decrypted `/app/request` through [onRequest].
 class FakeTpapPlugWithLogin extends FakeTpapPlug implements LoginPlug {
   FakeTpapPlugWithLogin({
-    String email = TestFixtures.testEmail,
-    String password = TestFixtures.testPassword,
-  }) : _email = email,
-       _password = password;
+    this._email = TestFixtures.testEmail,
+    this._password = TestFixtures.testPassword,
+  });
 
   final String _email;
   final String _password;

@@ -152,56 +152,6 @@ void main() {
       });
     });
 
-    group('hasCredentials', () {
-      test('returns true when both email and password exist', () async {
-        when(
-          mockStorage.read(key: 'tapo_email'),
-        ).thenAnswer((_) async => TestFixtures.testEmail);
-        when(
-          mockStorage.read(key: 'tapo_password'),
-        ).thenAnswer((_) async => TestFixtures.testPassword);
-
-        final result = await service.hasCredentials();
-
-        expect(result, isTrue);
-      });
-
-      test('returns false when email is null', () async {
-        when(mockStorage.read(key: 'tapo_email')).thenAnswer((_) async => null);
-        when(
-          mockStorage.read(key: 'tapo_password'),
-        ).thenAnswer((_) async => TestFixtures.testPassword);
-
-        final result = await service.hasCredentials();
-
-        expect(result, isFalse);
-      });
-
-      test('returns false when password is null', () async {
-        when(
-          mockStorage.read(key: 'tapo_email'),
-        ).thenAnswer((_) async => TestFixtures.testEmail);
-        when(
-          mockStorage.read(key: 'tapo_password'),
-        ).thenAnswer((_) async => null);
-
-        final result = await service.hasCredentials();
-
-        expect(result, isFalse);
-      });
-
-      test('returns false when both are null', () async {
-        when(mockStorage.read(key: 'tapo_email')).thenAnswer((_) async => null);
-        when(
-          mockStorage.read(key: 'tapo_password'),
-        ).thenAnswer((_) async => null);
-
-        final result = await service.hasCredentials();
-
-        expect(result, isFalse);
-      });
-    });
-
     group('saveDeviceIps', () {
       test('writes JSON encoded IP list to storage', () async {
         when(

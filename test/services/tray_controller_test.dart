@@ -1,17 +1,17 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:mockito/mockito.dart';
+import 'package:tapo/models/tapo_device.dart';
+import 'package:tapo/providers/home_provider.dart';
+import 'package:tapo/providers/launch_at_startup_provider.dart';
+import 'package:tapo/providers/services.dart';
 import 'package:tapo/services/desktop_shell.dart';
-import 'package:tapo/services/secure_storage_service.dart';
-import 'package:tapo/services/tapo_service.dart';
 import 'package:tapo/services/tray_controller.dart';
-import 'package:tapo/services/widget_data_service.dart';
-import 'package:tapo/viewmodels/home_viewmodel.dart';
-import 'package:tapo/viewmodels/launch_at_startup_viewmodel.dart';
 
 import '../helpers/fake_desktop_shell.dart';
+import '../helpers/providers.dart';
 import '../helpers/test_utils.dart';
 import '../helpers/test_utils.mocks.dart';
 
@@ -33,10 +33,8 @@ void main() {
   late MockSecureStorageService storage;
   late MockTapoService tapo;
   late FakeDesktopShell shell;
-  late HomeViewModel home;
-  late LaunchAtStartupViewModel launchAtStartup;
-  late TrayController controller;
-  final getIt = GetIt.instance;
+  late ProviderContainer container;
+  late HomeNotifier home;
 
   void stubStates({bool bureauOn = false}) {
     when(
@@ -55,53 +53,36 @@ void main() {
   }
 
   setUp(() async {
-    await getIt.reset();
     storage = MockSecureStorageService();
     tapo = MockTapoService();
-    final widgetData = MockWidgetDataService();
-    when(widgetData.saveAllDevices(any)).thenAnswer((_) async {});
-    when(widgetData.refreshWidgets()).thenAnswer((_) async {});
-    when(
-      widgetData.saveDeviceState(
-        ip: anyNamed('ip'),
-        model: anyNamed('model'),
-        nickname: anyNamed('nickname'),
-        deviceOn: anyNamed('deviceOn'),
-        isOnline: anyNamed('isOnline'),
-      ),
-    ).thenAnswer((_) async {});
-    getIt
-      ..registerSingleton<SecureStorageService>(storage)
-      ..registerSingleton<TapoService>(tapo)
-      ..registerSingleton<WidgetDataService>(widgetData);
-
+    stubSignedIn(storage);
     when(
       storage.getDeviceIps(),
     ).thenAnswer((_) async => [_salon, _bureau, _chambre]);
     stubStates();
 
     shell = FakeDesktopShell();
-    home = HomeViewModel();
-    launchAtStartup = LaunchAtStartupViewModel(shell: shell);
-    controller = TrayController(
-      shell: shell,
-      home: home,
-      launchAtStartup: launchAtStartup,
-      refreshBudget: const Duration(milliseconds: 50),
+    container = ProviderContainer.test(
+      overrides: [
+        ...appOverrides(storage: storage, tapo: tapo),
+        desktopShellProvider.overrideWithValue(shell),
+        trayControllerProvider.overrideWith(
+          (ref) => TrayController(
+            ref,
+            refreshBudget: const Duration(milliseconds: 50),
+          ),
+        ),
+      ],
     );
-    await controller.start();
+    container.read(trayControllerProvider).start();
+    home = await signIn(container);
   });
 
-  tearDown(() async {
-    home.dispose();
-    launchAtStartup.dispose();
-    await getIt.reset();
-  });
+  List<TapoDevice> devices() => container.read(homeProvider).devices;
 
   group('TrayController', () {
     group('menu', () {
       test('refreshes the plugs before listing them', () async {
-        await home.loadDevices();
         stubStates(bureauOn: true);
 
         await shell.rightClickTray();
@@ -122,7 +103,6 @@ void main() {
       });
 
       test('shows cached states when the refresh exceeds its budget', () async {
-        await home.loadDevices();
         final pendingIps = Completer<List<String>>();
         when(storage.getDeviceIps()).thenAnswer((_) => pendingIps.future);
 
@@ -187,7 +167,7 @@ void main() {
         await shell.select('Bureau');
 
         verify(tapo.toggleDevice(_bureau)).called(1);
-        expect(home.devices[1].deviceOn, isTrue);
+        expect(devices()[1].deviceOn, isTrue);
         expect(shell.notifications, isEmpty);
       });
 
@@ -243,19 +223,21 @@ void main() {
         await shell.select('Lancer au démarrage');
 
         expect(shell.launchAtStartup, isTrue);
-        expect(launchAtStartup.isEnabled, isTrue);
+        expect(container.read(launchAtStartupProvider).value, isTrue);
       });
+    });
+
+    test('start loads the startup setting for the window switch', () {
+      // Read without waiting: the window's first frame must show it.
+      expect(container.read(launchAtStartupProvider).hasValue, isTrue);
     });
 
     group('tooltip', () {
       test('summarises how many plugs are on', () async {
-        await home.loadDevices();
-
         expect(shell.tooltips.last, 'Tapo · 1/3 allumées');
       });
 
       test('is only resent when the summary changes', () async {
-        await home.loadDevices();
         final sent = shell.tooltips.length;
 
         await home.loadDevices();

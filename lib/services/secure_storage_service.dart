@@ -29,12 +29,6 @@ class SecureStorageService {
     await storage.delete(key: _keyPassword);
   }
 
-  Future<bool> hasCredentials() async {
-    final email = await storage.read(key: _keyEmail);
-    final password = await storage.read(key: _keyPassword);
-    return email != null && password != null;
-  }
-
   // Device IPs methods
   Future<void> saveDeviceIps(List<String> ips) async {
     final json = jsonEncode(ips);
