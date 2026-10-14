@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tapo/models/tapo_device.dart';
+import 'package:tapo/providers/auth_provider.dart';
 import 'package:tapo/providers/services.dart';
 import 'package:tapo/services/secure_storage_service.dart';
 import 'package:tapo/services/tapo_service.dart';
@@ -177,6 +178,13 @@ class HomeNotifier extends Notifier<HomeState> {
       timer.cancel();
     }
     _powerOffTimers.clear();
+  }
+
+  /// Signs out. The countdowns stop first: clearing the storage takes a
+  /// while, and a plug must not turn off meanwhile.
+  Future<void> logout() {
+    _cancelAllPowerOffs();
+    return ref.read(authProvider.notifier).logout();
   }
 
   /// Retry immediately so a restored Wi-Fi connection can be used.

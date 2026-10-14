@@ -347,6 +347,20 @@ void main() {
         verifyNever(tapo.setDevicePower(any, on: anyNamed('on')));
         expect(state(), const HomeState());
       });
+
+      test('signing out stops them before clearing the storage', () async {
+        final clearing = Completer<void>();
+        when(storage.clearCredentials()).thenAnswer((_) => clearing.future);
+        home.schedulePowerOff(_ip);
+
+        final logout = home.logout();
+        await Future<void>.delayed(const Duration(milliseconds: 60));
+
+        verifyNever(tapo.setDevicePower(any, on: anyNamed('on')));
+        expect(state().powerOffRemaining, isEmpty);
+        clearing.complete();
+        await logout;
+      });
     });
 
     group('signing out', () {

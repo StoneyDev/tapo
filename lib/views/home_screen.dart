@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapo/core/platform.dart';
 import 'package:tapo/models/tapo_device.dart';
-import 'package:tapo/providers/auth_provider.dart';
 import 'package:tapo/providers/home_provider.dart';
 import 'package:tapo/views/desktop/desktop_breakpoint.dart';
 import 'package:tapo/views/desktop/desktop_home_layout.dart';
@@ -46,7 +45,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  void _logout() => unawaited(ref.read(authProvider.notifier).logout());
+  void _logout() => unawaited(ref.read(homeProvider.notifier).logout());
 
   @override
   Widget build(BuildContext context) {
