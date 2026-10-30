@@ -1,34 +1,23 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:tapo/viewmodels/config_viewmodel.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tapo/providers/config_provider.dart';
 import 'package:tapo/views/desktop/desktop_breakpoint.dart';
-import 'package:watch_it/watch_it.dart';
 
-class ConfigScreen extends StatefulWidget with WatchItStatefulWidgetMixin {
+class ConfigScreen extends ConsumerStatefulWidget {
   const ConfigScreen({super.key});
 
   @override
-  State<ConfigScreen> createState() => _ConfigScreenState();
+  ConsumerState<ConfigScreen> createState() => _ConfigScreenState();
 }
 
-class _ConfigScreenState extends State<ConfigScreen> {
+class _ConfigScreenState extends ConsumerState<ConfigScreen> {
   final _ipController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  late final ConfigViewModel _viewModel;
 
-  @override
-  void initState() {
-    super.initState();
-    _viewModel = di<ConfigViewModel>();
-    unawaited(_loadConfig());
-  }
-
-  Future<void> _loadConfig() async {
-    final creds = await _viewModel.loadConfig();
-    _emailController.text = creds.email;
-  }
+  ConfigNotifier get _config => ref.read(configProvider.notifier);
 
   @override
   void dispose() {
@@ -41,36 +30,37 @@ class _ConfigScreenState extends State<ConfigScreen> {
   void _addIp() {
     final ip = _ipController.text.trim();
     if (ip.isEmpty) return;
-    _viewModel.addDeviceIp(ip);
+    _config.addDeviceIp(ip);
     _ipController.clear();
   }
 
-  Future<void> _save() async {
-    final success = await _viewModel.saveConfig(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
-    if (success && mounted) {
-      await Navigator.of(context).pushReplacementNamed('/home');
-    }
-  }
+  // Signing in switches the app to the home screen.
+  void _save() => unawaited(
+    _config.saveConfig(_emailController.text.trim(), _passwordController.text),
+  );
 
   @override
   Widget build(BuildContext context) {
-    watchIt<ConfigViewModel>();
+    ref.listen(configProvider.select((config) => config.value?.email), (
+      _,
+      email,
+    ) {
+      if (email != null) _emailController.text = email;
+    });
+    final config = ref.watch(configProvider).value;
 
     return Scaffold(
       body: SafeArea(
-        child: _viewModel.isLoading
+        child: config == null || config.isSaving
             ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
             : LayoutBuilder(
                 builder: (context, constraints) =>
                     constraints.maxWidth >= desktopBreakpoint
-                    ? _buildCard(context)
+                    ? _buildCard(context, config)
                     : Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 560),
-                          child: _buildContent(context, inCard: false),
+                          child: _buildContent(context, config, inCard: false),
                         ),
                       ),
               ),
@@ -79,7 +69,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
   }
 
   /// Wide windows: the form sits in a card on the page background.
-  Widget _buildCard(BuildContext context) {
+  Widget _buildCard(BuildContext context, ConfigState config) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -91,7 +81,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
             clipBehavior: Clip.antiAlias,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              child: _buildContent(context, inCard: true),
+              child: _buildContent(context, config, inCard: true),
             ),
           ),
         ),
@@ -99,10 +89,14 @@ class _ConfigScreenState extends State<ConfigScreen> {
     );
   }
 
-  Widget _buildContent(BuildContext context, {required bool inCard}) {
+  Widget _buildContent(
+    BuildContext context,
+    ConfigState config, {
+    required bool inCard,
+  }) {
     return Column(
       children: [
-        Expanded(child: _buildForm(context, inCard: inCard)),
+        Expanded(child: _buildForm(context, config, inCard: inCard)),
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
           child: FilledButton(
@@ -114,7 +108,11 @@ class _ConfigScreenState extends State<ConfigScreen> {
     );
   }
 
-  Widget _buildForm(BuildContext context, {required bool inCard}) {
+  Widget _buildForm(
+    BuildContext context,
+    ConfigState config, {
+    required bool inCard,
+  }) {
     final colors = Theme.of(context).colorScheme;
     // On the surface-colored card, fields keep the theme's contrasting fill.
     final fieldFill = inCard ? null : colors.surface;
@@ -197,7 +195,7 @@ class _ConfigScreenState extends State<ConfigScreen> {
                 ),
               ),
               Text(
-                '${_viewModel.deviceIps.length}',
+                '${config.deviceIps.length}',
                 style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
               ),
             ],
@@ -239,9 +237,9 @@ class _ConfigScreenState extends State<ConfigScreen> {
               ),
             ],
           ),
-          if (_viewModel.deviceIps.isNotEmpty) ...[
+          if (config.deviceIps.isNotEmpty) ...[
             const SizedBox(height: 12),
-            for (final ip in _viewModel.deviceIps) ...[
+            for (final ip in config.deviceIps) ...[
               Row(
                 children: [
                   Icon(
@@ -257,17 +255,17 @@ class _ConfigScreenState extends State<ConfigScreen> {
                     icon: const Icon(Icons.delete, size: 20),
                     color: colors.onSurfaceVariant,
                     tooltip: 'Supprimer $ip',
-                    onPressed: () => _viewModel.removeDeviceIp(ip),
+                    onPressed: () => _config.removeDeviceIp(ip),
                   ),
                 ],
               ),
               Divider(height: 1, color: colors.outlineVariant),
             ],
           ],
-          if (_viewModel.errorMessage != null) ...[
+          if (config.errorMessage case final errorMessage?) ...[
             const SizedBox(height: 16),
             Text(
-              _viewModel.errorMessage!,
+              errorMessage,
               style: TextStyle(color: colors.error, fontSize: 13),
             ),
           ],

@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:tapo/core/di.dart';
 import 'package:tapo/core/platform.dart';
-import 'package:tapo/services/secure_storage_service.dart';
+import 'package:tapo/providers/auth_provider.dart';
 import 'package:tapo/services/tray_controller.dart';
 import 'package:tapo/services/widget_callback.dart';
 import 'package:tapo/views/config_screen.dart';
@@ -12,15 +12,17 @@ import 'package:tapo/views/home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  setupLocator();
   if (supportsHomeWidgets) {
     unawaited(HomeWidget.setAppGroupId('group.stoneydev.tapo'));
     unawaited(
       HomeWidget.registerInteractivityCallback(widgetBackgroundCallback),
     );
   }
-  if (isWindowsDesktop) unawaited(getIt<TrayController>().start());
-  runApp(const MyApp());
+  // The tray lives outside the widget tree, so it shares an explicit
+  // container with the app.
+  final container = ProviderContainer();
+  if (isWindowsDesktop) container.read(trayControllerProvider).start();
+  runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -33,11 +35,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: appTheme,
       darkTheme: darkAppTheme,
-      home: const _StartupScreen(),
-      routes: {
-        '/config': (context) => const ConfigScreen(),
-        '/home': (context) => const HomeScreen(),
-      },
+      home: const _Root(),
     );
   }
 }
@@ -119,35 +117,22 @@ ThemeData _buildAppTheme(Brightness brightness) {
   );
 }
 
-class _StartupScreen extends StatefulWidget {
-  const _StartupScreen();
+/// Home when signed in, configuration otherwise.
+class _Root extends ConsumerWidget {
+  const _Root();
 
   @override
-  State<_StartupScreen> createState() => _StartupScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    return switch (ref.watch(authProvider)) {
+      AsyncData(value: null) => const ConfigScreen(),
+      AsyncData() => const HomeScreen(),
+      _ => const _SplashScreen(),
+    };
+  }
 }
 
-class _StartupScreenState extends State<_StartupScreen> {
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_checkAuth());
-  }
-
-  Future<void> _checkAuth() async {
-    final storage = getIt<SecureStorageService>();
-    final hasCreds = await storage.hasCredentials();
-
-    if (!mounted) return;
-
-    if (hasCreds) {
-      final creds = await storage.getCredentials();
-      await registerTapoService(creds.email!, creds.password!);
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      Navigator.pushReplacementNamed(context, '/config');
-    }
-  }
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
 
   @override
   Widget build(BuildContext context) {

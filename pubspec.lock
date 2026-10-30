@@ -214,6 +214,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_riverpod:
+    dependency: "direct main"
+    description:
+      name: flutter_riverpod
+      sha256: "2b7f9d2a3c730ac1a98221b420cef966b990fca7ab546ede324642ca57a533e3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.4.3"
   flutter_secure_storage:
     dependency: "direct main"
     description:
@@ -288,14 +296,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.0"
-  get_it:
-    dependency: "direct main"
-    description:
-      name: get_it
-      sha256: "2b5c6b077aad30bba9782178baff6076a2044141f1d5f2f15b43bca3fbe74874"
-      url: "https://pub.dev"
-    source: hosted
-    version: "9.3.0"
   glob:
     dependency: transitive
     description:
@@ -408,14 +408,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
-  listen_it:
+  listen:
     dependency: transitive
     description:
-      name: listen_it
-      sha256: "137f2576048c1982863141547db0a3c5a200541f47216b507f9fe6545ea696f5"
+      name: listen
+      sha256: "47501a08016a43fcad79252439d723f50f14f88fa7bfd8a177e0a417e5c9e1f2"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.0"
+    version: "1.0.1"
   logging:
     dependency: transitive
     description:
@@ -592,6 +592,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.0"
+  riverpod:
+    dependency: transitive
+    description:
+      name: riverpod
+      sha256: "484dfc873ea4c4f4240e5635444fa066f87b07862b7279ebd004a2b71fba4b7a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.4.3"
   shelf:
     dependency: transitive
     description:
@@ -637,6 +645,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.12.2"
+  state_notifier:
+    dependency: transitive
+    description:
+      name: state_notifier
+      sha256: b8677376aa54f2d7c58280d5a007f9e8774f1968d1fb1c096adcb4792fba29bb
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   stream_channel:
     dependency: transitive
     description:
@@ -685,6 +701,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  uuid:
+    dependency: transitive
+    description:
+      name: uuid
+      sha256: "9b129329f58692f6e6578329498a8fe9fbe98f090beb764ffbb8ee2eadd01dcd"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.6.0"
   vector_math:
     dependency: transitive
     description:
@@ -709,14 +733,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "15.3.0"
-  watch_it:
-    dependency: "direct main"
-    description:
-      name: watch_it
-      sha256: "623695dc6d108e4f317827bf61632c31da4282547879e9a92a90a15538872f9c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.5.0"
   watcher:
     dependency: transitive
     description:

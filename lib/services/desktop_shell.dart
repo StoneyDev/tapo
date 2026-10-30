@@ -39,8 +39,7 @@ class TrayMenuSeparator extends TrayMenuEntry {
 /// Bridge to the Windows runner (windows/runner/flutter_window.cpp):
 /// tray icon, main window and launch at startup.
 class DesktopShell {
-  DesktopShell({MethodChannel channel = const MethodChannel('tapo/desktop')})
-    : _channel = channel;
+  DesktopShell({this._channel = const MethodChannel('tapo/desktop')});
 
   final MethodChannel _channel;
 

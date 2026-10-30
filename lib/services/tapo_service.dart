@@ -14,12 +14,10 @@ import 'package:tapo/services/tpap_client.dart';
 /// Supports both KLAP (older firmware) and TPAP (firmware 1.4+)
 class TapoService {
   TapoService({
-    required Uint8List authHash,
-    required String email,
-    required String password,
-  }) : _authHash = authHash,
-       _email = email,
-       _password = password;
+    required this._authHash,
+    required this._email,
+    required this._password,
+  });
 
   /// Factory constructor from email/password
   factory TapoService.fromCredentials(String email, String password) {

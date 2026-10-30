@@ -3,35 +3,32 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:tapo/viewmodels/home_viewmodel.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tapo/providers/home_provider.dart';
 import 'package:tapo/views/desktop/desktop_sidebar.dart';
 import 'package:tapo/views/desktop/plug_tile.dart';
 import 'package:tapo/views/widgets/home_summary.dart';
 import 'package:tapo/views/widgets/message_state.dart';
+import 'package:tapo/views/widgets/plug_builder.dart';
 
 /// Sidebar + plug grid shown on wide windows.
-class DesktopHomeLayout extends StatefulWidget {
-  const DesktopHomeLayout({
-    required this.viewModel,
-    required this.onLogout,
-    super.key,
-  });
+class DesktopHomeLayout extends ConsumerStatefulWidget {
+  const DesktopHomeLayout({required this.onLogout, super.key});
 
-  final HomeViewModel viewModel;
   final VoidCallback onLogout;
 
   @override
-  State<DesktopHomeLayout> createState() => _DesktopHomeLayoutState();
+  ConsumerState<DesktopHomeLayout> createState() => _DesktopHomeLayoutState();
 }
 
-class _DesktopHomeLayoutState extends State<DesktopHomeLayout> {
+class _DesktopHomeLayoutState extends ConsumerState<DesktopHomeLayout> {
   bool _refreshing = false;
 
   Future<void> _refresh() async {
     if (_refreshing) return;
     setState(() => _refreshing = true);
     try {
-      await widget.viewModel.refresh(silent: true);
+      await ref.read(homeProvider.notifier).refresh(silent: true);
     } finally {
       if (mounted) setState(() => _refreshing = false);
     }
@@ -50,12 +47,11 @@ class _DesktopHomeLayoutState extends State<DesktopHomeLayout> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             DesktopSidebar(
-              viewModel: widget.viewModel,
               isRefreshing: _refreshing,
               onRefresh: () => unawaited(_refresh()),
               onLogout: widget.onLogout,
             ),
-            Expanded(child: _PlugsPane(viewModel: widget.viewModel)),
+            const Expanded(child: _PlugsPane()),
           ],
         ),
       ),
@@ -63,45 +59,44 @@ class _DesktopHomeLayoutState extends State<DesktopHomeLayout> {
   }
 }
 
-class _PlugsPane extends StatelessWidget {
-  const _PlugsPane({required this.viewModel});
+class _PlugsPane extends ConsumerWidget {
+  const _PlugsPane();
 
   static const double _minTileWidth = 280;
   static const double _spacing = 16;
 
-  final HomeViewModel viewModel;
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final plugs = ref.watch(plugListProvider);
     return Padding(
       padding: const EdgeInsets.fromLTRB(32, 37, 32, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DevicesHeader(count: viewModel.devices.length),
+          DevicesHeader(count: plugs.devices.length),
           const SizedBox(height: 24),
-          Expanded(child: _buildBody()),
+          Expanded(child: _buildBody(ref.read(homeProvider.notifier), plugs)),
         ],
       ),
     );
   }
 
-  Widget _buildBody() {
-    if (viewModel.isLoading) {
+  Widget _buildBody(HomeNotifier home, PlugList plugs) {
+    final (:isLoading, :errorMessage, :devices) = plugs;
+    if (isLoading) {
       return const Center(child: CircularProgressIndicator(strokeWidth: 2));
     }
 
-    if (viewModel.errorMessage != null) {
+    if (errorMessage != null) {
       return MessageState(
         icon: Icons.cloud_off_rounded,
         title: 'Connexion impossible',
-        message: viewModel.errorMessage!,
+        message: errorMessage,
         actionLabel: 'Retry',
-        onAction: viewModel.refresh,
+        onAction: home.refresh,
       );
     }
 
-    final devices = viewModel.devices;
     if (devices.isEmpty) {
       return const MessageState(
         icon: Icons.power_outlined,
@@ -126,18 +121,8 @@ class _PlugsPane extends StatelessWidget {
           ),
           itemCount: devices.length,
           itemBuilder: (context, index) {
-            final device = devices[index];
-            return PlugTile(
-              key: ValueKey(device.ip),
-              device: device,
-              onToggle: () => viewModel.toggleDevice(device.ip),
-              onRemove: () => viewModel.removeDevice(device.ip),
-              onEditIp: (newIp) => viewModel.updateDeviceIp(device.ip, newIp),
-              isToggling: viewModel.isToggling(device.ip),
-              powerOffRemaining: viewModel.powerOffRemaining(device.ip),
-              onSchedulePowerOff: () => viewModel.schedulePowerOff(device.ip),
-              onCancelPowerOff: () => viewModel.cancelPowerOff(device.ip),
-            );
+            final ip = devices[index].ip;
+            return PlugBuilder(key: ValueKey(ip), ip: ip, card: PlugTile.new);
           },
         );
       },
