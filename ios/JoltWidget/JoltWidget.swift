@@ -72,6 +72,25 @@ private func brandMark(size: CGFloat, colorScheme: ColorScheme) -> some View {
         .background(Circle().fill(brandInk(colorScheme)))
 }
 
+private func powerControl(isOnline: Bool, deviceOn: Bool, isLoading: Bool, size: CGFloat, glyph: CGFloat, colorScheme: ColorScheme) -> some View {
+    let tint = iconTintColor(isOnline: isOnline, deviceOn: deviceOn, colorScheme: colorScheme)
+    return ZStack {
+        Circle()
+            .fill(iconBackgroundColor(isOnline: isOnline, deviceOn: deviceOn, colorScheme: colorScheme))
+            .frame(width: size, height: size)
+
+        if isLoading {
+            ProgressView()
+                .tint(tint)
+                .frame(width: glyph, height: glyph)
+        } else {
+            Image(systemName: iconName(isOnline: isOnline))
+                .font(.system(size: glyph, weight: .semibold))
+                .foregroundColor(tint)
+        }
+    }
+}
+
 /// Load raw device dictionaries from shared UserDefaults.
 func loadDevicesFromStorage() -> [[String: Any]] {
     let userDefaults = UserDefaults(suiteName: appGroupId)
@@ -161,21 +180,7 @@ struct JoltWidgetEntryView: View {
 
                     Spacer(minLength: 8)
 
-                    ZStack {
-                        Circle()
-                            .fill(iconBackgroundColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn, colorScheme: colorScheme))
-                            .frame(width: 52, height: 52)
-
-                        if entry.isLoading {
-                            ProgressView()
-                                .tint(iconTintColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn, colorScheme: colorScheme))
-                                .frame(width: 22, height: 22)
-                        } else {
-                            Image(systemName: iconName(isOnline: entry.isOnline))
-                                .font(.system(size: 22, weight: .semibold))
-                                .foregroundColor(iconTintColor(isOnline: entry.isOnline, deviceOn: entry.deviceOn, colorScheme: colorScheme))
-                        }
-                    }
+                    powerControl(isOnline: entry.isOnline, deviceOn: entry.deviceOn, isLoading: entry.isLoading, size: 52, glyph: 22, colorScheme: colorScheme)
 
                     Spacer(minLength: 8)
 
@@ -217,10 +222,13 @@ struct JoltWidgetEntryView: View {
                 Text("Ajouter une prise")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(brandInk(colorScheme))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 Text("Ouvrez Jolt pour commencer")
                     .font(.system(size: 11))
                     .foregroundColor(brandMuted(colorScheme))
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .containerBackground(for: .widget) {
                 brandBackground(colorScheme)
@@ -244,9 +252,11 @@ struct JoltWidget: Widget {
 
 // MARK: - List Widget (All Plugs)
 
+typealias ListDevice = (nickname: String, model: String, ip: String, deviceOn: Bool, isOnline: Bool, isLoading: Bool)
+
 struct DeviceListEntry: TimelineEntry {
     let date: Date
-    let devices: [(nickname: String, model: String, ip: String, deviceOn: Bool, isOnline: Bool, isLoading: Bool)]
+    let devices: [ListDevice]
 }
 
 struct JoltListWidgetProvider: TimelineProvider {
@@ -272,7 +282,7 @@ struct JoltListWidgetProvider: TimelineProvider {
             return DeviceListEntry(date: Date(), devices: [])
         }
 
-        let parsed = devices.compactMap { device -> (nickname: String, model: String, ip: String, deviceOn: Bool, isOnline: Bool, isLoading: Bool)? in
+        let parsed = devices.compactMap { device -> ListDevice? in
             guard let ip = device["ip"] as? String,
                   let model = device["model"] as? String else { return nil }
             let nickname = device["nickname"] as? String ?? model
@@ -288,13 +298,13 @@ struct JoltListWidgetProvider: TimelineProvider {
 struct JoltListWidgetEntryView: View {
     var entry: DeviceListEntry
     @Environment(\.colorScheme) var colorScheme
-    @Environment(\.widgetFamily) var widgetFamily
 
-    private var visibleDevices: ArraySlice<(nickname: String, model: String, ip: String, deviceOn: Bool, isOnline: Bool, isLoading: Bool)> {
-        entry.devices.prefix(widgetFamily == .systemLarge ? 7 : 3)
-    }
-
-    private var controlSize: CGFloat { widgetFamily == .systemLarge ? 32 : 28 }
+    /// The shortest row that fits the name, the status and the control.
+    private let minRowHeight: CGFloat = 28
+    /// More rows would put the toggles of a large widget too close to tap.
+    private let maxRows = 8
+    /// Rows at least this tall get larger text and control.
+    private let roomyRowHeight: CGFloat = 56
 
     var body: some View {
         if entry.devices.isEmpty {
@@ -315,7 +325,7 @@ struct JoltListWidgetEntryView: View {
                 brandBackground(colorScheme)
             }
         } else {
-            VStack(alignment: .leading, spacing: widgetFamily == .systemLarge ? 6 : 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     HStack(spacing: 7) {
                         brandMark(size: 26, colorScheme: colorScheme)
@@ -339,58 +349,56 @@ struct JoltListWidgetEntryView: View {
                         .background(Capsule().fill(brandOffSurface(colorScheme)))
                 }
 
-                ForEach(visibleDevices, id: \.ip) { device in
-                    Button(intent: ToggleDeviceIntent(ip: device.ip)) {
-                        HStack(spacing: 8) {
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(device.nickname)
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(brandInk(colorScheme))
-                                    .lineLimit(1)
-                                Text("\(deviceStatus(isOnline: device.isOnline, deviceOn: device.deviceOn)) · \(device.model)")
-                                    .font(.system(size: 10, weight: .medium))
-                                    .foregroundColor(brandMuted(colorScheme))
-                                    .lineLimit(1)
-                            }
-
-                            Spacer()
-
-                            ZStack {
-                                Circle()
-                                    .fill(iconBackgroundColor(isOnline: device.isOnline, deviceOn: device.deviceOn, colorScheme: colorScheme))
-                                    .frame(width: controlSize, height: controlSize)
-
-                                if device.isLoading {
-                                    ProgressView()
-                                        .tint(iconTintColor(isOnline: device.isOnline, deviceOn: device.deviceOn, colorScheme: colorScheme))
-                                        .frame(width: 14, height: 14)
-                                } else {
-                                    Image(systemName: iconName(isOnline: device.isOnline))
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(iconTintColor(isOnline: device.isOnline, deviceOn: device.deviceOn, colorScheme: colorScheme))
+                // The rows share the height left by the header, as many as fit.
+                GeometryReader { proxy in
+                    let visible = entry.devices.prefix(min(maxRows, max(1, Int(proxy.size.height / minRowHeight))))
+                    let roomy = proxy.size.height / CGFloat(visible.count) >= roomyRowHeight
+                    VStack(spacing: 0) {
+                        ForEach(visible, id: \.ip) { device in
+                            row(device, roomy: roomy)
+                                .overlay(alignment: .bottom) {
+                                    if device.ip != visible.last?.ip {
+                                        Rectangle()
+                                            .fill(brandOffSurface(colorScheme))
+                                            .frame(height: 0.5)
+                                    }
                                 }
-                            }
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(device.isLoading)
-                    .accessibilityLabel("\(device.nickname), \(deviceStatus(isOnline: device.isOnline, deviceOn: device.deviceOn))")
-                    .overlay(alignment: .bottom) {
-                        if device.ip != visibleDevices.last?.ip {
-                            Rectangle()
-                                .fill(brandOffSurface(colorScheme))
-                                .frame(height: 0.5)
-                                .offset(y: 2)
                         }
                     }
                 }
-                Spacer(minLength: 0)
             }
             .containerBackground(for: .widget) {
                 brandBackground(colorScheme)
             }
         }
+    }
+
+    private func row(_ device: ListDevice, roomy: Bool) -> some View {
+        let status = deviceStatus(isOnline: device.isOnline, deviceOn: device.deviceOn)
+        return Button(intent: ToggleDeviceIntent(ip: device.ip)) {
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: roomy ? 2 : 1) {
+                    Text(device.nickname)
+                        .font(.system(size: roomy ? 16 : 13, weight: .semibold))
+                        .foregroundColor(brandInk(colorScheme))
+                        .lineLimit(1)
+                    Text("\(status) · \(device.model)")
+                        .font(.system(size: roomy ? 12 : 10, weight: .medium))
+                        .foregroundColor(brandMuted(colorScheme))
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                powerControl(isOnline: device.isOnline, deviceOn: device.deviceOn, isLoading: device.isLoading, size: roomy ? 44 : 28, glyph: roomy ? 18 : 14, colorScheme: colorScheme)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(device.isLoading)
+        .accessibilityLabel("\(device.nickname), \(status)")
+        // Only the content toggles: the rest of a tall row opens the app.
+        .frame(maxHeight: .infinity)
     }
 }
 
