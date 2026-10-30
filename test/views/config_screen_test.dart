@@ -104,6 +104,20 @@ void main() {
         expect(field.controller?.text, '');
       });
 
+      testWidgets('the IP field keyboard has a dot on iOS', (tester) async {
+        await pumpConfig(tester);
+
+        await tester.showKeyboard(find.widgetWithText(TextField, 'Adresse IP'));
+
+        // iOS shows its numbers and punctuation keyboard for signed numbers:
+        // its decimal pad has the locale's separator, a comma in French.
+        expect(tester.testTextInput.setClientArgs?['inputType'], {
+          'name': 'TextInputType.number',
+          'signed': true,
+          'decimal': true,
+        });
+      });
+
       testWidgets('an empty IP field adds nothing', (tester) async {
         await pumpConfig(tester);
 

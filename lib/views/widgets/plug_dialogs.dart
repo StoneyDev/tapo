@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:jolt/core/validators.dart';
-
 /// Asks for a new IP address; returns null when cancelled or unchanged.
 Future<String?> showEditIpDialog(BuildContext context, String currentIp) async {
   final controller = TextEditingController(text: currentIp);
@@ -14,7 +13,11 @@ Future<String?> showEditIpDialog(BuildContext context, String currentIp) async {
         child: TextFormField(
           controller: controller,
           autofocus: true,
-          keyboardType: TextInputType.number,
+          // signed: the only iOS keyboard with a dot in any locale.
+          keyboardType: const TextInputType.numberWithOptions(
+            signed: true,
+            decimal: true,
+          ),
           decoration: const InputDecoration(
             labelText: 'Adresse IP',
             hintText: '192.168.1.100',

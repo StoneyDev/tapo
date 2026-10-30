@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:jolt/providers/config_provider.dart';
 import 'package:jolt/views/desktop/desktop_breakpoint.dart';
-
 class ConfigScreen extends ConsumerStatefulWidget {
   const ConfigScreen({super.key});
 
@@ -217,7 +216,9 @@ class _ConfigScreenState extends ConsumerState<ConfigScreen> {
                     fillColor: fieldFill,
                     prefixIcon: const Icon(Icons.router_outlined, size: 20),
                   ),
+                  // signed: the only iOS keyboard with a dot in any locale.
                   keyboardType: const TextInputType.numberWithOptions(
+                    signed: true,
                     decimal: true,
                   ),
                   textInputAction: TextInputAction.done,

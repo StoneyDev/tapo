@@ -225,6 +225,20 @@ void main() {
         expect(textField.controller?.text, TestFixtures.testDeviceIp);
       });
 
+      testWidgets('the IP field keyboard has a dot on iOS', (tester) async {
+        await tester.pumpWidget(buildTestWidget(TestFixtures.onlineDevice()));
+
+        await tester.longPress(find.byType(Card));
+        await tester.pumpAndSettle();
+
+        // The same keyboard as the configuration's IP field.
+        expect(tester.testTextInput.setClientArgs?['inputType'], {
+          'name': 'TextInputType.number',
+          'signed': true,
+          'decimal': true,
+        });
+      });
+
       testWidgets('save with valid changed IP calls onEditIp', (tester) async {
         final device = TestFixtures.onlineDevice();
         await tester.pumpWidget(buildTestWidget(device));
