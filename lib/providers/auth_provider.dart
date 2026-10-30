@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tapo/providers/services.dart';
+import 'package:jolt/providers/services.dart';
 
 typedef Credentials = ({String email, String password});
 

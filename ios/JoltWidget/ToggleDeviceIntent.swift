@@ -6,7 +6,7 @@ import WidgetKit
 
 // This file is built into both the app and the widget extension.
 
-let appGroupId = "group.dev.yannderoues.tapo"
+let appGroupId = "group.dev.yannderoues.jolt"
 private let loadingKeyPrefix = "loading_"
 
 func setDeviceLoading(ip: String, loading: Bool) {

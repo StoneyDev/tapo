@@ -1,4 +1,4 @@
-package dev.yannderoues.tapo
+package dev.yannderoues.jolt
 
 import android.content.Context
 

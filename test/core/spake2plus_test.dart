@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/core/spake2plus.dart';
+import 'package:jolt/core/spake2plus.dart';
 
 void main() {
   group('Spake2Plus', () {

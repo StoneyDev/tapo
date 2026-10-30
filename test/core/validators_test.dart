@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/core/validators.dart';
+import 'package:jolt/core/validators.dart';
 
 void main() {
   group('isValidIpv4', () {

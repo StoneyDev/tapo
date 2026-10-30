@@ -5,18 +5,18 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "tapo",
+      "name": "jolt",
       "request": "launch",
       "type": "dart"
     },
     {
-      "name": "tapo (profile mode)",
+      "name": "jolt (profile mode)",
       "request": "launch",
       "type": "dart",
       "flutterMode": "profile"
     },
     {
-      "name": "tapo (release mode)",
+      "name": "jolt (release mode)",
       "request": "launch",
       "type": "dart",
       "flutterMode": "release"

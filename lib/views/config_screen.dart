@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tapo/providers/config_provider.dart';
-import 'package:tapo/views/desktop/desktop_breakpoint.dart';
+import 'package:jolt/providers/config_provider.dart';
+import 'package:jolt/views/desktop/desktop_breakpoint.dart';
 
 class ConfigScreen extends ConsumerStatefulWidget {
   const ConfigScreen({super.key});

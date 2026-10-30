@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:home_widget/home_widget.dart';
-import 'package:tapo/core/platform.dart';
-import 'package:tapo/models/tapo_device.dart';
+import 'package:jolt/core/platform.dart';
+import 'package:jolt/models/tapo_device.dart';
 
 /// Persists device state to home widget storage via home_widget package.
 ///
@@ -74,12 +74,12 @@ class WidgetDataService {
     if (!supportsHomeWidgets) return;
     await Future.wait([
       HomeWidget.updateWidget(
-        androidName: 'TapoSingleWidgetProvider',
-        iOSName: 'TapoWidget',
+        androidName: 'JoltSingleWidgetProvider',
+        iOSName: 'JoltWidget',
       ),
       HomeWidget.updateWidget(
-        androidName: 'TapoListWidgetProvider',
-        iOSName: 'TapoListWidget',
+        androidName: 'JoltListWidgetProvider',
+        iOSName: 'JoltListWidget',
       ),
     ]);
   }

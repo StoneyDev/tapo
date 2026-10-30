@@ -10,7 +10,7 @@
 namespace {
 
 constexpr wchar_t kWindowTitle[] = L"Jolt";
-constexpr wchar_t kSingleInstanceMutex[] = L"Local\\YannDeroues.Tapo";
+constexpr wchar_t kSingleInstanceMutex[] = L"Local\\YannDeroues.Jolt";
 
 // Passed by the "Lancer au démarrage" Run entry: start hidden in the tray.
 constexpr char kMinimizedFlag[] = "--minimized";

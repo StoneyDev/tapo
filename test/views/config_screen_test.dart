@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jolt/providers/auth_provider.dart';
+import 'package:jolt/providers/services.dart';
+import 'package:jolt/views/config_screen.dart';
 import 'package:mockito/mockito.dart';
-import 'package:tapo/providers/auth_provider.dart';
-import 'package:tapo/providers/services.dart';
-import 'package:tapo/views/config_screen.dart';
 
 import '../helpers/providers.dart';
 import '../helpers/test_utils.dart';

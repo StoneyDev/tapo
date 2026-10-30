@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tapo/providers/auth_provider.dart';
-import 'package:tapo/services/desktop_shell.dart';
-import 'package:tapo/services/secure_storage_service.dart';
-import 'package:tapo/services/tapo_service.dart';
-import 'package:tapo/services/widget_data_service.dart';
+import 'package:jolt/providers/auth_provider.dart';
+import 'package:jolt/services/desktop_shell.dart';
+import 'package:jolt/services/secure_storage_service.dart';
+import 'package:jolt/services/tapo_service.dart';
+import 'package:jolt/services/widget_data_service.dart';
 
 final secureStorageProvider = Provider<SecureStorageService>(
   (ref) => SecureStorageService(),

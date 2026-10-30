@@ -1,4 +1,4 @@
-name: tapo
+name: jolt
 description: "Local control and home screen widgets for TP-Link Tapo smart plugs."
 publish_to: "none"
 

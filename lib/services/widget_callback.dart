@@ -3,16 +3,16 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:tapo/services/secure_storage_service.dart';
-import 'package:tapo/services/tapo_service.dart';
-import 'package:tapo/services/widget_data_service.dart';
+import 'package:jolt/services/secure_storage_service.dart';
+import 'package:jolt/services/tapo_service.dart';
+import 'package:jolt/services/widget_data_service.dart';
 
 /// Background callback for home widget interactivity.
 /// Runs in a separate isolate -- must bootstrap services independently.
 @pragma('vm:entry-point')
 Future<void> widgetBackgroundCallback(Uri? uri) async {
   if (uri == null) return;
-  if (uri.scheme != 'tapotoggle' || uri.host != 'toggle') return;
+  if (uri.scheme != 'jolttoggle' || uri.host != 'toggle') return;
 
   final ip = uri.queryParameters['ip'];
   if (ip == null) return;
@@ -27,7 +27,7 @@ Future<void> widgetToggleMain(List<String> args) async {
   try {
     await _toggleFromWidget(args.single);
   } finally {
-    await const MethodChannel('tapo/widget_toggle').invokeMethod<void>('done');
+    await const MethodChannel('jolt/widget_toggle').invokeMethod<void>('done');
   }
 }
 
@@ -35,7 +35,7 @@ Future<void> _toggleFromWidget(String ip) async {
   // The widget set loading_$ip for any value: every path below must clear it.
 
   WidgetsFlutterBinding.ensureInitialized();
-  await HomeWidget.setAppGroupId('group.dev.yannderoues.tapo');
+  await HomeWidget.setAppGroupId('group.dev.yannderoues.jolt');
 
   final widgetData = WidgetDataService();
   final storage = SecureStorageService();

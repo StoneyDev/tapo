@@ -2,15 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tapo/core/platform.dart';
-import 'package:tapo/models/tapo_device.dart';
-import 'package:tapo/providers/home_provider.dart';
-import 'package:tapo/views/desktop/desktop_breakpoint.dart';
-import 'package:tapo/views/desktop/desktop_home_layout.dart';
-import 'package:tapo/views/widgets/home_summary.dart';
-import 'package:tapo/views/widgets/message_state.dart';
-import 'package:tapo/views/widgets/plug_builder.dart';
-import 'package:tapo/views/widgets/plug_card.dart';
+import 'package:jolt/core/platform.dart';
+import 'package:jolt/models/tapo_device.dart';
+import 'package:jolt/providers/home_provider.dart';
+import 'package:jolt/views/desktop/desktop_breakpoint.dart';
+import 'package:jolt/views/desktop/desktop_home_layout.dart';
+import 'package:jolt/views/widgets/home_summary.dart';
+import 'package:jolt/views/widgets/message_state.dart';
+import 'package:jolt/views/widgets/plug_builder.dart';
+import 'package:jolt/views/widgets/plug_card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

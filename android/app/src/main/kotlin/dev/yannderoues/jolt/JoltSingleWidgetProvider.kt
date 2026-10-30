@@ -1,4 +1,4 @@
-package dev.yannderoues.tapo
+package dev.yannderoues.jolt
 
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -10,7 +10,7 @@ import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 import org.json.JSONArray
 
-class TapoSingleWidgetProvider : AppWidgetProvider() {
+class JoltSingleWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(
         context: Context,
@@ -29,7 +29,7 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
             appWidgetId: Int
         ) {
             val widgetData = HomeWidgetPlugin.getData(context)
-            val views = RemoteViews(context.packageName, R.layout.tapo_single_widget)
+            val views = RemoteViews(context.packageName, R.layout.jolt_single_widget)
 
             val deviceIp = widgetData.getString("widget_${appWidgetId}_ip", null)
             val devicesJson = widgetData.getString("devices", null)
@@ -72,9 +72,9 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
             views.setInt(R.id.widget_icon_container, "setBackgroundResource", WidgetColors.iconBgDrawable(isOnline, deviceOn))
 
             if (deviceIp != null) {
-                val intent = TapoWidgetClickReceiver.getBroadcast(
+                val intent = JoltWidgetClickReceiver.getBroadcast(
                     context,
-                    Uri.parse("tapotoggle://toggle?ip=$deviceIp")
+                    Uri.parse("jolttoggle://toggle?ip=$deviceIp")
                 )
                 views.setOnClickPendingIntent(R.id.widget_container, intent)
             }
@@ -85,7 +85,7 @@ class TapoSingleWidgetProvider : AppWidgetProvider() {
         fun updateAllWidgets(context: Context) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val widgetIds = appWidgetManager.getAppWidgetIds(
-                ComponentName(context, TapoSingleWidgetProvider::class.java)
+                ComponentName(context, JoltSingleWidgetProvider::class.java)
             )
             for (id in widgetIds) {
                 updateWidget(context, appWidgetManager, id)

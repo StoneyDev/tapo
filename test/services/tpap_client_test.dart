@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jolt/core/tpap_session.dart';
+import 'package:jolt/services/tpap_client.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:tapo/core/tpap_session.dart';
-import 'package:tapo/services/tpap_client.dart';
 
 @GenerateMocks([TpapSession])
 import 'tpap_client_test.mocks.dart';

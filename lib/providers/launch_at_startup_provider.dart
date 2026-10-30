@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tapo/providers/services.dart';
+import 'package:jolt/providers/services.dart';
 
 /// "Lancer au démarrage" setting, shared by the tray menu and the window.
 final launchAtStartupProvider =

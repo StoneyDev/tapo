@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:tapo/core/http_utils.dart';
-import 'package:tapo/core/spake2plus.dart';
-import 'package:tapo/core/tpap_crypto.dart';
+import 'package:jolt/core/http_utils.dart';
+import 'package:jolt/core/spake2plus.dart';
+import 'package:jolt/core/tpap_crypto.dart';
 
 /// TPAP session for Tapo devices with firmware 1.4+
 /// Uses TLS on port 4433 with SPAKE2+ authentication

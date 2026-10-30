@@ -15,10 +15,10 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
-		AA0001011AAAA00100000001 /* TapoWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001021AAAA00100000001 /* TapoWidget.swift */; };
-		AA0001031AAAA00100000001 /* TapoWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001041AAAA00100000001 /* TapoWidgetBundle.swift */; };
+		AA0001011AAAA00100000001 /* JoltWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001021AAAA00100000001 /* JoltWidget.swift */; };
+		AA0001031AAAA00100000001 /* JoltWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001041AAAA00100000001 /* JoltWidgetBundle.swift */; };
 		AA0001051AAAA00100000001 /* SelectDeviceIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001061AAAA00100000001 /* SelectDeviceIntent.swift */; };
-		AA0001071AAAA00100000001 /* TapoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA0001081AAAA00100000001 /* TapoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AA0001071AAAA00100000001 /* JoltWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA0001081AAAA00100000001 /* JoltWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AA0001181AAAA00100000001 /* ToggleDeviceIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001191AAAA00100000001 /* ToggleDeviceIntent.swift */; };
 		AA0001221AAAA00100000001 /* ToggleDeviceIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001191AAAA00100000001 /* ToggleDeviceIntent.swift */; };
 		AA0001231AAAA00100000001 /* WidgetToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001241AAAA00100000001 /* WidgetToggle.swift */; };
@@ -37,7 +37,7 @@
 			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = AA00010A1AAAA00100000001;
-			remoteInfo = TapoWidgetExtension;
+			remoteInfo = JoltWidgetExtension;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -58,7 +58,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				AA0001071AAAA00100000001 /* TapoWidgetExtension.appex in Embed Foundation Extensions */,
+				AA0001071AAAA00100000001 /* JoltWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -82,12 +82,12 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AA0001021AAAA00100000001 /* TapoWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapoWidget.swift; sourceTree = "<group>"; };
-		AA0001041AAAA00100000001 /* TapoWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapoWidgetBundle.swift; sourceTree = "<group>"; };
+		AA0001021AAAA00100000001 /* JoltWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoltWidget.swift; sourceTree = "<group>"; };
+		AA0001041AAAA00100000001 /* JoltWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoltWidgetBundle.swift; sourceTree = "<group>"; };
 		AA0001061AAAA00100000001 /* SelectDeviceIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectDeviceIntent.swift; sourceTree = "<group>"; };
-		AA0001081AAAA00100000001 /* TapoWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TapoWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0001081AAAA00100000001 /* JoltWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = JoltWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA00010C1AAAA00100000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AA00010D1AAAA00100000001 /* TapoWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TapoWidget.entitlements; sourceTree = "<group>"; };
+		AA00010D1AAAA00100000001 /* JoltWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JoltWidget.entitlements; sourceTree = "<group>"; };
 		AA00010E1AAAA00100000001 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Runner.entitlements; path = Runner/Runner.entitlements; sourceTree = "<group>"; };
 		AA0001191AAAA00100000001 /* ToggleDeviceIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleDeviceIntent.swift; sourceTree = "<group>"; };
 		AA0001241AAAA00100000001 /* WidgetToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetToggle.swift; sourceTree = "<group>"; };
@@ -146,7 +146,7 @@
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
-				AA0001101AAAA00100000001 /* TapoWidget */,
+				AA0001101AAAA00100000001 /* JoltWidget */,
 			);
 			sourceTree = "<group>";
 		};
@@ -155,7 +155,7 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
-				AA0001081AAAA00100000001 /* TapoWidgetExtension.appex */,
+				AA0001081AAAA00100000001 /* JoltWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -177,17 +177,17 @@
 			path = Runner;
 			sourceTree = "<group>";
 		};
-		AA0001101AAAA00100000001 /* TapoWidget */ = {
+		AA0001101AAAA00100000001 /* JoltWidget */ = {
 			isa = PBXGroup;
 			children = (
-				AA0001021AAAA00100000001 /* TapoWidget.swift */,
-				AA0001041AAAA00100000001 /* TapoWidgetBundle.swift */,
+				AA0001021AAAA00100000001 /* JoltWidget.swift */,
+				AA0001041AAAA00100000001 /* JoltWidgetBundle.swift */,
 				AA0001061AAAA00100000001 /* SelectDeviceIntent.swift */,
 				AA0001191AAAA00100000001 /* ToggleDeviceIntent.swift */,
 				AA00010C1AAAA00100000001 /* Info.plist */,
-				AA00010D1AAAA00100000001 /* TapoWidget.entitlements */,
+				AA00010D1AAAA00100000001 /* JoltWidget.entitlements */,
 			);
-			path = TapoWidget;
+			path = JoltWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -236,9 +236,9 @@
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
 		};
-		AA00010A1AAAA00100000001 /* TapoWidgetExtension */ = {
+		AA00010A1AAAA00100000001 /* JoltWidgetExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AA0001121AAAA00100000001 /* Build configuration list for PBXNativeTarget "TapoWidgetExtension" */;
+			buildConfigurationList = AA0001121AAAA00100000001 /* Build configuration list for PBXNativeTarget "JoltWidgetExtension" */;
 			buildPhases = (
 				AA0001131AAAA00100000001 /* Sources */,
 				AA00010F1AAAA00100000001 /* Frameworks */,
@@ -248,9 +248,9 @@
 			);
 			dependencies = (
 			);
-			name = TapoWidgetExtension;
-			productName = TapoWidgetExtension;
-			productReference = AA0001081AAAA00100000001 /* TapoWidgetExtension.appex */;
+			name = JoltWidgetExtension;
+			productName = JoltWidgetExtension;
+			productReference = AA0001081AAAA00100000001 /* JoltWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -294,7 +294,7 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
-				AA00010A1AAAA00100000001 /* TapoWidgetExtension */,
+				AA00010A1AAAA00100000001 /* JoltWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -385,8 +385,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA0001011AAAA00100000001 /* TapoWidget.swift in Sources */,
-				AA0001031AAAA00100000001 /* TapoWidgetBundle.swift in Sources */,
+				AA0001011AAAA00100000001 /* JoltWidget.swift in Sources */,
+				AA0001031AAAA00100000001 /* JoltWidgetBundle.swift in Sources */,
 				AA0001051AAAA00100000001 /* SelectDeviceIntent.swift in Sources */,
 				AA0001181AAAA00100000001 /* ToggleDeviceIntent.swift in Sources */,
 			);
@@ -402,7 +402,7 @@
 		};
 		AA0001111AAAA00100000001 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = AA00010A1AAAA00100000001 /* TapoWidgetExtension */;
+			target = AA00010A1AAAA00100000001 /* JoltWidgetExtension */;
 			targetProxy = AA0001091AAAA00100000001 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -494,7 +494,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.tapo;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.jolt;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -514,7 +514,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.tapo.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.jolt.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -531,7 +531,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.tapo.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.jolt.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -546,7 +546,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.tapo.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.jolt.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -679,7 +679,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.tapo;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.jolt;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -707,7 +707,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.tapo;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.jolt;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -725,13 +725,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = TapoWidget/TapoWidget.entitlements;
+				CODE_SIGN_ENTITLEMENTS = JoltWidget/JoltWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 42SFWGQMN9;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TapoWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TapoWidget;
+				INFOPLIST_FILE = JoltWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = JoltWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -740,7 +740,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.tapo.TapoWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.jolt.JoltWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG WIDGET_EXTENSION";
@@ -757,13 +757,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = TapoWidget/TapoWidget.entitlements;
+				CODE_SIGN_ENTITLEMENTS = JoltWidget/JoltWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 42SFWGQMN9;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TapoWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TapoWidget;
+				INFOPLIST_FILE = JoltWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = JoltWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -772,7 +772,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.tapo.TapoWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.jolt.JoltWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
@@ -788,13 +788,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_ENTITLEMENTS = TapoWidget/TapoWidget.entitlements;
+				CODE_SIGN_ENTITLEMENTS = JoltWidget/JoltWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 42SFWGQMN9;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = TapoWidget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TapoWidget;
+				INFOPLIST_FILE = JoltWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = JoltWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -803,7 +803,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.tapo.TapoWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.jolt.JoltWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
@@ -846,7 +846,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AA0001121AAAA00100000001 /* Build configuration list for PBXNativeTarget "TapoWidgetExtension" */ = {
+		AA0001121AAAA00100000001 /* Build configuration list for PBXNativeTarget "JoltWidgetExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA0001151AAAA00100000001 /* Debug */,

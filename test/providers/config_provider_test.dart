@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jolt/providers/auth_provider.dart';
+import 'package:jolt/providers/config_provider.dart';
+import 'package:jolt/providers/services.dart';
 import 'package:mockito/mockito.dart';
-import 'package:tapo/providers/auth_provider.dart';
-import 'package:tapo/providers/config_provider.dart';
-import 'package:tapo/providers/services.dart';
 
 import '../helpers/providers.dart';
 import '../helpers/test_utils.dart';

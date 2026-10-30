@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jolt/core/http_utils.dart';
+import 'package:jolt/models/tapo_device.dart';
+import 'package:jolt/services/tapo_service.dart';
 import 'package:pointycastle/export.dart';
-import 'package:tapo/core/http_utils.dart';
-import 'package:tapo/models/tapo_device.dart';
-import 'package:tapo/services/tapo_service.dart';
 
 import '../helpers/fake_plugs.dart';
 import '../helpers/test_utils.dart';

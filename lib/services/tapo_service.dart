@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:tapo/core/http_utils.dart';
-import 'package:tapo/core/klap_crypto.dart';
-import 'package:tapo/core/klap_session.dart';
-import 'package:tapo/core/tpap_session.dart';
-import 'package:tapo/models/tapo_device.dart';
-import 'package:tapo/services/tapo_client.dart';
-import 'package:tapo/services/tpap_client.dart';
+import 'package:jolt/core/http_utils.dart';
+import 'package:jolt/core/klap_crypto.dart';
+import 'package:jolt/core/klap_session.dart';
+import 'package:jolt/core/tpap_session.dart';
+import 'package:jolt/models/tapo_device.dart';
+import 'package:jolt/services/tapo_client.dart';
+import 'package:jolt/services/tpap_client.dart';
 
 /// High-level service for managing Tapo devices
 /// Handles session management and device communication

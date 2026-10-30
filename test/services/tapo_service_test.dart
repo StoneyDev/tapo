@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/core/klap_crypto.dart';
-import 'package:tapo/core/klap_session.dart';
-import 'package:tapo/models/tapo_device.dart';
-import 'package:tapo/services/tapo_client.dart';
-import 'package:tapo/services/tapo_service.dart';
+import 'package:jolt/core/klap_crypto.dart';
+import 'package:jolt/core/klap_session.dart';
+import 'package:jolt/models/tapo_device.dart';
+import 'package:jolt/services/tapo_client.dart';
+import 'package:jolt/services/tapo_service.dart';
 
 import '../helpers/test_utils.dart';
 

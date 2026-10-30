@@ -14,7 +14,7 @@
 
 // A window hosting the Flutter view that lives on in the tray: closing it
 // only hides it, "Quitter" in the tray menu exits the app. Talks to Dart
-// through the "tapo/desktop" channel (lib/services/desktop_shell.dart).
+// through the "jolt/desktop" channel (lib/services/desktop_shell.dart).
 class FlutterWindow : public Win32Window {
  public:
   // Creates a new FlutterWindow hosting a Flutter view running |project|.

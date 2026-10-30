@@ -28,7 +28,7 @@ enum WidgetToggle {
       guard
         engine.run(
           withEntrypoint: "widgetToggleMain",
-          libraryURI: "package:tapo/services/widget_callback.dart",
+          libraryURI: "package:jolt/services/widget_callback.dart",
           initialRoute: nil,
           entrypointArgs: [ip])
       else {
@@ -36,7 +36,7 @@ enum WidgetToggle {
       }
       // Dart reaches the channel through this main thread, so it cannot send
       // done before the handler is set.
-      FlutterMethodChannel(name: "tapo/widget_toggle", binaryMessenger: engine.binaryMessenger)
+      FlutterMethodChannel(name: "jolt/widget_toggle", binaryMessenger: engine.binaryMessenger)
         .setMethodCallHandler { call, result in
           guard call.method == "done" else {
             return result(FlutterMethodNotImplemented)

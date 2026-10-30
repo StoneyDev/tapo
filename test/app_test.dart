@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jolt/main.dart';
 import 'package:mockito/mockito.dart';
-import 'package:tapo/main.dart';
 
 import 'helpers/providers.dart';
 import 'helpers/test_utils.dart';

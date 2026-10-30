@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:tapo/core/http_utils.dart';
-import 'package:tapo/core/klap_crypto.dart';
+import 'package:jolt/core/http_utils.dart';
+import 'package:jolt/core/klap_crypto.dart';
 
 /// KLAP session for communicating with Tapo devices
 /// Matches python-kasa KlapEncryptionSession implementation

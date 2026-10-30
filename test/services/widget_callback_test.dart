@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/services/widget_callback.dart';
+import 'package:jolt/services/widget_callback.dart';
 
 import '../helpers/fake_plugs.dart';
 
@@ -119,7 +119,7 @@ void main() {
       });
 
       final completed = await IOOverrides.runZoned(
-        () => widgetBackgroundCallback(Uri.parse('tapotoggle://toggle?ip=$ip'))
+        () => widgetBackgroundCallback(Uri.parse('jolttoggle://toggle?ip=$ip'))
             .then((_) => true)
             .timeout(const Duration(seconds: 11), onTimeout: () => false),
         socketConnect: (host, port, {sourceAddress, sourcePort = 0, timeout}) =>
@@ -147,7 +147,7 @@ void main() {
       widgetStore['loading_192.168.1.100'] = true;
 
       await widgetBackgroundCallback(
-        Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
+        Uri.parse('jolttoggle://toggle?ip=192.168.1.100'),
       );
 
       expect(widgetStore.containsKey('loading_192.168.1.100'), isFalse);
@@ -170,7 +170,7 @@ void main() {
       ]);
 
       await widgetBackgroundCallback(
-        Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
+        Uri.parse('jolttoggle://toggle?ip=192.168.1.100'),
       );
 
       final devices = jsonDecode(widgetStore['devices'] as String) as List;
@@ -190,7 +190,7 @@ void main() {
 
       await expectLater(
         widgetBackgroundCallback(
-          Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
+          Uri.parse('jolttoggle://toggle?ip=192.168.1.100'),
         ),
         throwsA(isA<PlatformException>()),
       );
@@ -217,13 +217,13 @@ void main() {
 
       test('returns for wrong host', () async {
         await widgetBackgroundCallback(
-          Uri.parse('tapotoggle://wronghost?ip=192.168.1.1'),
+          Uri.parse('jolttoggle://wronghost?ip=192.168.1.1'),
         );
         expect(homeWidgetCalls, isEmpty);
       });
 
       test('returns when ip param is missing', () async {
-        await widgetBackgroundCallback(Uri.parse('tapotoggle://toggle'));
+        await widgetBackgroundCallback(Uri.parse('jolttoggle://toggle'));
         expect(homeWidgetCalls, isEmpty);
       });
     });
@@ -240,7 +240,7 @@ void main() {
         await IOOverrides.runZoned(
           () => HttpOverrides.runZoned(
             () => widgetBackgroundCallback(
-              Uri.parse('tapotoggle://toggle?ip=$ip'),
+              Uri.parse('jolttoggle://toggle?ip=$ip'),
             ),
             createHttpClient: FakeTpapPlug().createClient,
           ),
@@ -262,7 +262,7 @@ void main() {
     group('credential guard clauses', () {
       test('calls setAppGroupId before checking creds', () async {
         await widgetBackgroundCallback(
-          Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
+          Uri.parse('jolttoggle://toggle?ip=192.168.1.100'),
         );
 
         final methods = homeWidgetCalls.map((c) => c.method).toList();
@@ -273,7 +273,7 @@ void main() {
         'clears loading and refreshes widgets when no credentials',
         () async {
           await widgetBackgroundCallback(
-            Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
+            Uri.parse('jolttoggle://toggle?ip=192.168.1.100'),
           );
 
           final methods = homeWidgetCalls.map((c) => c.method).toList();
@@ -286,7 +286,7 @@ void main() {
         secureStore['tapo_email'] = 'test@example.com';
 
         await widgetBackgroundCallback(
-          Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
+          Uri.parse('jolttoggle://toggle?ip=192.168.1.100'),
         );
 
         final methods = homeWidgetCalls.map((c) => c.method).toList();
@@ -299,7 +299,7 @@ void main() {
           secureStore['tapo_password'] = 'password123';
 
           await widgetBackgroundCallback(
-            Uri.parse('tapotoggle://toggle?ip=192.168.1.100'),
+            Uri.parse('jolttoggle://toggle?ip=192.168.1.100'),
           );
 
           final methods = homeWidgetCalls.map((c) => c.method).toList();
@@ -310,7 +310,7 @@ void main() {
   });
 
   group('widgetToggleMain', () {
-    const toggleChannel = MethodChannel('tapo/widget_toggle');
+    const toggleChannel = MethodChannel('jolt/widget_toggle');
     // Not a configured plug: the toggle stops early but still clears loading.
     const ip = '192.168.1.200';
     final messenger =

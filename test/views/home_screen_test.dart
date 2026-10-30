@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/providers/home_provider.dart';
-import 'package:tapo/views/home_screen.dart';
-import 'package:tapo/views/widgets/plug_card.dart';
+import 'package:jolt/providers/home_provider.dart';
+import 'package:jolt/views/home_screen.dart';
+import 'package:jolt/views/widgets/plug_card.dart';
 
 import '../helpers/test_utils.dart';
 import 'home_test_doubles.dart';

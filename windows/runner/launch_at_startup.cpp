@@ -13,9 +13,7 @@ constexpr wchar_t kRunKey[] =
 constexpr wchar_t kStartupApprovedKey[] =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved"
     L"\\Run";
-// Named before the app became Jolt, kept so that existing entries still match
-// (RefreshPath then points them at the renamed executable).
-constexpr wchar_t kValueName[] = L"Tapo";
+constexpr wchar_t kValueName[] = L"Jolt";
 
 std::wstring CurrentCommand() {
   std::wstring path(MAX_PATH, L'\0');

@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:tapo/core/http_utils.dart';
-import 'package:tapo/core/klap_crypto.dart';
-import 'package:tapo/core/klap_session.dart';
+import 'package:jolt/core/http_utils.dart';
+import 'package:jolt/core/klap_crypto.dart';
+import 'package:jolt/core/klap_session.dart';
 
 /// Client for Tapo devices via KLAP protocol
 /// Matches python-kasa encrypt/decrypt implementation

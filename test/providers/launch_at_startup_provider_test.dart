@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/providers/launch_at_startup_provider.dart';
-import 'package:tapo/providers/services.dart';
+import 'package:jolt/providers/launch_at_startup_provider.dart';
+import 'package:jolt/providers/services.dart';
 
 import '../helpers/fake_desktop_shell.dart';
 

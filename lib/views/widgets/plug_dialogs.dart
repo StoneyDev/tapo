@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tapo/core/validators.dart';
+import 'package:jolt/core/validators.dart';
 
 /// Asks for a new IP address; returns null when cancelled or unchanged.
 Future<String?> showEditIpDialog(BuildContext context, String currentIp) async {

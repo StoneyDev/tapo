@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/core/http_utils.dart';
+import 'package:jolt/core/http_utils.dart';
 
 void main() {
   group('HttpResponse', () {

@@ -29,7 +29,7 @@
         </activity>
         <!-- Widget configuration activity -->
         <activity
-            android:name=".TapoWidgetConfigActivity"
+            android:name=".JoltWidgetConfigActivity"
             android:exported="true"
             android:theme="@style/WidgetConfigTheme">
             <intent-filter>
@@ -39,7 +39,7 @@
 
         <!-- Single plug widget -->
         <receiver
-            android:name=".TapoSingleWidgetProvider"
+            android:name=".JoltSingleWidgetProvider"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -51,7 +51,7 @@
 
         <!-- Multi-plug list widget -->
         <receiver
-            android:name=".TapoListWidgetProvider"
+            android:name=".JoltListWidgetProvider"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -63,12 +63,12 @@
 
         <!-- Custom click receiver for instant loading feedback -->
         <receiver
-            android:name=".TapoWidgetClickReceiver"
+            android:name=".JoltWidgetClickReceiver"
             android:exported="false" />
 
         <!-- home_widget background receiver for Dart callbacks. Not exported:
              it toggles plugs with the stored credentials, and its only sender
-             is TapoWidgetClickReceiver through an explicit intent. -->
+             is JoltWidgetClickReceiver through an explicit intent. -->
         <receiver
             android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver"
             android:exported="false" />

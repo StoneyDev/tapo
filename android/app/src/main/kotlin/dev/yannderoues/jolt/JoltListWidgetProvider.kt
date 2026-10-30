@@ -1,4 +1,4 @@
-package dev.yannderoues.tapo
+package dev.yannderoues.jolt
 
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -10,7 +10,7 @@ import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 import org.json.JSONArray
 
-class TapoListWidgetProvider : AppWidgetProvider() {
+class JoltListWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(
         context: Context,
@@ -29,7 +29,7 @@ class TapoListWidgetProvider : AppWidgetProvider() {
             appWidgetId: Int
         ) {
             val widgetData = HomeWidgetPlugin.getData(context)
-            val views = RemoteViews(context.packageName, R.layout.tapo_list_widget)
+            val views = RemoteViews(context.packageName, R.layout.jolt_list_widget)
 
             val devicesJson = widgetData.getString("devices", null)
 
@@ -71,7 +71,7 @@ class TapoListWidgetProvider : AppWidgetProvider() {
                     val isOnline = device.optBoolean("isOnline", true)
                     val isLoading = widgetData.getBoolean("loading_$ip", false)
 
-                    val itemView = RemoteViews(context.packageName, R.layout.tapo_list_widget_item)
+                    val itemView = RemoteViews(context.packageName, R.layout.jolt_list_widget_item)
 
                     itemView.setTextViewText(R.id.list_item_nickname, nickname)
                     itemView.setTextViewText(
@@ -86,9 +86,9 @@ class TapoListWidgetProvider : AppWidgetProvider() {
                     itemView.setViewVisibility(R.id.list_item_loading, if (isLoading) View.VISIBLE else View.GONE)
 
                     if (ip.isNotEmpty()) {
-                        val intent = TapoWidgetClickReceiver.getBroadcast(
+                        val intent = JoltWidgetClickReceiver.getBroadcast(
                             context,
-                            Uri.parse("tapotoggle://toggle?ip=$ip")
+                            Uri.parse("jolttoggle://toggle?ip=$ip")
                         )
                         itemView.setOnClickPendingIntent(R.id.list_item_container, intent)
                     }
@@ -105,7 +105,7 @@ class TapoListWidgetProvider : AppWidgetProvider() {
         fun updateAllWidgets(context: Context) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val widgetIds = appWidgetManager.getAppWidgetIds(
-                ComponentName(context, TapoListWidgetProvider::class.java)
+                ComponentName(context, JoltListWidgetProvider::class.java)
             )
             for (id in widgetIds) {
                 updateWidget(context, appWidgetManager, id)

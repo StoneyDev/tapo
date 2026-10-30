@@ -115,7 +115,7 @@ FlutterWindow::~FlutterWindow() {}
 // static
 UINT FlutterWindow::ActivationMessage() {
   static const UINT message =
-      RegisterWindowMessageW(L"YannDeroues.Tapo.ShowWindow");
+      RegisterWindowMessageW(L"YannDeroues.Jolt.ShowWindow");
   return message;
 }
 
@@ -139,7 +139,7 @@ bool FlutterWindow::OnCreate() {
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   channel_ = std::make_unique<flutter::MethodChannel<EncodableValue>>(
-      flutter_controller_->engine()->messenger(), "tapo/desktop",
+      flutter_controller_->engine()->messenger(), "jolt/desktop",
       &flutter::StandardMethodCodec::GetInstance());
   channel_->SetMethodCallHandler(
       [this](const MethodCall& call, std::unique_ptr<MethodResult> result) {

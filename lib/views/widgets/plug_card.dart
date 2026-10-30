@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tapo/models/tapo_device.dart';
-import 'package:tapo/views/widgets/plug_dialogs.dart';
-import 'package:tapo/views/widgets/plug_parts.dart';
+import 'package:jolt/models/tapo_device.dart';
+import 'package:jolt/views/widgets/plug_dialogs.dart';
+import 'package:jolt/views/widgets/plug_parts.dart';
 
 /// Mobile plug row: swipe to delete, long press to edit the IP.
 class PlugCard extends StatelessWidget {

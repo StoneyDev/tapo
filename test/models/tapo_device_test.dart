@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/models/tapo_device.dart';
+import 'package:jolt/models/tapo_device.dart';
 
 void main() {
   group('TapoDevice', () {

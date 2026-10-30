@@ -1,4 +1,4 @@
-import 'package:tapo/core/tpap_session.dart';
+import 'package:jolt/core/tpap_session.dart';
 
 /// Client for Tapo devices via TPAP protocol (firmware 1.4+)
 class TpapClient {

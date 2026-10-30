@@ -4,12 +4,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tapo/providers/home_provider.dart';
-import 'package:tapo/views/desktop/desktop_sidebar.dart';
-import 'package:tapo/views/desktop/plug_tile.dart';
-import 'package:tapo/views/widgets/home_summary.dart';
-import 'package:tapo/views/widgets/message_state.dart';
-import 'package:tapo/views/widgets/plug_builder.dart';
+import 'package:jolt/providers/home_provider.dart';
+import 'package:jolt/views/desktop/desktop_sidebar.dart';
+import 'package:jolt/views/desktop/plug_tile.dart';
+import 'package:jolt/views/widgets/home_summary.dart';
+import 'package:jolt/views/widgets/message_state.dart';
+import 'package:jolt/views/widgets/plug_builder.dart';
 
 /// Sidebar + plug grid shown on wide windows.
 class DesktopHomeLayout extends ConsumerStatefulWidget {

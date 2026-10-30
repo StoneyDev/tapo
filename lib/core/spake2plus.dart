@@ -3,9 +3,9 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:jolt/core/klap_crypto.dart' show bytesEqual;
+import 'package:jolt/core/tpap_crypto.dart' show TpapHkdf;
 import 'package:pointycastle/export.dart';
-import 'package:tapo/core/klap_crypto.dart' show bytesEqual;
-import 'package:tapo/core/tpap_crypto.dart' show TpapHkdf;
 
 /// SPAKE2+ implementation for TPAP protocol
 /// Based on RFC 9383 with P-256 curve

@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/models/tapo_device.dart';
-import 'package:tapo/providers/home_provider.dart';
-import 'package:tapo/providers/services.dart';
-import 'package:tapo/views/desktop/plug_tile.dart';
-import 'package:tapo/views/home_screen.dart';
-import 'package:tapo/views/widgets/plug_card.dart';
+import 'package:jolt/models/tapo_device.dart';
+import 'package:jolt/providers/home_provider.dart';
+import 'package:jolt/providers/services.dart';
+import 'package:jolt/views/desktop/plug_tile.dart';
+import 'package:jolt/views/home_screen.dart';
+import 'package:jolt/views/widgets/plug_card.dart';
 
 import '../../helpers/fake_desktop_shell.dart';
 import '../home_test_doubles.dart';

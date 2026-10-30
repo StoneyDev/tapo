@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.dev.yannderoues.tapo</string>
+		<string>group.dev.yannderoues.jolt</string>
 	</array>
 </dict>
 </plist>

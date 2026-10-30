@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:tapo/models/tapo_device.dart';
-import 'package:tapo/providers/home_provider.dart';
+import 'package:jolt/models/tapo_device.dart';
+import 'package:jolt/providers/home_provider.dart';
 
 /// Home state set by the test, recording the actions the UI triggers.
 ///

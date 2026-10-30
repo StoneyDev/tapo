@@ -3,17 +3,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:tapo/core/platform.dart';
-import 'package:tapo/providers/auth_provider.dart';
-import 'package:tapo/services/tray_controller.dart';
-import 'package:tapo/services/widget_callback.dart';
-import 'package:tapo/views/config_screen.dart';
-import 'package:tapo/views/home_screen.dart';
+import 'package:jolt/core/platform.dart';
+import 'package:jolt/providers/auth_provider.dart';
+import 'package:jolt/services/tray_controller.dart';
+import 'package:jolt/services/widget_callback.dart';
+import 'package:jolt/views/config_screen.dart';
+import 'package:jolt/views/home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (supportsHomeWidgets) {
-    unawaited(HomeWidget.setAppGroupId('group.dev.yannderoues.tapo'));
+    unawaited(HomeWidget.setAppGroupId('group.dev.yannderoues.jolt'));
   }
   if (usesWidgetBackgroundCallback) {
     unawaited(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tapo/models/tapo_device.dart';
+import 'package:jolt/models/tapo_device.dart';
 
 /// "Prises allumées 01 / 03" counter with the local network status.
 class PoweredSummary extends StatelessWidget {

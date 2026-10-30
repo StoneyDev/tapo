@@ -35,9 +35,9 @@ Pushing a `v*` tag matching the pubspec version publishes a GitHub Release
 
 ## Architecture
 
-Flutter app (named Jolt) for controlling TP-Link Tapo smart plugs over local
-network. Only user-facing strings say Jolt: code identifiers (Dart package, app
-id, channels, registry value) keep `tapo`.
+Jolt: Flutter app for controlling TP-Link Tapo smart plugs over local network.
+Names about the plugs, their protocols or the Tapo account (`TapoDevice`,
+`TapoService`, `tapo_email`) keep the Tapo brand; names of the app say Jolt.
 
 ### Layers
 
@@ -88,7 +88,7 @@ its `build` or a widget's life-cycle methods.
 ### Windows desktop
 
 `windows/runner/` hosts a tray icon (`tray_icon.cpp`), launch at startup
-(`launch_at_startup.cpp`) and the `tapo/desktop` method channel
+(`launch_at_startup.cpp`) and the `jolt/desktop` method channel
 (`flutter_window.cpp`). Dart side: `DesktopShell` (channel wrapper),
 `TrayController` (reads providers through a `Ref`, builds the tray menu from
 `homeProvider`, refreshing plug states within a 450 ms budget),

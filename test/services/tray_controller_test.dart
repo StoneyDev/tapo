@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jolt/models/tapo_device.dart';
+import 'package:jolt/providers/home_provider.dart';
+import 'package:jolt/providers/launch_at_startup_provider.dart';
+import 'package:jolt/providers/services.dart';
+import 'package:jolt/services/desktop_shell.dart';
+import 'package:jolt/services/tray_controller.dart';
 import 'package:mockito/mockito.dart';
-import 'package:tapo/models/tapo_device.dart';
-import 'package:tapo/providers/home_provider.dart';
-import 'package:tapo/providers/launch_at_startup_provider.dart';
-import 'package:tapo/providers/services.dart';
-import 'package:tapo/services/desktop_shell.dart';
-import 'package:tapo/services/tray_controller.dart';
 
 import '../helpers/fake_desktop_shell.dart';
 import '../helpers/providers.dart';

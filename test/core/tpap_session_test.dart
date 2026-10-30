@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/core/tpap_session.dart';
+import 'package:jolt/core/tpap_session.dart';
 
 void main() {
   group('TpapCredentials', () {

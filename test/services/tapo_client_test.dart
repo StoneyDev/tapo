@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/core/klap_session.dart';
-import 'package:tapo/services/tapo_client.dart';
+import 'package:jolt/core/klap_session.dart';
+import 'package:jolt/services/tapo_client.dart';
 
 import '../helpers/test_utils.dart';
 

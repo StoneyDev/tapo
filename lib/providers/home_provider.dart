@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:tapo/models/tapo_device.dart';
-import 'package:tapo/providers/auth_provider.dart';
-import 'package:tapo/providers/services.dart';
-import 'package:tapo/services/secure_storage_service.dart';
-import 'package:tapo/services/tapo_service.dart';
-import 'package:tapo/services/widget_data_service.dart';
+import 'package:jolt/models/tapo_device.dart';
+import 'package:jolt/providers/auth_provider.dart';
+import 'package:jolt/providers/services.dart';
+import 'package:jolt/services/secure_storage_service.dart';
+import 'package:jolt/services/tapo_service.dart';
+import 'package:jolt/services/widget_data_service.dart';
 
 part 'home_provider.freezed.dart';
 

@@ -3,7 +3,7 @@
     android:minWidth="180dp"
     android:minHeight="180dp"
     android:updatePeriodMillis="0"
-    android:initialLayout="@layout/tapo_list_widget"
+    android:initialLayout="@layout/jolt_list_widget"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:description="@string/list_widget_description" />

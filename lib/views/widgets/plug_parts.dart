@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tapo/models/tapo_device.dart';
+import 'package:jolt/models/tapo_device.dart';
 
 // Building blocks shared by the mobile PlugCard and the desktop PlugTile.
 

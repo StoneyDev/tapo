@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:tapo/core/validators.dart';
-import 'package:tapo/providers/auth_provider.dart';
-import 'package:tapo/providers/services.dart';
+import 'package:jolt/core/validators.dart';
+import 'package:jolt/providers/auth_provider.dart';
+import 'package:jolt/providers/services.dart';
 
 part 'config_provider.freezed.dart';
 

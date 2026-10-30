@@ -1,5 +1,5 @@
 import 'package:flutter/services.dart';
-import 'package:tapo/services/desktop_shell.dart';
+import 'package:jolt/services/desktop_shell.dart';
 
 /// In-memory stand-in for the Windows runner behind [DesktopShell].
 class FakeDesktopShell implements DesktopShell {

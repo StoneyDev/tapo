@@ -1,7 +1,6 @@
 # Jolt
 
 Flutter app for controlling TP-Link Tapo smart plugs over local network.
-Code identifiers (Dart package, app id, channels) keep the original `tapo` name.
 
 ## Features
 
@@ -75,7 +74,7 @@ Behaviour:
 
 The native side lives in `windows/runner/` (`tray_icon.cpp`,
 `launch_at_startup.cpp`, `flutter_window.cpp`) and talks to Dart through the
-`tapo/desktop` method channel (`lib/services/desktop_shell.dart`).
+`jolt/desktop` method channel (`lib/services/desktop_shell.dart`).
 
 ## Releases
 

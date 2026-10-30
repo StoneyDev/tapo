@@ -1,12 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jolt/core/klap_crypto.dart';
+import 'package:jolt/models/tapo_device.dart';
+import 'package:jolt/services/secure_storage_service.dart';
+import 'package:jolt/services/tapo_service.dart';
+import 'package:jolt/services/widget_data_service.dart';
 import 'package:mockito/annotations.dart';
-import 'package:tapo/core/klap_crypto.dart';
-import 'package:tapo/models/tapo_device.dart';
-import 'package:tapo/services/secure_storage_service.dart';
-import 'package:tapo/services/tapo_service.dart';
-import 'package:tapo/services/widget_data_service.dart';
 
 @GenerateMocks([
   SecureStorageService,

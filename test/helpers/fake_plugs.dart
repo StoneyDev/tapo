@@ -6,9 +6,9 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jolt/core/klap_crypto.dart';
+import 'package:jolt/core/tpap_crypto.dart';
 import 'package:pointycastle/export.dart';
-import 'package:tapo/core/klap_crypto.dart';
-import 'package:tapo/core/tpap_crypto.dart';
 
 import 'test_utils.dart';
 

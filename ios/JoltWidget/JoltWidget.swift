@@ -96,7 +96,7 @@ struct DeviceEntry: TimelineEntry {
     let isLoading: Bool
 }
 
-struct TapoWidgetProvider: AppIntentTimelineProvider {
+struct JoltWidgetProvider: AppIntentTimelineProvider {
     typealias Entry = DeviceEntry
     typealias Intent = SelectDeviceIntent
 
@@ -143,7 +143,7 @@ struct TapoWidgetProvider: AppIntentTimelineProvider {
     }
 }
 
-struct TapoWidgetEntryView: View {
+struct JoltWidgetEntryView: View {
     var entry: DeviceEntry
     @Environment(\.colorScheme) var colorScheme
 
@@ -229,12 +229,12 @@ struct TapoWidgetEntryView: View {
     }
 }
 
-struct TapoWidget: Widget {
-    let kind: String = "TapoWidget"
+struct JoltWidget: Widget {
+    let kind: String = "JoltWidget"
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: kind, intent: SelectDeviceIntent.self, provider: TapoWidgetProvider()) { entry in
-            TapoWidgetEntryView(entry: entry)
+        AppIntentConfiguration(kind: kind, intent: SelectDeviceIntent.self, provider: JoltWidgetProvider()) { entry in
+            JoltWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("Tapo Plug")
         .description("Toggle a single Tapo smart plug.")
@@ -249,7 +249,7 @@ struct DeviceListEntry: TimelineEntry {
     let devices: [(nickname: String, model: String, ip: String, deviceOn: Bool, isOnline: Bool, isLoading: Bool)]
 }
 
-struct TapoListWidgetProvider: TimelineProvider {
+struct JoltListWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> DeviceListEntry {
         DeviceListEntry(date: Date(), devices: [
             (nickname: "Lampe Salon", model: "P110", ip: "192.168.1.1", deviceOn: true, isOnline: true, isLoading: false),
@@ -285,7 +285,7 @@ struct TapoListWidgetProvider: TimelineProvider {
     }
 }
 
-struct TapoListWidgetEntryView: View {
+struct JoltListWidgetEntryView: View {
     var entry: DeviceListEntry
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.widgetFamily) var widgetFamily
@@ -394,12 +394,12 @@ struct TapoListWidgetEntryView: View {
     }
 }
 
-struct TapoListWidget: Widget {
-    let kind: String = "TapoListWidget"
+struct JoltListWidget: Widget {
+    let kind: String = "JoltListWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: TapoListWidgetProvider()) { entry in
-            TapoListWidgetEntryView(entry: entry)
+        StaticConfiguration(kind: kind, provider: JoltListWidgetProvider()) { entry in
+            JoltListWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("Tapo Plugs")
         .description("View and toggle all Tapo smart plugs.")

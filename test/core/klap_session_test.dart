@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/core/klap_crypto.dart';
-import 'package:tapo/core/klap_session.dart';
+import 'package:jolt/core/klap_crypto.dart';
+import 'package:jolt/core/klap_session.dart';
 
 import '../helpers/test_utils.dart';
 

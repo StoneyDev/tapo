@@ -1,4 +1,4 @@
-package dev.yannderoues.tapo
+package dev.yannderoues.jolt
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager
@@ -15,7 +15,7 @@ import android.widget.TextView
 import es.antonborri.home_widget.HomeWidgetPlugin
 import org.json.JSONArray
 
-class TapoWidgetConfigActivity : Activity() {
+class JoltWidgetConfigActivity : Activity() {
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
@@ -42,7 +42,7 @@ class TapoWidgetConfigActivity : Activity() {
             return
         }
 
-        setContentView(R.layout.tapo_widget_config)
+        setContentView(R.layout.jolt_widget_config)
 
         val listView = findViewById<ListView>(R.id.config_device_list)
         val emptyContainer = findViewById<LinearLayout>(R.id.config_empty_container)
@@ -86,7 +86,7 @@ class TapoWidgetConfigActivity : Activity() {
 
             // Update the widget
             val appWidgetManager = AppWidgetManager.getInstance(this)
-            TapoSingleWidgetProvider.updateWidget(this, appWidgetManager, appWidgetId)
+            JoltSingleWidgetProvider.updateWidget(this, appWidgetManager, appWidgetId)
 
             // Return OK result
             val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
@@ -106,8 +106,8 @@ class TapoWidgetConfigActivity : Activity() {
         override fun getItemId(position: Int): Long = position.toLong()
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-            val view = convertView ?: LayoutInflater.from(this@TapoWidgetConfigActivity)
-                .inflate(R.layout.tapo_widget_config_item, parent, false)
+            val view = convertView ?: LayoutInflater.from(this@JoltWidgetConfigActivity)
+                .inflate(R.layout.jolt_widget_config_item, parent, false)
 
             val device = items[position]
 

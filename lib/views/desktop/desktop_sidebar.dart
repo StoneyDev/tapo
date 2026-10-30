@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tapo/core/platform.dart';
-import 'package:tapo/providers/home_provider.dart';
-import 'package:tapo/providers/launch_at_startup_provider.dart';
-import 'package:tapo/views/widgets/home_summary.dart';
+import 'package:jolt/core/platform.dart';
+import 'package:jolt/providers/home_provider.dart';
+import 'package:jolt/providers/launch_at_startup_provider.dart';
+import 'package:jolt/views/widgets/home_summary.dart';
 
 /// Left column of the desktop layout: summary, global actions and settings.
 class DesktopSidebar extends ConsumerWidget {

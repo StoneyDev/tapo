@@ -1,11 +1,11 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tapo/services/desktop_shell.dart';
+import 'package:jolt/services/desktop_shell.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('tapo/desktop');
+  const channel = MethodChannel('jolt/desktop');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   late List<MethodCall> calls;
@@ -57,11 +57,11 @@ void main() {
     });
 
     test('sends notification title and message', () async {
-      await shell.showNotification(title: 'Tapo', message: 'Injoignable');
+      await shell.showNotification(title: 'Jolt', message: 'Injoignable');
 
       expect(calls.single.method, 'showNotification');
       expect(calls.single.arguments, {
-        'title': 'Tapo',
+        'title': 'Jolt',
         'message': 'Injoignable',
       });
     });
