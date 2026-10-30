@@ -20,7 +20,8 @@
 		AA0001051AAAA00100000001 /* SelectDeviceIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001061AAAA00100000001 /* SelectDeviceIntent.swift */; };
 		AA0001071AAAA00100000001 /* TapoWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AA0001081AAAA00100000001 /* TapoWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AA0001181AAAA00100000001 /* ToggleDeviceIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001191AAAA00100000001 /* ToggleDeviceIntent.swift */; };
-		AA0001201AAAA00100000001 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = AA0001211AAAA00100000001 /* FlutterGeneratedPluginSwiftPackage */; };
+		AA0001221AAAA00100000001 /* ToggleDeviceIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001191AAAA00100000001 /* ToggleDeviceIntent.swift */; };
+		AA0001231AAAA00100000001 /* WidgetToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001241AAAA00100000001 /* WidgetToggle.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -89,6 +90,7 @@
 		AA00010D1AAAA00100000001 /* TapoWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TapoWidget.entitlements; sourceTree = "<group>"; };
 		AA00010E1AAAA00100000001 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Runner.entitlements; path = Runner/Runner.entitlements; sourceTree = "<group>"; };
 		AA0001191AAAA00100000001 /* ToggleDeviceIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleDeviceIntent.swift; sourceTree = "<group>"; };
+		AA0001241AAAA00100000001 /* WidgetToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetToggle.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,7 +113,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA0001201AAAA00100000001 /* FlutterGeneratedPluginSwiftPackage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -170,6 +171,7 @@
 				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
+				AA0001241AAAA00100000001 /* WidgetToggle.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
@@ -247,9 +249,6 @@
 			dependencies = (
 			);
 			name = TapoWidgetExtension;
-			packageProductDependencies = (
-				AA0001211AAAA00100000001 /* FlutterGeneratedPluginSwiftPackage */,
-			);
 			productName = TapoWidgetExtension;
 			productReference = AA0001081AAAA00100000001 /* TapoWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -377,6 +376,8 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				AA0001221AAAA00100000001 /* ToggleDeviceIntent.swift in Sources */,
+				AA0001231AAAA00100000001 /* WidgetToggle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -742,7 +743,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.tapo.TapoWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG WIDGET_EXTENSION";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -774,6 +775,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.tapo.TapoWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -804,6 +806,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = dev.yannderoues.tapo.TapoWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -864,10 +867,6 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = FlutterGeneratedPluginSwiftPackage;
-		};
-		AA0001211AAAA00100000001 /* FlutterGeneratedPluginSwiftPackage */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FlutterGeneratedPluginSwiftPackage;
 		};

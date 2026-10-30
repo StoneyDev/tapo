@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:tapo/services/secure_storage_service.dart';
@@ -15,8 +16,23 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
 
   final ip = uri.queryParameters['ip'];
   if (ip == null) return;
-  // TapoWidgetClickReceiver set loading_$ip for any value: every path below
-  // must clear it.
+  await _toggleFromWidget(ip);
+}
+
+/// Entry point of the engine the iOS widget intent starts to toggle the plug
+/// at `args.single`. The intent waits for `done`, so every path must send it.
+@pragma('vm:entry-point')
+Future<void> widgetToggleMain(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await _toggleFromWidget(args.single);
+  } finally {
+    await const MethodChannel('tapo/widget_toggle').invokeMethod<void>('done');
+  }
+}
+
+Future<void> _toggleFromWidget(String ip) async {
+  // The widget set loading_$ip for any value: every path below must clear it.
 
   WidgetsFlutterBinding.ensureInitialized();
   await HomeWidget.setAppGroupId('group.dev.yannderoues.tapo');

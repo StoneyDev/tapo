@@ -4,23 +4,7 @@ import AppIntents
 
 // MARK: - Shared Constants & Helpers
 
-private let appGroupId = "group.dev.yannderoues.tapo"
 private let devicesKey = "devices"
-private let loadingKeyPrefix = "loading_"
-
-func setDeviceLoading(ip: String, loading: Bool) {
-    let userDefaults = UserDefaults(suiteName: appGroupId)
-    if loading {
-        userDefaults?.set(true, forKey: "\(loadingKeyPrefix)\(ip)")
-    } else {
-        userDefaults?.removeObject(forKey: "\(loadingKeyPrefix)\(ip)")
-    }
-}
-
-func isDeviceLoading(ip: String) -> Bool {
-    let userDefaults = UserDefaults(suiteName: appGroupId)
-    return userDefaults?.bool(forKey: "\(loadingKeyPrefix)\(ip)") ?? false
-}
 
 // MARK: - Brand
 

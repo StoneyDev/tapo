@@ -14,6 +14,8 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (supportsHomeWidgets) {
     unawaited(HomeWidget.setAppGroupId('group.dev.yannderoues.tapo'));
+  }
+  if (usesWidgetBackgroundCallback) {
     unawaited(
       HomeWidget.registerInteractivityCallback(widgetBackgroundCallback),
     );

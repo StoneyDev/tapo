@@ -6,6 +6,11 @@ bool get supportsHomeWidgets =>
     (defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS);
 
+/// Android widgets run Dart through home_widget's background callback; the
+/// iOS widget intent starts its own engine on `widgetToggleMain` instead.
+bool get usesWidgetBackgroundCallback =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
 /// The Windows runner provides the tray icon and the `tapo/desktop` channel.
 bool get isWindowsDesktop =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;

@@ -308,4 +308,46 @@ void main() {
       );
     });
   });
+
+  group('widgetToggleMain', () {
+    const toggleChannel = MethodChannel('tapo/widget_toggle');
+    // Not a configured plug: the toggle stops early but still clears loading.
+    const ip = '192.168.1.200';
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    late List<bool> loadingAtDone;
+
+    setUp(() {
+      loadingAtDone = [];
+      messenger.setMockMethodCallHandler(toggleChannel, (call) async {
+        if (call.method == 'done') {
+          loadingAtDone.add(widgetStore.containsKey('loading_$ip'));
+        }
+        return null;
+      });
+    });
+
+    tearDown(() => messenger.setMockMethodCallHandler(toggleChannel, null));
+
+    test('reports done once the toggle has cleared loading', () async {
+      widgetStore['loading_$ip'] = true;
+
+      await widgetToggleMain([ip]);
+
+      expect(loadingAtDone, [false]);
+    });
+
+    test('reports done when the toggle fails', () async {
+      messenger.setMockMethodCallHandler(
+        const MethodChannel('home_widget'),
+        (call) async => throw PlatformException(code: 'unavailable'),
+      );
+
+      await expectLater(
+        widgetToggleMain([ip]),
+        throwsA(isA<PlatformException>()),
+      );
+      expect(loadingAtDone, hasLength(1));
+    });
+  });
 }

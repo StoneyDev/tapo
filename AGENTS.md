@@ -100,6 +100,15 @@ on macOS; Windows builds need a Windows host.
 Layout switches to the desktop layout (`lib/views/desktop/`) at >= 720 px
 width; mobile layout stays unchanged below.
 
+### iOS widgets
+
+The app uses the UIScene life cycle (required by the iOS 27 SDK).
+`ToggleDeviceIntent` is built into both the app and the widget extension
+(which defines `WIDGET_EXTENSION`) and is performed in the app: `WidgetToggle`
+runs `widgetToggleMain` on a headless engine, because iOS creates no scene,
+hence no app engine, when it launches the app in the background for an
+intent. Android widgets go through home_widget's background callback instead.
+
 ### Models
 
 `TapoDevice` and the provider states use freezed for immutable data classes
