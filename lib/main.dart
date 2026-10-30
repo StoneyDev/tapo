@@ -13,7 +13,7 @@ import 'package:tapo/views/home_screen.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (supportsHomeWidgets) {
-    unawaited(HomeWidget.setAppGroupId('group.stoneydev.tapo'));
+    unawaited(HomeWidget.setAppGroupId('group.dev.yannderoues.tapo'));
     unawaited(
       HomeWidget.registerInteractivityCallback(widgetBackgroundCallback),
     );

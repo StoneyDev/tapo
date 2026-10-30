@@ -19,7 +19,7 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
   // must clear it.
 
   WidgetsFlutterBinding.ensureInitialized();
-  await HomeWidget.setAppGroupId('group.stoneydev.tapo');
+  await HomeWidget.setAppGroupId('group.dev.yannderoues.tapo');
 
   final widgetData = WidgetDataService();
   final storage = SecureStorageService();

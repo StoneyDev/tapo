@@ -25,7 +25,7 @@ struct ToggleDeviceIntent: AppIntent {
 
         await HomeWidgetBackgroundWorker.run(
             url: URL(string: "tapotoggle://toggle?ip=\(ip)"),
-            appGroup: "group.stoneydev.tapo"
+            appGroup: "group.dev.yannderoues.tapo"
         )
 
         // The Dart callback already clears loading and refreshes widgets.

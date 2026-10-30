@@ -4,7 +4,7 @@ import AppIntents
 
 // MARK: - Shared Constants & Helpers
 
-private let appGroupId = "group.stoneydev.tapo"
+private let appGroupId = "group.dev.yannderoues.tapo"
 private let devicesKey = "devices"
 private let loadingKeyPrefix = "loading_"
 

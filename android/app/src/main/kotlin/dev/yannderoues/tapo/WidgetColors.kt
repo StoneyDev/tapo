@@ -1,4 +1,4 @@
-package app.stoneydev.tapo
+package dev.yannderoues.tapo
 
 import android.content.Context
 

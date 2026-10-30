@@ -10,7 +10,7 @@
 namespace {
 
 constexpr wchar_t kWindowTitle[] = L"Tapo";
-constexpr wchar_t kSingleInstanceMutex[] = L"Local\\StoneyDev.Tapo";
+constexpr wchar_t kSingleInstanceMutex[] = L"Local\\YannDeroues.Tapo";
 
 // Passed by the "Lancer au démarrage" Run entry: start hidden in the tray.
 constexpr char kMinimizedFlag[] = "--minimized";

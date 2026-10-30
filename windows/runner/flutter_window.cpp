@@ -115,7 +115,7 @@ FlutterWindow::~FlutterWindow() {}
 // static
 UINT FlutterWindow::ActivationMessage() {
   static const UINT message =
-      RegisterWindowMessageW(L"StoneyDev.Tapo.ShowWindow");
+      RegisterWindowMessageW(L"YannDeroues.Tapo.ShowWindow");
   return message;
 }
 
