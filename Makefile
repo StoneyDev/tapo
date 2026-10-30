@@ -1,4 +1,4 @@
-# Tapo - common tasks.
+# Jolt - common tasks.
 # GNU make on macOS, Linux and Windows (cmd or Git Bash).
 # Windows: install GNU make once with `winget install ezwinports.make`.
 
@@ -6,7 +6,7 @@ FLUTTER ?= puro flutter
 DART ?= puro dart
 
 WINDOWS_RELEASE := build/windows/x64/runner/Release
-WINDOWS_ZIP := build/tapo-windows-x64.zip
+WINDOWS_ZIP := build/jolt-windows-x64.zip
 
 .DEFAULT_GOAL := help
 .PHONY: help deps gen analyze test coverage build-android build-windows \
@@ -14,7 +14,7 @@ WINDOWS_ZIP := build/tapo-windows-x64.zip
 
 # $(info) is printed by make itself: same output under cmd and sh.
 help:
-	$(info Tapo - available commands:)
+	$(info Jolt - available commands:)
 	$(info make deps             Install dependencies)
 	$(info make gen              Regenerate freezed models)
 	$(info make analyze          Static analysis)

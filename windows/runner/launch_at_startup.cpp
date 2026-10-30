@@ -13,6 +13,8 @@ constexpr wchar_t kRunKey[] =
 constexpr wchar_t kStartupApprovedKey[] =
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved"
     L"\\Run";
+// Named before the app became Jolt, kept so that existing entries still match
+// (RefreshPath then points them at the renamed executable).
 constexpr wchar_t kValueName[] = L"Tapo";
 
 std::wstring CurrentCommand() {
@@ -47,7 +49,7 @@ bool ReadRunCommand(std::wstring* command) {
   return true;
 }
 
-// The executable in a Run command: "C:\...\tapo.exe" --minimized.
+// The executable in a Run command: "C:\...\jolt.exe" --minimized.
 std::wstring ExecutableOf(const std::wstring& command) {
   if (command.empty() || command[0] != L'"') {
     return command;

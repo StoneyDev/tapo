@@ -55,7 +55,7 @@ class TrayIcon {
   HWND menu_owner_ = nullptr;
   UINT callback_message_;
   HICON icon_ = nullptr;
-  std::wstring tooltip_ = L"Tapo";
+  std::wstring tooltip_ = L"Jolt";
   bool added_ = false;
 };
 

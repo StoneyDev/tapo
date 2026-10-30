@@ -56,9 +56,9 @@ class TrayController {
   }
 
   static String _summary(List<TapoDevice> devices) {
-    if (devices.isEmpty) return 'Tapo · aucune prise';
+    if (devices.isEmpty) return 'Jolt · aucune prise';
     final on = devices.where((d) => d.isOnline && d.deviceOn).length;
-    return 'Tapo · $on/${devices.length} allumées';
+    return 'Jolt · $on/${devices.length} allumées';
   }
 
   Future<void> _showMenu() async {
@@ -96,7 +96,7 @@ class TrayController {
         ),
         const TrayMenuSeparator(),
       ],
-      const TrayMenuItem(id: _openId, label: 'Ouvrir Tapo'),
+      const TrayMenuItem(id: _openId, label: 'Ouvrir Jolt'),
       TrayMenuItem(
         id: _launchAtStartupId,
         label: 'Lancer au démarrage',
@@ -129,7 +129,7 @@ class TrayController {
 
     final device = _ref.read(homeProvider).deviceAt(ip);
     await _shell.showNotification(
-      title: 'Tapo',
+      title: 'Jolt',
       message: '${device?.nickname ?? ip} est injoignable',
     );
   }

@@ -1,6 +1,7 @@
-# Tapo
+# Jolt
 
 Flutter app for controlling TP-Link Tapo smart plugs over local network.
+Code identifiers (Dart package, app id, channels) keep the original `tapo` name.
 
 ## Features
 
@@ -40,7 +41,7 @@ make gen                # regenerate freezed models
 make analyze            # lint
 make build-android      # Android release APK (signed, see Releases)
 make build-windows      # Windows release build (on Windows only)
-make package-windows    # portable zip: build/tapo-windows-x64.zip
+make package-windows    # portable zip: build/jolt-windows-x64.zip
 puro flutter build ios --no-codesign    # iOS release build without signing
 ```
 
@@ -55,20 +56,20 @@ Flutter builds Windows apps on Windows only. Requirements on the PC:
   Git Bash)
 
 Then `make package-windows` produces a portable zip: unzip it anywhere and run
-`tapo.exe`. Tagged releases ship the same zip (see Releases).
+`jolt.exe`. Tagged releases ship the same zip (see Releases).
 
 Behaviour:
 
 - **Tray icon**: left click opens the window; right click lists the plugs
-  (✓ = on), "Tout éteindre", "Ouvrir Tapo", "Lancer au démarrage" and
+  (✓ = on), "Tout éteindre", "Ouvrir Jolt", "Lancer au démarrage" and
   "Quitter". Plug states are refreshed when the menu opens.
 - **Close button** hides the window to the tray; "Quitter" exits.
 - **Lancer au démarrage** (tray menu or sidebar) adds a per-user
   `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` entry that starts
-  Tapo hidden in the tray (`--minimized`). It also shows in Task Manager's
+  Jolt hidden in the tray (`--minimized`). It also shows in Task Manager's
   Startup apps.
-- Launching Tapo again brings the running window forward (single instance).
-- On Windows 11 new tray icons go to the overflow menu (^): drag Tapo to the
+- Launching Jolt again brings the running window forward (single instance).
+- On Windows 11 new tray icons go to the overflow menu (^): drag Jolt to the
   taskbar, or enable it in Settings > Personalization > Taskbar > Other system
   tray icons.
 
@@ -79,8 +80,8 @@ The native side lives in `windows/runner/` (`tray_icon.cpp`,
 ## Releases
 
 Pushing a `v*` tag runs `.github/workflows/release.yml`: analyze and tests,
-then a GitHub Release with `tapo-<version>-windows-x64.zip` and
-`tapo-<version>-android.apk`. The tag must match the pubspec version; a
+then a GitHub Release with `jolt-<version>-windows-x64.zip` and
+`jolt-<version>-android.apk`. The tag must match the pubspec version; a
 suffixed tag (`v1.2.0-beta.1`) becomes a prerelease.
 
 ```bash

@@ -35,7 +35,9 @@ Pushing a `v*` tag matching the pubspec version publishes a GitHub Release
 
 ## Architecture
 
-Flutter app for controlling TP-Link Tapo smart plugs over local network.
+Flutter app (named Jolt) for controlling TP-Link Tapo smart plugs over local
+network. Only user-facing strings say Jolt: code identifiers (Dart package, app
+id, channels, registry value) keep `tapo`.
 
 ### Layers
 

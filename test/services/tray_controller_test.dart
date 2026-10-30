@@ -88,7 +88,7 @@ void main() {
         await shell.rightClickTray();
 
         expect(_describe(shell.menus.single), [
-          'Tapo · 2/3 allumées (grisé)',
+          'Jolt · 2/3 allumées (grisé)',
           '---',
           '✓ Salon',
           '✓ Bureau',
@@ -96,7 +96,7 @@ void main() {
           '---',
           'Tout éteindre',
           '---',
-          'Ouvrir Tapo',
+          'Ouvrir Jolt',
           'Lancer au démarrage',
           'Quitter',
         ]);
@@ -132,9 +132,9 @@ void main() {
         await shell.rightClickTray();
 
         expect(_describe(shell.menus.single), [
-          'Tapo · aucune prise (grisé)',
+          'Jolt · aucune prise (grisé)',
           '---',
-          'Ouvrir Tapo',
+          'Ouvrir Jolt',
           'Lancer au démarrage',
           'Quitter',
         ]);
@@ -207,8 +207,8 @@ void main() {
         verify(tapo.setDevicePower(_salon, on: false)).called(1);
       });
 
-      test('"Ouvrir Tapo" shows the window', () async {
-        await shell.select('Ouvrir Tapo');
+      test('"Ouvrir Jolt" shows the window', () async {
+        await shell.select('Ouvrir Jolt');
 
         expect(shell.showWindowCalls, 1);
       });
@@ -234,7 +234,7 @@ void main() {
 
     group('tooltip', () {
       test('summarises how many plugs are on', () async {
-        expect(shell.tooltips.last, 'Tapo · 1/3 allumées');
+        expect(shell.tooltips.last, 'Jolt · 1/3 allumées');
       });
 
       test('is only resent when the summary changes', () async {

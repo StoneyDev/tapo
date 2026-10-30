@@ -9,7 +9,7 @@
 
 namespace {
 
-constexpr wchar_t kWindowTitle[] = L"Tapo";
+constexpr wchar_t kWindowTitle[] = L"Jolt";
 constexpr wchar_t kSingleInstanceMutex[] = L"Local\\YannDeroues.Tapo";
 
 // Passed by the "Lancer au démarrage" Run entry: start hidden in the tray.
@@ -31,7 +31,7 @@ void ActivateRunningInstance() {
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
-  // One instance only (one tray icon): launching Tapo again just brings the
+  // One instance only (one tray icon): launching Jolt again just brings the
   // running window forward.
   HANDLE single_instance =
       ::CreateMutexW(nullptr, FALSE, kSingleInstanceMutex);

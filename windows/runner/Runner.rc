@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "Yann Deroues" "\0"
-            VALUE "FileDescription", "Tapo" "\0"
+            VALUE "FileDescription", "Jolt" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "tapo" "\0"
+            VALUE "InternalName", "jolt" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 Yann Deroues. All rights reserved." "\0"
-            VALUE "OriginalFilename", "tapo.exe" "\0"
-            VALUE "ProductName", "Tapo" "\0"
+            VALUE "OriginalFilename", "jolt.exe" "\0"
+            VALUE "ProductName", "Jolt" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

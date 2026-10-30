@@ -153,7 +153,7 @@ struct TapoWidgetEntryView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: 6) {
                         brandMark(size: 22, colorScheme: colorScheme)
-                        Text("Tapo Home")
+                        Text("Jolt")
                             .font(.system(size: 10, weight: .medium))
                             .tracking(0.2)
                             .foregroundColor(brandMuted(colorScheme))
@@ -203,7 +203,7 @@ struct TapoWidgetEntryView: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
                     brandMark(size: 22, colorScheme: colorScheme)
-                    Text("Tapo Home")
+                    Text("Jolt")
                         .font(.system(size: 10, weight: .medium))
                         .tracking(0.2)
                         .foregroundColor(brandMuted(colorScheme))
@@ -217,7 +217,7 @@ struct TapoWidgetEntryView: View {
                 Text("Ajouter une prise")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(brandInk(colorScheme))
-                Text("Ouvrez Tapo pour commencer")
+                Text("Ouvrez Jolt pour commencer")
                     .font(.system(size: 11))
                     .foregroundColor(brandMuted(colorScheme))
                     .lineLimit(1)
@@ -307,7 +307,7 @@ struct TapoListWidgetEntryView: View {
                 Text("Aucune prise")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(brandInk(colorScheme))
-                Text("Ajoutez une prise dans Tapo")
+                Text("Ajoutez une prise dans Jolt")
                     .font(.system(size: 11))
                     .foregroundColor(brandMuted(colorScheme))
             }
@@ -320,7 +320,7 @@ struct TapoListWidgetEntryView: View {
                     HStack(spacing: 7) {
                         brandMark(size: 26, colorScheme: colorScheme)
                         VStack(alignment: .leading, spacing: 1) {
-                            Text("Tapo Home")
+                            Text("Jolt")
                                 .font(.system(size: 9, weight: .medium))
                                 .tracking(0.2)
                                 .foregroundColor(brandMuted(colorScheme))

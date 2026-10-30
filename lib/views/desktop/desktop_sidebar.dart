@@ -118,7 +118,7 @@ class _Header extends StatelessWidget {
                 ),
               ),
               Text(
-                'Tapo · chez vous',
+                'Jolt · chez vous',
                 style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
               ),
             ],

@@ -57,11 +57,11 @@ jobs:
       - name: Package
         run: >-
           Compress-Archive -Path build/windows/x64/runner/Release/*
-          -DestinationPath "tapo-$env:VERSION-windows-x64.zip"
+          -DestinationPath "jolt-$env:VERSION-windows-x64.zip"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: windows
-          path: tapo-*-windows-x64.zip
+          path: jolt-*-windows-x64.zip
           if-no-files-found: error
           retention-days: 7
 
@@ -102,11 +102,11 @@ jobs:
           keyAlias=tapo
           EOF
       - run: flutter build apk --release
-      - run: mv build/app/outputs/flutter-apk/app-release.apk "tapo-$VERSION-android.apk"
+      - run: mv build/app/outputs/flutter-apk/app-release.apk "jolt-$VERSION-android.apk"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: android
-          path: tapo-*-android.apk
+          path: jolt-*-android.apk
           if-no-files-found: error
           retention-days: 7
 

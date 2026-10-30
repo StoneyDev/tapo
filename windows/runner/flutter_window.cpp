@@ -340,7 +340,7 @@ void FlutterWindow::QueueMenu(std::vector<TrayIcon::MenuEntry> entries,
 void FlutterWindow::QueueFallbackMenu() {
   std::vector<TrayIcon::MenuEntry> entries(2);
   entries[0].id = kFallbackOpenId;
-  entries[0].label = L"Ouvrir Tapo";
+  entries[0].label = L"Ouvrir Jolt";
   entries[1].id = kFallbackQuitId;
   entries[1].label = L"Quitter";
   QueueMenu(std::move(entries), /*from_dart=*/false);

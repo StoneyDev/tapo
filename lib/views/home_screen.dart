@@ -97,7 +97,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
                 ),
                 Text(
-                  'Tapo · chez vous',
+                  'Jolt · chez vous',
                   style: TextStyle(
                     color: colors.onSurfaceVariant,
                     fontSize: 14,
