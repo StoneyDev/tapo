@@ -20,7 +20,8 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
 }
 
 /// Entry point of the engine the iOS widget intent starts to toggle the plug
-/// at `args.single`. The intent waits for `done`, so every path must send it.
+/// at `args.single`. `WidgetToggle` waits for `done`, so every path must send
+/// it.
 @pragma('vm:entry-point')
 Future<void> widgetToggleMain(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +33,8 @@ Future<void> widgetToggleMain(List<String> args) async {
 }
 
 Future<void> _toggleFromWidget(String ip) async {
-  // The widget set loading_$ip for any value: every path below must clear it.
+  // loading_$ip was set for this toggle, whatever its value: every path below
+  // must clear it.
 
   WidgetsFlutterBinding.ensureInitialized();
   await HomeWidget.setAppGroupId('group.dev.yannderoues.jolt');

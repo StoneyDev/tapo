@@ -111,6 +111,12 @@ runs `widgetToggleMain` on a headless engine, because iOS creates no scene,
 hence no app engine, when it launches the app in the background for an
 intent. Android widgets go through home_widget's background callback instead.
 
+WidgetKit only reloads the tapped widget once the intent returns, so the
+intent returns before the toggle, which `WidgetToggle` runs in a background
+task: that reload shows the plug loading. `loading_<ip>` holds a deadline,
+which the timelines turn into a later entry without loading, should the app
+not reload the widgets once the toggle ended.
+
 ### Models
 
 `TapoDevice` and the provider states use freezed for immutable data classes

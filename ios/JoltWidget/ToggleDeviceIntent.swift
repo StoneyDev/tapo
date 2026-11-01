@@ -9,18 +9,21 @@ import WidgetKit
 let appGroupId = "group.dev.yannderoues.jolt"
 private let loadingKeyPrefix = "loading_"
 
-func setDeviceLoading(ip: String, loading: Bool) {
+/// Shows the plug at `ip` loading until `deadline`, or no longer if nil. The
+/// deadline keeps a toggle that never ends from showing it loading for good.
+func setDeviceLoading(ip: String, until deadline: Date?) {
     let userDefaults = UserDefaults(suiteName: appGroupId)
-    if loading {
-        userDefaults?.set(true, forKey: "\(loadingKeyPrefix)\(ip)")
+    if let deadline {
+        userDefaults?.set(deadline, forKey: "\(loadingKeyPrefix)\(ip)")
     } else {
         userDefaults?.removeObject(forKey: "\(loadingKeyPrefix)\(ip)")
     }
 }
 
-func isDeviceLoading(ip: String) -> Bool {
+/// Until when the plug at `ip` shows loading, if it was set to.
+func deviceLoadingDeadline(ip: String) -> Date? {
     let userDefaults = UserDefaults(suiteName: appGroupId)
-    return userDefaults?.bool(forKey: "\(loadingKeyPrefix)\(ip)") ?? false
+    return userDefaults?.object(forKey: "\(loadingKeyPrefix)\(ip)") as? Date
 }
 
 // MARK: - Toggle Intent
@@ -67,18 +70,9 @@ extension ToggleDeviceIntent {
 @available(iOS 17, *)
 extension ToggleDeviceIntent: ForegroundContinuableIntent {
     func perform() async throws -> some IntentResult {
-        setDeviceLoading(ip: ip, loading: true)
-        WidgetCenter.shared.reloadAllTimelines()
-
-        await WidgetToggle.run(ip: ip)
-
-        // The Dart toggle already clears loading and refreshes widgets.
-        // Only reload here as a fallback if Dart failed to clear loading.
-        if isDeviceLoading(ip: ip) {
-            setDeviceLoading(ip: ip, loading: false)
-            WidgetCenter.shared.reloadAllTimelines()
-        }
-
+        // The tapped widget only reloads once perform returns: return before
+        // the toggle so that it shows the plug loading meanwhile.
+        await WidgetToggle.start(ip: ip)
         return .result()
     }
 }

@@ -6,6 +6,11 @@ import AppIntents
 
 private let devicesKey = "devices"
 
+/// Whether a plug loading until `deadline` shows loading at `date`.
+private func showsLoading(until deadline: Date?, at date: Date) -> Bool {
+    (deadline ?? .distantPast) > date
+}
+
 // MARK: - Brand
 
 private let brandInkLight = Color(red: 16/255, green: 16/255, blue: 16/255)
@@ -105,14 +110,16 @@ func loadDevicesFromStorage() -> [[String: Any]] {
 // MARK: - Single Plug Widget
 
 struct DeviceEntry: TimelineEntry {
-    let date: Date
+    var date: Date
     let nickname: String
     let model: String
     let ip: String
     let deviceOn: Bool
     let isOnline: Bool
     let hasDevice: Bool
-    let isLoading: Bool
+    let loadingUntil: Date?
+
+    var isLoading: Bool { showsLoading(until: loadingUntil, at: date) }
 }
 
 struct JoltWidgetProvider: AppIntentTimelineProvider {
@@ -120,7 +127,7 @@ struct JoltWidgetProvider: AppIntentTimelineProvider {
     typealias Intent = SelectDeviceIntent
 
     func placeholder(in context: Context) -> DeviceEntry {
-        DeviceEntry(date: Date(), nickname: "Lampe Salon", model: "P110", ip: "", deviceOn: false, isOnline: true, hasDevice: true, isLoading: false)
+        DeviceEntry(date: Date(), nickname: "Lampe Salon", model: "P110", ip: "", deviceOn: false, isOnline: true, hasDevice: true, loadingUntil: nil)
     }
 
     func snapshot(for configuration: SelectDeviceIntent, in context: Context) async -> DeviceEntry {
@@ -129,13 +136,21 @@ struct JoltWidgetProvider: AppIntentTimelineProvider {
 
     func timeline(for configuration: SelectDeviceIntent, in context: Context) async -> Timeline<DeviceEntry> {
         let entry = getEntry(for: configuration)
-        return Timeline(entries: [entry], policy: .never)
+        var entries = [entry]
+        // Stop loading at the deadline, should the app not reload the widget
+        // once the toggle ended.
+        if entry.isLoading, let deadline = entry.loadingUntil {
+            var settled = entry
+            settled.date = deadline
+            entries.append(settled)
+        }
+        return Timeline(entries: entries, policy: .never)
     }
 
     private func getEntry(for configuration: SelectDeviceIntent) -> DeviceEntry {
         let devices = loadDevicesFromStorage()
         guard !devices.isEmpty else {
-            return DeviceEntry(date: Date(), nickname: "No device", model: "", ip: "", deviceOn: false, isOnline: true, hasDevice: false, isLoading: false)
+            return DeviceEntry(date: Date(), nickname: "No device", model: "", ip: "", deviceOn: false, isOnline: true, hasDevice: false, loadingUntil: nil)
         }
 
         let selectedIp = configuration.device?.id
@@ -157,7 +172,7 @@ struct JoltWidgetProvider: AppIntentTimelineProvider {
             deviceOn: device["deviceOn"] as? Bool ?? false,
             isOnline: device["isOnline"] as? Bool ?? true,
             hasDevice: true,
-            isLoading: isDeviceLoading(ip: ip)
+            loadingUntil: deviceLoadingDeadline(ip: ip)
         )
     }
 }
@@ -252,18 +267,18 @@ struct JoltWidget: Widget {
 
 // MARK: - List Widget (All Plugs)
 
-typealias ListDevice = (nickname: String, model: String, ip: String, deviceOn: Bool, isOnline: Bool, isLoading: Bool)
+typealias ListDevice = (nickname: String, model: String, ip: String, deviceOn: Bool, isOnline: Bool, loadingUntil: Date?)
 
 struct DeviceListEntry: TimelineEntry {
-    let date: Date
+    var date: Date
     let devices: [ListDevice]
 }
 
 struct JoltListWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> DeviceListEntry {
         DeviceListEntry(date: Date(), devices: [
-            (nickname: "Lampe Salon", model: "P110", ip: "192.168.1.1", deviceOn: true, isOnline: true, isLoading: false),
-            (nickname: "Bureau", model: "P100", ip: "192.168.1.2", deviceOn: false, isOnline: true, isLoading: false),
+            (nickname: "Lampe Salon", model: "P110", ip: "192.168.1.1", deviceOn: true, isOnline: true, loadingUntil: nil),
+            (nickname: "Bureau", model: "P100", ip: "192.168.1.2", deviceOn: false, isOnline: true, loadingUntil: nil),
         ])
     }
 
@@ -273,7 +288,16 @@ struct JoltListWidgetProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<DeviceListEntry>) -> Void) {
         let entry = getEntry()
-        completion(Timeline(entries: [entry], policy: .never))
+        // Stop loading each plug at its deadline, should the app not reload
+        // the widget once the toggle ended.
+        let deadlines = entry.devices.compactMap { $0.loadingUntil }
+            .filter { showsLoading(until: $0, at: entry.date) }
+        let settled = Set(deadlines).sorted().map { deadline in
+            var later = entry
+            later.date = deadline
+            return later
+        }
+        completion(Timeline(entries: [entry] + settled, policy: .never))
     }
 
     private func getEntry() -> DeviceListEntry {
@@ -288,7 +312,7 @@ struct JoltListWidgetProvider: TimelineProvider {
             let nickname = device["nickname"] as? String ?? model
             let deviceOn = device["deviceOn"] as? Bool ?? false
             let isOnline = device["isOnline"] as? Bool ?? true
-            return (nickname: nickname, model: model, ip: ip, deviceOn: deviceOn, isOnline: isOnline, isLoading: isDeviceLoading(ip: ip))
+            return (nickname: nickname, model: model, ip: ip, deviceOn: deviceOn, isOnline: isOnline, loadingUntil: deviceLoadingDeadline(ip: ip))
         }
 
         return DeviceListEntry(date: Date(), devices: parsed)
@@ -375,6 +399,7 @@ struct JoltListWidgetEntryView: View {
 
     private func row(_ device: ListDevice, roomy: Bool) -> some View {
         let status = deviceStatus(isOnline: device.isOnline, deviceOn: device.deviceOn)
+        let isLoading = showsLoading(until: device.loadingUntil, at: entry.date)
         return Button(intent: ToggleDeviceIntent(ip: device.ip)) {
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: roomy ? 2 : 1) {
@@ -390,12 +415,12 @@ struct JoltListWidgetEntryView: View {
 
                 Spacer()
 
-                powerControl(isOnline: device.isOnline, deviceOn: device.deviceOn, isLoading: device.isLoading, size: roomy ? 44 : 28, glyph: roomy ? 18 : 14, colorScheme: colorScheme)
+                powerControl(isOnline: device.isOnline, deviceOn: device.deviceOn, isLoading: isLoading, size: roomy ? 44 : 28, glyph: roomy ? 18 : 14, colorScheme: colorScheme)
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(device.isLoading)
+        .disabled(isLoading)
         .accessibilityLabel("\(device.nickname), \(status)")
         // Only the content toggles: the rest of a tall row opens the app.
         .frame(maxHeight: .infinity)
