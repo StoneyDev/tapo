@@ -11,10 +11,14 @@ private let loadingKeyPrefix = "loading_"
 
 /// Shows the plug at `ip` loading until `deadline`, or no longer if nil. The
 /// deadline keeps a toggle that never ends from showing it loading for good.
+///
+/// It is stored as a number: Dart reads `loading_<ip>` through home_widget
+/// when clearing it, and Flutter's codec aborts the app on a `Date`.
 func setDeviceLoading(ip: String, until deadline: Date?) {
     let userDefaults = UserDefaults(suiteName: appGroupId)
     if let deadline {
-        userDefaults?.set(deadline, forKey: "\(loadingKeyPrefix)\(ip)")
+        userDefaults?.set(
+            deadline.timeIntervalSinceReferenceDate, forKey: "\(loadingKeyPrefix)\(ip)")
     } else {
         userDefaults?.removeObject(forKey: "\(loadingKeyPrefix)\(ip)")
     }
@@ -23,7 +27,10 @@ func setDeviceLoading(ip: String, until deadline: Date?) {
 /// Until when the plug at `ip` shows loading, if it was set to.
 func deviceLoadingDeadline(ip: String) -> Date? {
     let userDefaults = UserDefaults(suiteName: appGroupId)
-    return userDefaults?.object(forKey: "\(loadingKeyPrefix)\(ip)") as? Date
+    guard
+        let seconds = userDefaults?.object(forKey: "\(loadingKeyPrefix)\(ip)") as? TimeInterval
+    else { return nil }
+    return Date(timeIntervalSinceReferenceDate: seconds)
 }
 
 // MARK: - Toggle Intent

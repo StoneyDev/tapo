@@ -157,6 +157,26 @@ void main() {
       );
     });
 
+    // iOS apps up to 1.1.5 stored a Date there, which aborts the app when it
+    // goes through the platform channel.
+    test('clears loading without reading it back', () async {
+      widgetStore['loading_192.168.1.100'] = true;
+
+      await widgetBackgroundCallback(
+        Uri.parse('jolttoggle://toggle?ip=192.168.1.100'),
+      );
+
+      expect(widgetStore.containsKey('loading_192.168.1.100'), isFalse);
+      expect(
+        homeWidgetCalls.where(
+          (call) =>
+              call.method == 'getWidgetData' &&
+              (call.arguments as Map)['id'] == 'loading_192.168.1.100',
+        ),
+        isEmpty,
+      );
+    });
+
     test('keeps the plug name when secure storage is unavailable', () async {
       secureStorageUnavailable = true;
       widgetStore['devices'] = jsonEncode([

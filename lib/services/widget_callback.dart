@@ -71,7 +71,9 @@ Future<void> _toggleFromWidget(String ip) async {
       isOnline: false,
     );
   } finally {
-    await HomeWidget.saveWidgetData('loading_$ip', null);
+    // Without reading it back for a file to delete: it holds none, and a value
+    // the codec cannot send, like an older app's Date on iOS, aborts the app.
+    await HomeWidget.saveWidgetData('loading_$ip', null, deleteFile: false);
     await widgetData.refreshWidgets();
     await tapoService?.disconnectAll();
   }
