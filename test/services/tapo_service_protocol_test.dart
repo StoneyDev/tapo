@@ -42,6 +42,11 @@ PlugReply _plugOff(Map<String, dynamic> request) => const JsonReply({
   'result': {'nickname': 'Desk', 'model': 'P110', 'device_on': false},
 });
 
+const Map<String, Object> _removeCountdowns = {
+  'method': 'remove_countdown_rules',
+  'params': {'remove_all': true},
+};
+
 final _protocols = <String, LoginPlug Function()>{
   'KLAP': FakeKlapPlug.new,
   'TPAP': FakeTpapPlugWithLogin.new,
@@ -206,6 +211,59 @@ void main() {
       _runAgainst(plug, () => service.toggleDevice(_ip));
 
       expect(methods, ['get_device_info']);
+    });
+
+    group('over $protocol, the countdown of the plug', () {
+      late LoginPlug plug;
+      late List<Map<String, dynamic>> requests;
+
+      setUp(() {
+        plug = newPlug();
+        requests = [];
+        plug.onRequest = (request) {
+          requests.add(request);
+          return const JsonReply({'error_code': 0});
+        };
+      });
+
+      test('replaces the previous one to power off after the delay', () {
+        _runAgainst(
+          plug,
+          () => _service().schedulePowerOff(_ip, const Duration(minutes: 1)),
+        );
+
+        expect(requests, [
+          _removeCountdowns,
+          {
+            'method': 'add_countdown_rule',
+            'params': {
+              'delay': 60,
+              'desired_states': {'on': false},
+              'enable': true,
+              'remain': 60,
+            },
+          },
+        ]);
+      });
+
+      test('is not scheduled when the plug refuses it', () {
+        plug.onRequest = (request) => JsonReply({
+          'error_code': request['method'] == 'add_countdown_rule' ? -1902 : 0,
+        });
+
+        final scheduled = _runAgainst(
+          plug,
+          () => _service().schedulePowerOff(_ip, const Duration(minutes: 1)),
+        );
+
+        expect(scheduled, isFalse);
+      });
+
+      test('is cancelled', () {
+        _runAgainst(plug, () => _service().cancelPowerOff(_ip));
+
+        expect(requests, [_removeCountdowns]);
+      });
     });
   }
 

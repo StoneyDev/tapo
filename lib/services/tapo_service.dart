@@ -103,6 +103,8 @@ class TapoService {
         return _Connection(
           getInfo: client.getDeviceInfo,
           setOn: client.setDeviceOn,
+          setPowerOffCountdown: client.setPowerOffCountdown,
+          clearCountdown: client.clearCountdown,
         );
       }
     }
@@ -119,6 +121,8 @@ class TapoService {
     return _Connection(
       getInfo: client.getDeviceInfo,
       setOn: client.setDeviceOn,
+      setPowerOffCountdown: client.setPowerOffCountdown,
+      clearCountdown: client.clearCountdown,
       close: session.close,
     );
   }
@@ -130,6 +134,20 @@ class TapoService {
     int generation,
     Future<T?> Function(_Connection connection) command,
   ) => _queued(ip, () => _sendNow(ip, generation, command));
+
+  /// Runs [command] on the plug at [ip]; false if the plug cannot be reached,
+  /// fails the command, or was disconnected since [generation].
+  Future<bool> _run(
+    String ip,
+    int generation,
+    Future<bool> Function(_Connection connection) command,
+  ) async =>
+      await _send(
+        ip,
+        generation,
+        (connection) async => await command(connection) ? true : null,
+      ) ??
+      false;
 
   /// A plug drops our session when it expires or when another app logs in to
   /// it: [command] then runs once more on a new session.
@@ -218,16 +236,28 @@ class TapoService {
     if (currentState.deviceOn == on) return currentState;
 
     // A plug disconnected since reading its state is not switched.
-    final switched = await _send(
+    final switched = await _run(
       ip,
       generation,
-      (connection) async => await connection.setOn(on: on) ? true : null,
+      (connection) => connection.setOn(on: on),
     );
 
-    return switched == null
-        ? currentState.copyWith(isOnline: false)
-        : currentState.copyWith(deviceOn: on);
+    return switched
+        ? currentState.copyWith(deviceOn: on)
+        : currentState.copyWith(isOnline: false);
   }
+
+  /// Has the plug at [ip] turn itself off after [delay], even once the app
+  /// no longer runs; false if the plug cannot be reached.
+  Future<bool> schedulePowerOff(String ip, Duration delay) => _run(
+    ip,
+    _generation(ip),
+    (connection) => connection.setPowerOffCountdown(delay),
+  );
+
+  /// Cancels the countdown of the plug at [ip].
+  Future<bool> cancelPowerOff(String ip) =>
+      _run(ip, _generation(ip), (connection) => connection.clearCountdown());
 
   /// Disconnect from device (clear session). Work in progress on it stops
   /// instead of logging in again.
@@ -248,11 +278,15 @@ class _Connection {
   _Connection({
     required this.getInfo,
     required this.setOn,
+    required this.setPowerOffCountdown,
+    required this.clearCountdown,
     this.close = _keepsNothingOpen,
   });
 
   final Future<Map<String, dynamic>?> Function() getInfo;
   final Future<bool> Function({required bool on}) setOn;
+  final Future<bool> Function(Duration delay) setPowerOffCountdown;
+  final Future<bool> Function() clearCountdown;
   final Future<void> Function() close;
 
   /// KLAP opens a socket per request.

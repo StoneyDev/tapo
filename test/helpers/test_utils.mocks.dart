@@ -205,6 +205,22 @@ class MockTapoService extends _i1.Mock implements _i6.TapoService {
           as _i5.Future<_i3.TapoDevice>);
 
   @override
+  _i5.Future<bool> schedulePowerOff(String? ip, Duration? delay) =>
+      (super.noSuchMethod(
+            Invocation.method(#schedulePowerOff, [ip, delay]),
+            returnValue: _i5.Future<bool>.value(false),
+          )
+          as _i5.Future<bool>);
+
+  @override
+  _i5.Future<bool> cancelPowerOff(String? ip) =>
+      (super.noSuchMethod(
+            Invocation.method(#cancelPowerOff, [ip]),
+            returnValue: _i5.Future<bool>.value(false),
+          )
+          as _i5.Future<bool>);
+
+  @override
   _i5.Future<void> disconnect(String? ip) =>
       (super.noSuchMethod(
             Invocation.method(#disconnect, [ip]),

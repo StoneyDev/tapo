@@ -147,10 +147,13 @@ class HomeNotifier extends Notifier<HomeState> {
         return;
       }
 
-      cancelPowerOff(ip);
+      _stopPowerOff(ip);
+      // Already off, unless the plug could not count down itself.
       unawaited(_turnOffDevice(ip));
     });
     _setPowerOffRemaining(ip, _powerOffDelay);
+    // iOS suspends the app in the background: the plug counts down itself.
+    unawaited(service?.schedulePowerOff(ip, _powerOffDelay));
   }
 
   void _setPowerOffRemaining(String ip, Duration remaining) {
@@ -160,18 +163,20 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   void cancelPowerOff(String ip) {
+    if (!_powerOffTimers.containsKey(ip)) return;
+    _stopPowerOff(ip);
+    unawaited(_service?.cancelPowerOff(ip));
+  }
+
+  void _stopPowerOff(String ip) {
     _powerOffTimers.remove(ip)?.cancel();
-    if (!state.powerOffRemaining.containsKey(ip)) return;
     state = state.copyWith(
       powerOffRemaining: Map.of(state.powerOffRemaining)..remove(ip),
     );
   }
 
-  void _cancelAllPowerOffs() {
-    _stopCountdowns();
-    if (state.powerOffRemaining.isEmpty) return;
-    state = state.copyWith(powerOffRemaining: const {});
-  }
+  void _cancelAllPowerOffs() =>
+      _powerOffTimers.keys.toList().forEach(cancelPowerOff);
 
   void _stopCountdowns() {
     for (final timer in _powerOffTimers.values) {
