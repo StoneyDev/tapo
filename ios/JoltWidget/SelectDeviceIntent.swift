@@ -45,3 +45,11 @@ struct SelectDeviceIntent: WidgetConfigurationIntent {
     @Parameter(title: "Device")
     var device: DeviceItem?
 }
+
+struct SelectDevicesIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Select Devices"
+    static var description = IntentDescription("Select which Tapo plugs to control.")
+
+    @Parameter(title: "Devices", size: 2)
+    var devices: [DeviceItem]?
+}

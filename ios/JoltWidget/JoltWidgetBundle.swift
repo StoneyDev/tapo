@@ -5,6 +5,7 @@ import SwiftUI
 struct JoltWidgetBundle: WidgetBundle {
     var body: some Widget {
         JoltWidget()
+        JoltPairWidget()
         JoltListWidget()
     }
 }

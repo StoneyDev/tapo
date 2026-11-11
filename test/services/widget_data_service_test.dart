@@ -230,6 +230,43 @@ void main() {
       });
     });
 
+    group('refreshWidgets', () {
+      Future<List<Object?>> refreshedKinds(TargetPlatform platform) async {
+        final kinds = <Object?>[];
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(const MethodChannel('home_widget'), (
+              call,
+            ) async {
+              if (call.method != 'updateWidget') return null;
+              final arguments = call.arguments as Map<Object?, Object?>;
+              kinds.add(
+                arguments[platform == TargetPlatform.iOS ? 'ios' : 'android'],
+              );
+              return true;
+            });
+        debugDefaultTargetPlatformOverride = platform;
+        addTearDown(() => debugDefaultTargetPlatformOverride = null);
+
+        await service.refreshWidgets();
+        return kinds;
+      }
+
+      test('reloads every iOS widget kind', () async {
+        expect(await refreshedKinds(TargetPlatform.iOS), [
+          'JoltWidget',
+          'JoltListWidget',
+          'JoltPairWidget',
+        ]);
+      });
+
+      test('reloads the Android widget providers only', () async {
+        expect(await refreshedKinds(TargetPlatform.android), [
+          'JoltSingleWidgetProvider',
+          'JoltListWidgetProvider',
+        ]);
+      });
+    });
+
     group('on platforms without home screen widgets', () {
       setUp(() {
         // Windows has no home_widget plugin: any channel call would throw

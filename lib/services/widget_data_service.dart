@@ -81,6 +81,7 @@ class WidgetDataService {
         androidName: 'JoltListWidgetProvider',
         iOSName: 'JoltListWidget',
       ),
+      if (hasPairWidget) HomeWidget.updateWidget(iOSName: 'JoltPairWidget'),
     ]);
   }
 

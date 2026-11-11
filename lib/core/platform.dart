@@ -11,6 +11,10 @@ bool get supportsHomeWidgets =>
 bool get usesWidgetBackgroundCallback =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
+/// Only iOS has the widget of two plugs: Android has no `JoltPairWidget`.
+bool get hasPairWidget =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
 /// The Windows runner provides the tray icon and the `jolt/desktop` channel.
 bool get isWindowsDesktop =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
