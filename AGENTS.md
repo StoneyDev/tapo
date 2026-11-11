@@ -76,6 +76,9 @@ TapoService tries KLAP first, falls back to TPAP. Sessions cached per device IP.
   account change and loads the plugs itself. Async work checks that the
   account did not change meanwhile before publishing. `plugListProvider` and
   `plugProvider(ip)` project it so a countdown tick only rebuilds its card.
+  The plug runs each power-off countdown itself (`add_countdown_rule`), as
+  iOS suspends the app in the background: the app's timer shows it, then
+  turns the plug off should the plug not have.
 - `configProvider` (auto-dispose `AsyncNotifier`): the configuration form;
   saving signs in. `launchAtStartupProvider`: the Windows startup setting.
 

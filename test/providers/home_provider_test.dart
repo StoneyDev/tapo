@@ -30,6 +30,8 @@ void main() {
       tapo.getDeviceState(_ip),
     ).thenAnswer((_) async => TestFixtures.onlineDevice());
     when(tapo.disconnect(any)).thenAnswer((_) async {});
+    when(tapo.schedulePowerOff(any, any)).thenAnswer((_) async => true);
+    when(tapo.cancelPowerOff(any)).thenAnswer((_) async => true);
     container = ProviderContainer.test(
       overrides: appOverrides(
         storage: storage,
@@ -304,6 +306,25 @@ void main() {
         expect(state().powerOffRemaining, isEmpty);
       });
 
+      test('has the plug count down itself', () async {
+        home.schedulePowerOff(_ip);
+
+        verify(
+          tapo.schedulePowerOff(_ip, const Duration(milliseconds: 30)),
+        ).called(1);
+      });
+
+      test('leaves the countdown of the plug when it ends', () async {
+        when(
+          tapo.setDevicePower(_ip, on: false),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice(deviceOn: false));
+        home.schedulePowerOff(_ip);
+
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+
+        verifyNever(tapo.cancelPowerOff(any));
+      });
+
       test('counts down on each tick', () async {
         home.schedulePowerOff(_ip);
 
@@ -327,6 +348,35 @@ void main() {
         expect(state().powerOffRemaining, isEmpty);
       });
 
+      test('cancels the countdown of the plug', () async {
+        home
+          ..schedulePowerOff(_ip)
+          ..cancelPowerOff(_ip);
+
+        verify(tapo.cancelPowerOff(_ip)).called(1);
+      });
+
+      test('cancels the countdown of the plug on toggle', () async {
+        when(
+          tapo.toggleDevice(_ip),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice(deviceOn: false));
+        home.schedulePowerOff(_ip);
+
+        await home.toggleDevice(_ip);
+
+        verify(tapo.cancelPowerOff(_ip)).called(1);
+      });
+
+      test('does not cancel on a plug without countdown', () async {
+        when(
+          tapo.toggleDevice(_ip),
+        ).thenAnswer((_) async => TestFixtures.onlineDevice(deviceOn: false));
+
+        await home.toggleDevice(_ip);
+
+        verifyNever(tapo.cancelPowerOff(any));
+      });
+
       test('does not schedule for a device that is already off', () async {
         when(
           tapo.getDeviceState(_ip),
@@ -346,6 +396,14 @@ void main() {
 
         verifyNever(tapo.setDevicePower(any, on: anyNamed('on')));
         expect(state(), const HomeState());
+      });
+
+      test('signing out cancels the countdowns of the plugs', () async {
+        home.schedulePowerOff(_ip);
+
+        await home.logout();
+
+        verify(tapo.cancelPowerOff(_ip)).called(1);
       });
 
       test('signing out stops them before clearing the storage', () async {

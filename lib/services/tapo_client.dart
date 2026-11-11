@@ -26,6 +26,30 @@ class TapoClient {
     return response != null;
   }
 
+  /// Has the plug turn itself off after [delay], replacing its countdown: it
+  /// holds a single one.
+  Future<bool> setPowerOffCountdown(Duration delay) async {
+    await clearCountdown();
+    final response = await _request({
+      'method': 'add_countdown_rule',
+      'params': {
+        'delay': delay.inSeconds,
+        'desired_states': {'on': false},
+        'enable': true,
+        'remain': delay.inSeconds,
+      },
+    });
+    return response != null;
+  }
+
+  Future<bool> clearCountdown() async {
+    final response = await _request({
+      'method': 'remove_countdown_rules',
+      'params': {'remove_all': true},
+    });
+    return response != null;
+  }
+
   Future<Map<String, dynamic>?> _request(Map<String, dynamic> payload) async {
     if (!session.isEstablished) return null;
 
