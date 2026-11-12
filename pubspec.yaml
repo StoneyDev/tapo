@@ -2,7 +2,7 @@ name: jolt
 description: "Local control and home screen widgets for TP-Link Tapo smart plugs."
 publish_to: "none"
 
-version: 1.1.5+6
+version: 1.1.6+7
 
 environment:
   sdk: ">=3.12.0"
