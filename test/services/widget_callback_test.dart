@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jolt/services/widget_callback.dart';
 
 import '../helpers/fake_plugs.dart';
+import '../helpers/test_utils.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -220,6 +221,88 @@ void main() {
         homeWidgetCalls.where((call) => call.method == 'updateWidget'),
         hasLength(2),
       );
+    });
+
+    group('plug that cannot be reached at first', () {
+      const ip = '192.168.1.100';
+      late FakeKlapPlug plug;
+      late bool deviceOn;
+      late List<bool> switches;
+
+      Future<void> toggle({required int refusedConnections}) {
+        var connections = 0;
+        return IOOverrides.runZoned(
+          () => HttpOverrides.runZoned(
+            () => widgetBackgroundCallback(
+              Uri.parse('jolttoggle://toggle?ip=$ip'),
+            ),
+            createHttpClient: FakeTpapPlug().createClient,
+          ),
+          socketConnect:
+              (host, port, {sourceAddress, sourcePort = 0, timeout}) {
+                plug.port = connections++ < refusedConnections
+                    ? PortState.refused
+                    : PortState.open;
+                return plug.connect(timeout);
+              },
+        );
+      }
+
+      Map<String, dynamic> widgetDevice() =>
+          (jsonDecode(widgetStore['devices'] as String) as List).single
+              as Map<String, dynamic>;
+
+      setUp(() {
+        secureStore.addAll({
+          'tapo_email': TestFixtures.testEmail,
+          'tapo_password': TestFixtures.testPassword,
+        });
+        deviceOn = false;
+        switches = [];
+        plug = FakeKlapPlug()
+          ..onRequest = (request) {
+            if (request['method'] == 'set_device_info') {
+              deviceOn = (request['params'] as Map)['device_on'] as bool;
+              switches.add(deviceOn);
+            }
+            return JsonReply({
+              'error_code': 0,
+              'result': {
+                'nickname': 'Desk',
+                'model': 'P110',
+                'device_on': deviceOn,
+              },
+            });
+          };
+      });
+
+      test('turns it on once it answers', () async {
+        await toggle(refusedConnections: 1);
+
+        expect(widgetDevice(), {
+          'ip': ip,
+          'model': 'P110',
+          'nickname': 'Desk',
+          'deviceOn': true,
+          'isOnline': true,
+        });
+      });
+
+      test('does not toggle it back when the switch is tried again', () async {
+        final answer = plug.onRequest;
+        plug.onRequest = (request) {
+          final reply = answer(request);
+          // The plug switches but its first reply is lost.
+          return switches.length == 1 && request['method'] == 'set_device_info'
+              ? const HangUpReply()
+              : reply;
+        };
+
+        await toggle(refusedConnections: 0);
+
+        expect(switches, [true]);
+        expect(widgetDevice()['deviceOn'], isTrue);
+      });
     });
 
     group('URI guard clauses', () {
