@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:jolt/models/tapo_device.dart';
 import 'package:jolt/services/secure_storage_service.dart';
 import 'package:jolt/services/tapo_service.dart';
 import 'package:jolt/services/widget_data_service.dart';
@@ -33,10 +32,6 @@ Future<void> widgetToggleMain(List<String> args) async {
   }
 }
 
-/// How long a widget toggle may take.
-const _toggleBudget = Duration(seconds: 10);
-const _retryPause = Duration(milliseconds: 300);
-
 Future<void> _toggleFromWidget(String ip) async {
   // loading_$ip was set for this toggle, whatever its value: every path below
   // must clear it.
@@ -49,14 +44,6 @@ Future<void> _toggleFromWidget(String ip) async {
   TapoService? tapoService;
   Map<String, dynamic>? currentDevice;
 
-  Future<void> saveOffline() => widgetData.saveDeviceState(
-    ip: ip,
-    model: currentDevice?['model'] as String? ?? 'Unknown',
-    nickname: currentDevice?['nickname'] as String?,
-    deviceOn: currentDevice?['deviceOn'] as bool? ?? false,
-    isOnline: false,
-  );
-
   try {
     currentDevice = await _findDeviceByIp(ip);
     // Credentials only ever go to plugs the user configured.
@@ -65,8 +52,9 @@ Future<void> _toggleFromWidget(String ip) async {
     if (creds.email == null || creds.password == null) return;
 
     tapoService = TapoService.fromCredentials(creds.email!, creds.password!);
-    final device = await _toggle(tapoService, ip).timeout(_toggleBudget);
-    if (!device.isOnline) return await saveOffline();
+    final device = await tapoService
+        .toggleDevice(ip)
+        .timeout(const Duration(seconds: 10));
     await widgetData.saveDeviceState(
       ip: device.ip,
       model: device.model,
@@ -75,41 +63,19 @@ Future<void> _toggleFromWidget(String ip) async {
       isOnline: device.isOnline,
     );
   } on Exception {
-    await saveOffline();
+    await widgetData.saveDeviceState(
+      ip: ip,
+      model: currentDevice?['model'] as String? ?? 'Unknown',
+      nickname: currentDevice?['nickname'] as String?,
+      deviceOn: currentDevice?['deviceOn'] as bool? ?? false,
+      isOnline: false,
+    );
   } finally {
     // Without reading it back for a file to delete: it holds none, and a value
     // the codec cannot send, like an older app's Date on iOS, aborts the app.
     await HomeWidget.saveWidgetData('loading_$ip', null, deleteFile: false);
     await widgetData.refreshWidgets();
     await tapoService?.disconnectAll();
-  }
-}
-
-/// Toggles the plug at [ip], trying again while it cannot be reached: the
-/// first connections of an app iOS just launched in the background may fail.
-///
-/// The state to reach is set once the plug was read, so that trying again
-/// cannot toggle it back.
-Future<TapoDevice> _toggle(TapoService service, String ip) async {
-  final elapsed = Stopwatch()..start();
-  final current = await _untilOnline(() => service.getDeviceState(ip), elapsed);
-  if (!current.isOnline) return current;
-  return await _untilOnline(
-    () => service.setDevicePower(ip, on: !current.deviceOn),
-    elapsed,
-  );
-}
-
-Future<TapoDevice> _untilOnline(
-  Future<TapoDevice> Function() command,
-  Stopwatch elapsed,
-) async {
-  while (true) {
-    final device = await command();
-    if (device.isOnline || elapsed.elapsed + _retryPause >= _toggleBudget) {
-      return device;
-    }
-    await Future<void>.delayed(_retryPause);
   }
 }
 

@@ -120,11 +120,6 @@ task: that reload shows the plug loading. `loading_<ip>` holds a deadline,
 which the timelines turn into a later entry without loading, should the app
 not reload the widgets once the toggle ended.
 
-A widget toggle (`_toggleFromWidget`) tries again, within its 10 s, while the
-plug cannot be reached: iOS launching the app cold for the intent, its first
-connections may fail. It reads the plug, then sets the opposite state, so
-that trying again cannot toggle it back.
-
 ### Models
 
 `TapoDevice` and the provider states use freezed for immutable data classes
