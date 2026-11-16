@@ -120,6 +120,10 @@ task: that reload shows the plug loading. `loading_<ip>` holds a deadline,
 which the timelines turn into a later entry without loading, should the app
 not reload the widgets once the toggle ended.
 
+Before starting Dart, `WidgetToggle` waits for the plug with an
+`NWConnection`: Dart's sockets fail at once where a Network framework
+connection waits for connectivity, as Apple recommends (TN3179).
+
 ### Models
 
 `TapoDevice` and the provider states use freezed for immutable data classes
