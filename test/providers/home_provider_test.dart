@@ -272,8 +272,10 @@ void main() {
 
     group('power-off countdown', () {
       late HomeNotifier home;
+      late Duration suspension;
 
       setUp(() async {
+        suspension = Duration.zero;
         container = ProviderContainer.test(
           overrides: [
             ...appOverrides(storage: storage, tapo: tapo),
@@ -281,6 +283,7 @@ void main() {
               () => HomeNotifier(
                 powerOffDelay: const Duration(milliseconds: 30),
                 countdownTick: const Duration(milliseconds: 5),
+                now: () => DateTime.now().add(suspension),
               ),
             ),
           ],
@@ -303,6 +306,16 @@ void main() {
 
         verify(tapo.setDevicePower(_ip, on: false)).called(1);
         expect(state().devices.first.deviceOn, isFalse);
+        expect(state().powerOffRemaining, isEmpty);
+      });
+
+      test('leaves the plug alone when the app was suspended', () async {
+        home.schedulePowerOff(_ip);
+
+        suspension = const Duration(hours: 1);
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+
+        verifyNever(tapo.setDevicePower(any, on: anyNamed('on')));
         expect(state().powerOffRemaining, isEmpty);
       });
 
