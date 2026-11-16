@@ -1,4 +1,5 @@
 import Flutter
+import Network
 import UIKit
 import WidgetKit
 
@@ -7,8 +8,12 @@ import WidgetKit
 /// in the background to perform a widget intent.
 @MainActor
 enum WidgetToggle {
-  /// How long a toggle may take, past the Dart toggle's own 10 s timeout.
+  /// How long a toggle may take, past the wait for the plug and the Dart
+  /// toggle's own 10 s timeout.
   private static let timeout: TimeInterval = 20
+
+  /// How long a toggle waits for the plug to be reachable.
+  private static let connectivityWait: TimeInterval = 5
 
   /// Toggles run one after the other, as on Android: they rewrite the same
   /// widget device list.
@@ -48,6 +53,7 @@ enum WidgetToggle {
   /// toggle no longer runs.
   private static func toggle(ip: String, until deadline: Date) async {
     guard deadline > Date() else { return }
+    await waitForPlug(ip: ip)
     let engine = FlutterEngine(
       name: "widget_toggle", project: nil, allowHeadlessExecution: true)
 
@@ -81,6 +87,34 @@ enum WidgetToggle {
 
     engine.destroyContext()
   }
+
+  /// Waits until the plug at `ip` can be reached, for `connectivityWait` at
+  /// most. Dart's sockets fail at once, as on the local network of an app
+  /// iOS just launched in the background, where a Network framework
+  /// connection waits for the system to let it through.
+  private static func waitForPlug(ip: String) async {
+    let connection = NWConnection(host: NWEndpoint.Host(ip), port: 80, using: .tcp)
+
+    await withCheckedContinuation { continuation in
+      let wait = ToggleWait(continuation)
+      connection.stateUpdateHandler = { state in
+        switch state {
+        // A plug refusing the connection is reachable.
+        case .ready, .failed, .cancelled, .waiting(.posix(.ECONNREFUSED)):
+          wait.resume()
+        default:
+          break
+        }
+      }
+      connection.start(queue: .main)
+      DispatchQueue.main.asyncAfter(deadline: .now() + connectivityWait) {
+        wait.resume()
+      }
+    }
+
+    connection.stateUpdateHandler = nil
+    connection.cancel()
+  }
 }
 
 /// Keeps the app running until `end`, as iOS suspends it once the intent
@@ -100,8 +134,8 @@ private final class BackgroundTime {
   }
 }
 
-/// Resumes the wait for a toggle once, on done or on the timeout. Only used on
-/// the main thread.
+/// Resumes a wait once, on its outcome or on its timeout. Only used on the
+/// main thread.
 private final class ToggleWait: @unchecked Sendable {
   private var continuation: CheckedContinuation<Void, Never>?
 
