@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:jolt/core/platform.dart';
 import 'package:jolt/services/secure_storage_service.dart';
 import 'package:jolt/services/tapo_service.dart';
 import 'package:jolt/services/widget_data_service.dart';
@@ -37,7 +38,7 @@ Future<void> _toggleFromWidget(String ip) async {
   // must clear it.
 
   WidgetsFlutterBinding.ensureInitialized();
-  await HomeWidget.setAppGroupId('group.dev.yannderoues.jolt');
+  await HomeWidget.setAppGroupId(appGroupId);
 
   final widgetData = WidgetDataService();
   final storage = SecureStorageService();

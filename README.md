@@ -38,11 +38,17 @@ Common tasks are in the `Makefile` (`make` lists them):
 make test               # run tests (make coverage for coverage)
 make gen                # regenerate freezed models
 make analyze            # lint
-make build-android      # Android release APK (signed, see Releases)
+make run                # run the dev flavor on a phone (FLAVOR=prod for prod)
+make build-android      # Android prod release APK (signed, see Releases)
 make build-windows      # Windows release build (on Windows only)
 make package-windows    # portable zip: build/jolt-windows-x64.zip
-puro flutter build ios --no-codesign    # iOS release build without signing
+puro flutter build ios --flavor prod --no-codesign    # iOS release build without signing
 ```
+
+Android and iOS have two flavors, which `flutter run` and `flutter build`
+require as `--flavor dev` or `--flavor prod`. `dev` is named Jolt Dev and
+installs next to `prod`, with its own application id (`dev.yannderoues.jolt.dev`),
+storage and, on iOS, app group and widgets. Windows has no flavor.
 
 ## Windows
 
