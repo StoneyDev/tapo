@@ -240,7 +240,9 @@ void main() {
               if (call.method != 'updateWidget') return null;
               final arguments = call.arguments as Map<Object?, Object?>;
               kinds.add(
-                arguments[platform == TargetPlatform.iOS ? 'ios' : 'android'],
+                arguments[platform == TargetPlatform.iOS
+                    ? 'ios'
+                    : 'qualifiedAndroidName'],
               );
               return true;
             });
@@ -261,8 +263,8 @@ void main() {
 
       test('reloads the Android widget providers only', () async {
         expect(await refreshedKinds(TargetPlatform.android), [
-          'JoltSingleWidgetProvider',
-          'JoltListWidgetProvider',
+          'dev.yannderoues.jolt.JoltSingleWidgetProvider',
+          'dev.yannderoues.jolt.JoltListWidgetProvider',
         ]);
       });
     });

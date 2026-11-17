@@ -5,21 +5,29 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "jolt",
+      "name": "jolt dev",
+      "request": "launch",
+      "type": "dart",
+      "args": ["--flavor", "dev"]
+    },
+    {
+      "name": "jolt dev (profile mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile",
+      "args": ["--flavor", "dev"]
+    },
+    {
+      "name": "jolt prod (release mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release",
+      "args": ["--flavor", "prod"]
+    },
+    {
+      "name": "jolt (Windows)",
       "request": "launch",
       "type": "dart"
-    },
-    {
-      "name": "jolt (profile mode)",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "profile"
-    },
-    {
-      "name": "jolt (release mode)",
-      "request": "launch",
-      "type": "dart",
-      "flutterMode": "release"
     }
   ]
 }

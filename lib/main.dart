@@ -13,7 +13,7 @@ import 'package:jolt/views/home_screen.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   if (supportsHomeWidgets) {
-    unawaited(HomeWidget.setAppGroupId('group.dev.yannderoues.jolt'));
+    unawaited(HomeWidget.setAppGroupId(appGroupId));
   }
   if (usesWidgetBackgroundCallback) {
     unawaited(
