@@ -32,6 +32,19 @@ android {
         versionName = flutter.versionName
     }
 
+    // dev installs next to prod: its own application id and name
+    // (src/dev/res).
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            applicationIdSuffix = ".dev"
+        }
+        create("prod") {
+            dimension = "environment"
+        }
+    }
+
     signingConfigs {
         if (!keystoreProperties.isEmpty) {
             create("release") {

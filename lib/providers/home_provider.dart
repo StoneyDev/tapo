@@ -79,10 +79,15 @@ class HomeNotifier extends Notifier<HomeState> {
   HomeNotifier({
     this._powerOffDelay = const Duration(minutes: 1),
     this._countdownTick = const Duration(seconds: 1),
+    this._now = DateTime.now,
   });
 
   final Duration _powerOffDelay;
   final Duration _countdownTick;
+  final DateTime Function() _now;
+
+  /// A countdown ending this late was suspended with the app.
+  static const _suspendedAfter = Duration(seconds: 5);
 
   final Map<String, DateTime> _lastToggleTime = {};
   final Map<String, Timer> _powerOffTimers = {};
@@ -137,17 +142,21 @@ class HomeNotifier extends Notifier<HomeState> {
     }
 
     final service = _service;
-    final deadline = DateTime.now().add(_powerOffDelay);
+    final deadline = _now().add(_powerOffDelay);
     _powerOffTimers.remove(ip)?.cancel();
     _powerOffTimers[ip] = Timer.periodic(_countdownTick, (_) {
       if (!_isCurrent(service)) return;
-      final remaining = deadline.difference(DateTime.now());
+      final remaining = deadline.difference(_now());
       if (remaining > Duration.zero) {
         _setPowerOffRemaining(ip, remaining);
         return;
       }
 
       _stopPowerOff(ip);
+      // The plug may have been turned back on since, as by the widget toggle
+      // that woke the app: a command now would undo it, and logging in would
+      // drop the session of that toggle.
+      if (remaining < -_suspendedAfter) return;
       // Already off, unless the plug could not count down itself.
       unawaited(_turnOffDevice(ip));
     });

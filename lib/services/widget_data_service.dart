@@ -10,6 +10,10 @@ import 'package:jolt/models/tapo_device.dart';
 class WidgetDataService {
   static const _devicesKey = 'devices';
 
+  /// The package of the Android widget providers, whatever the application
+  /// id of the flavor.
+  static const _androidPackage = 'dev.yannderoues.jolt';
+
   /// Save a single device's state to widget storage.
   /// Updates existing entry by IP or adds new one.
   Future<void> saveDeviceState({
@@ -74,11 +78,11 @@ class WidgetDataService {
     if (!supportsHomeWidgets) return;
     await Future.wait([
       HomeWidget.updateWidget(
-        androidName: 'JoltSingleWidgetProvider',
+        qualifiedAndroidName: '$_androidPackage.JoltSingleWidgetProvider',
         iOSName: 'JoltWidget',
       ),
       HomeWidget.updateWidget(
-        androidName: 'JoltListWidgetProvider',
+        qualifiedAndroidName: '$_androidPackage.JoltListWidgetProvider',
         iOSName: 'JoltListWidget',
       ),
       if (hasPairWidget) HomeWidget.updateWidget(iOSName: 'JoltPairWidget'),

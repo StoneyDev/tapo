@@ -6,7 +6,8 @@ import WidgetKit
 
 // This file is built into both the app and the widget extension.
 
-let appGroupId = "group.dev.yannderoues.jolt"
+/// The app group of the flavor, set by its build configurations.
+let appGroupId = Bundle.main.object(forInfoDictionaryKey: "AppGroupId") as! String
 private let loadingKeyPrefix = "loading_"
 
 /// Shows the plug at `ip` loading until `deadline`, or no longer if nil. The

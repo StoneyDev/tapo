@@ -25,8 +25,11 @@ puro dart run build_runner build --delete-conflicting-outputs
 # Analyze code
 puro flutter analyze
 
+# Run on a phone: Android and iOS need a flavor
+puro flutter run --flavor dev
+
 # Platform builds (see `make` for the full list)
-make build-android
+make build-android      # prod flavor
 make build-windows      # Windows host only
 ```
 
@@ -88,6 +91,23 @@ state, `ref.read(provider.notifier)` in callbacks. `PlugBuilder` wires a
 `PlugCard` or `PlugTile` to its plug. A notifier cannot change state during
 its `build` or a widget's life-cycle methods.
 
+### Flavors
+
+Android and iOS have a `dev` and a `prod` flavor; Windows has none, and no
+`default-flavor` is set as it would move the Windows build directory. `dev`
+installs next to `prod`: application id `dev.yannderoues.jolt.dev`, name Jolt
+Dev, its own storage and iOS app group.
+
+- Android: `productFlavors` in `android/app/build.gradle.kts`; the dev name
+  is in `src/dev/res`. The Kotlin package stays `dev.yannderoues.jolt`, so
+  Dart names the widget providers by their qualified name.
+- iOS: schemes `dev` and `prod` with the `<Mode>-<flavor>` build
+  configurations. The project-level ones define `APP_BUNDLE_ID`,
+  `APP_DISPLAY_NAME` and `APP_GROUP_ID`, which the targets' bundle ids, the
+  entitlements and the `AppGroupId` Info.plist key (read by Swift) use.
+- Dart: `appGroupId` (`lib/core/platform.dart`) follows `appFlavor`; without
+  a flavor (tests, Windows) it is the prod one.
+
 ### Windows desktop
 
 `windows/runner/` hosts a tray icon (`tray_icon.cpp`), launch at startup
@@ -119,6 +139,10 @@ intent returns before the toggle, which `WidgetToggle` runs in a background
 task: that reload shows the plug loading. `loading_<ip>` holds a deadline,
 which the timelines turn into a later entry without loading, should the app
 not reload the widgets once the toggle ended.
+
+Before starting Dart, `WidgetToggle` waits for the plug with an
+`NWConnection`: Dart's sockets fail at once where a Network framework
+connection waits for connectivity, as Apple recommends (TN3179).
 
 ### Models
 

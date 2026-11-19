@@ -1,4 +1,11 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+
+/// The app group the iOS app shares with its widgets: the dev flavor has its
+/// own, as it installs next to prod.
+const appGroupId = appFlavor == 'dev'
+    ? 'group.dev.yannderoues.jolt.dev'
+    : 'group.dev.yannderoues.jolt';
 
 /// Home screen widgets (home_widget) only exist on Android and iOS.
 bool get supportsHomeWidgets =>
